@@ -3,14 +3,16 @@ package stg.game.event;
 import stg.game.enemy.IEnemy;
 
 /**
- * 敌人被销毁事�?- 当敌人被销毁时触发
+ * 敌人被销毁事件
+ * 当敌人被销毁时触发
  */
 public class EnemyDestroyedEvent {
     private final IEnemy enemy;
     private final int score;
     
     /**
-     * 构造函�?     */
+     * 构造函数
+     */
     public EnemyDestroyedEvent(IEnemy enemy, int score) {
         this.enemy = enemy;
         this.score = score;

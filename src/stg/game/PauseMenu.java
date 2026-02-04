@@ -2,9 +2,9 @@ package stg.game;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.FontMetrics;
-import stg.game.GameStateManager;
+import java.awt.Graphics2D;
+// import stg.game.GameStateManager;
 
 /**
  * 暂停菜单 - 处理游戏暂停时的菜单显示和交互 */

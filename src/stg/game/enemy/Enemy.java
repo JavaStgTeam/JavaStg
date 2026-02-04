@@ -5,7 +5,8 @@ import stg.game.obj.Obj;
 import stg.game.ui.GameCanvas;
 
 /**
- * 敌方单位- 所有敌人的基类
+ * 敌方单位
+ * 所有敌人的基类
  * @since 2026-01-19
  */
 public abstract class Enemy extends Obj {
@@ -105,7 +106,7 @@ public abstract class Enemy extends Obj {
 	}
 
 	/**
-	 * 检查是否越界- @since 2026-01-19 使用中心原点坐标系
+	 * 检查是否越界 - @since 2026-01-19 使用中心原点坐标系
 	 * @param canvasWidth 画布宽度
 	 * @param canvasHeight 画布高度
 	 * @return 是否越界
@@ -167,7 +168,7 @@ public abstract class Enemy extends Obj {
 	}
 
 	/**
-	 * 任务开始时触发的方法- 用于处理开局对话等
+	 * 任务开始时触发的方法 - 用于处理开局对话等
 	 */
 	protected abstract void onTaskStart();
 

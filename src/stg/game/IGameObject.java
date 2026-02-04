@@ -7,7 +7,8 @@ import java.awt.Graphics2D;
  */
 public interface IGameObject {
     /**
-     * 更新对象状�?     */
+     * 更新对象状态
+     */
     void update();
     
     /**
@@ -16,7 +17,8 @@ public interface IGameObject {
     void render(Graphics2D g);
     
     /**
-     * 检查对象是否活�?     */
+     * 检查对象是否活跃
+     */
     boolean isActive();
     
     /**
@@ -35,7 +37,8 @@ public interface IGameObject {
     float getSize();
     
     /**
-     * 获取碰撞检测半�?     */
+     * 获取碰撞检测半径
+     */
     float getHitboxRadius();
     
     /**

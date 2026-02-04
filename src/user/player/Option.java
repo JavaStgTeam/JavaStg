@@ -9,7 +9,8 @@ import stg.game.ui.GameCanvas;
  * 参考东方正作设计：
  * - 子机跟随玩家移动
  * - 子机可以发射子弹
- * - 不同角色的子机有不同的行为模�? * - 子机通常有相对位置和延迟跟随
+ * - 不同角色的子机有不同的行为模式
+ * - 子机通常有相对位置和延迟跟随
  */
 public abstract class Option {
 	protected float x; // 子机X坐标
@@ -33,7 +34,8 @@ public abstract class Option {
 		this.offsetX = offsetX;
 		this.offsetY = offsetY;
 		this.gameCanvas = gameCanvas;
-		this.followSpeed = 0.25f; // 默认跟随速度（提高响应速度�?		this.size = 8.0f;
+		this.followSpeed = 0.25f; // 默认跟随速度（提高响应速度）
+		this.size = 8.0f;
 		this.color = new Color(150, 200, 255);
 		this.shooting = false;
 		this.shootCooldown = 0;
@@ -48,9 +50,11 @@ public abstract class Option {
 	}
 
 	/**
-	 * 更新子机状�?	 */
+	 * 更新子机状态
+	 */
 	public void update() {
-		// 更新目标位置（玩家位�?+ 偏移�?		targetX = player.getX() + offsetX;
+		// 更新目标位置（玩家位置 + 偏移量）
+		targetX = player.getX() + offsetX;
 		targetY = player.getY() + offsetY;
 
 		// 平滑跟随玩家
@@ -78,7 +82,8 @@ public abstract class Option {
 
 	/**
 	 * 渲染子机
-	 * @param g 图形上下�?	 */
+	 * @param g 图形上下文
+	 */
 	public void render(Graphics2D g) {
 		float screenX = x + gameCanvas.getWidth() / 2.0f;
 		float screenY = gameCanvas.getHeight() / 2.0f - y;
@@ -97,7 +102,8 @@ public abstract class Option {
 	}
 
 	/**
-	 * 设置射击状�?	 * @param shooting 是否射击
+	 * 设置射击状态
+	 * @param shooting 是否射击
 	 */
 	public void setShooting(boolean shooting) {
 		this.shooting = shooting;
@@ -120,7 +126,7 @@ public abstract class Option {
 	 */
 	public void setFollowSpeed(float speed) {
 		if (speed < 0 || speed > 1) {
-			throw new IllegalArgumentException("跟随速度必须�?-1之间，当前�? " + speed);
+			throw new IllegalArgumentException("跟随速度必须在0-1之间，当前值 " + speed);
 		}
 		this.followSpeed = speed;
 	}
@@ -128,10 +134,11 @@ public abstract class Option {
 	/**
 	 * 设置子机大小
 	 * @param size 大小
-	 * @throws IllegalArgumentException 如果大小为负数或�?	 */
+	 * @throws IllegalArgumentException 如果大小为负数或零
+	 */
 	public void setSize(float size) {
 		if (size <= 0) {
-			throw new IllegalArgumentException("子机大小必须为正数，当前�? " + size);
+			throw new IllegalArgumentException("子机大小必须为正数，当前值 " + size);
 		}
 		this.size = size;
 	}
@@ -147,21 +154,23 @@ public abstract class Option {
 	/**
 	 * 设置射击间隔
 	 * @param interval 射击间隔(帧数)
-	 * @throws IllegalArgumentException 如果间隔为负�?	 */
+	 * @throws IllegalArgumentException 如果间隔为负数
+	 */
 	public void setShootInterval(int interval) {
 		if (interval < 0) {
-			throw new IllegalArgumentException("射击间隔不能为负数，当前�? " + interval);
+			throw new IllegalArgumentException("射击间隔不能为负数，当前值 " + interval);
 		}
 		this.shootInterval = interval;
 	}
 
 	/**
 	 * 设置子弹伤害
-	 * @param damage 伤害�?	 * @throws IllegalArgumentException 如果伤害值为负数
+	 * @param damage 伤害值
+	 * @throws IllegalArgumentException 如果伤害值为负数
 	 */
 	public void setBulletDamage(int damage) {
 		if (damage < 0) {
-			throw new IllegalArgumentException("子弹伤害不能为负数，当前�? " + damage);
+			throw new IllegalArgumentException("子弹伤害不能为负数，当前值 " + damage);
 		}
 		this.bulletDamage = damage;
 	}
