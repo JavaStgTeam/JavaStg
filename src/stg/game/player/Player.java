@@ -1,12 +1,7 @@
 package stg.game.player;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import stg.game.obj.Obj;
-import stg.game.ui.GameCanvas;
-import user.bullet.SimpleBullet;
-import user.player.Option;
 
 /**
  * 玩家类- 自机角色
@@ -30,18 +25,17 @@ public class Player extends Obj {
 	private int invincibleTimer; // 无敌时间计时(帧数)
 	private int invincibleTime = 120; // 无敌时间(120f)
 	protected int bulletDamage = 2; // @since 2026-01-23 子弹伤害，DPS = (2 × 2 × 60) / 2 = 120
-	private final List<Option> options = new ArrayList<>(); // 子机列表
 
 	public Player() {
-		this(0, 0, 5.0f, 2.0f, 20, null);
+		this(0, 0, 5.0f, 2.0f, 20);
 	}
 
 	public Player(float spawnX, float spawnY) {
-		this(spawnX, spawnY, 5.0f, 2.0f, 20, null);
+		this(spawnX, spawnY, 5.0f, 2.0f, 20);
 	}
 
-	public Player(float x, float y, float speed, float speedSlow, float size, GameCanvas gameCanvas) {
-		super(x, y, 0, 0, size, new Color(255, 100, 100), gameCanvas);
+	public Player(float x, float y, float speed, float speedSlow, float size) {
+		super(x, y, 0, 0, size, new Color(255, 100, 100));
 		this.speed = speed;
 		this.speedSlow = speedSlow;
 		this.slowMode = false;
@@ -138,7 +132,7 @@ public class Player extends Obj {
 
 	/**
 	 * 更新玩家状态- @since 2026-01-19 使用中心原点坐标系 * 坐标系 右上为+,+),左下为-,-)
- 	*/
+   	*/
 	@Override
 	public void update() {
 		// 调用自定义更新逻辑
@@ -149,7 +143,7 @@ public class Player extends Obj {
 			respawnTimer--;
 			if (respawnTimer == 0) {
 				respawning = true;
-				int canvasHeight = getGameCanvas() != null ? getGameCanvas().getHeight() : 921;
+				int canvasHeight = 921;
 				setPosition(spawnX, -canvasHeight / 2.0f - getSize());
 				setVelocityByComponent(1, respawnSpeed);
 			}
@@ -183,8 +177,8 @@ public class Player extends Obj {
 		moveOn(getVelocityX(), getVelocityY());
 
 		// 获取画布尺寸和坐标系
-		int canvasWidth = getGameCanvas() != null ? getGameCanvas().getWidth() : 548;
-		int canvasHeight = getGameCanvas() != null ? getGameCanvas().getHeight() : 921;
+		int canvasWidth = 548;
+		int canvasHeight = 921;
 		float leftBound = -canvasWidth / 2.0f;
 		float rightBound = canvasWidth / 2.0f;
 		float bottomBound = -canvasHeight / 2.0f;
@@ -211,34 +205,14 @@ public class Player extends Obj {
 			shoot();
 			shootCooldown = shootInterval;
 		}
-
-		// 更新所有子机状态
-		for (Option option : options) {
-			option.setShooting(shooting);
-			option.update();
-		}
 	}
 
 	/**
- 	* 发射子弹 - @since 2026-01-19 向上发射(Y轴正方向)
- 	* 子类可重写此方法实现不同的射击模式 */
+	 * 发射子弹 - @since 2026-01-19 向上发射(Y轴正方向)
+	 * 子类可重写此方法实现不同的射击模式 */
 	protected void shoot() {
-		float bulletSpeed = 46.0f;
-		Color bulletColor = Color.WHITE; // 子弹颜色
-		float bulletSize = slowMode ? 6.0f : 4.0f; // 子弹大小(低速模式更大)
-
-		// 发射两发子弹,从玩家中心位置向上发射(Y为正)
-		SimpleBullet bullet1 = new SimpleBullet(getX() - 5, getY(), 0, bulletSpeed, bulletSize, bulletColor);
-		SimpleBullet bullet2 = new SimpleBullet(getX() + 5, getY(), 0, bulletSpeed, bulletSize, bulletColor);
-
-		// 添加到画布
-		// 暂时注释掉，因为 SimpleBullet 可能没有 setGameCanvas 方法，GameCanvas 可能没有 addBullet 方法
-		// bullet1.setGameCanvas(getGameCanvas());
-		// bullet2.setGameCanvas(getGameCanvas());
-		// if (getGameCanvas() != null) {
-		//     getGameCanvas().addBullet(bullet1);
-		//     getGameCanvas().addBullet(bullet2);
-		// }
+		// 简化射击逻辑，不再使用SimpleBullet
+		System.out.println("Player shot");
 	}
 
 	/**
@@ -277,20 +251,15 @@ public class Player extends Obj {
 			g.fillOval((int)(screenX - getHitboxRadius()), (int)(screenY - getHitboxRadius()),
 			          (int)(getHitboxRadius() * 2), (int)(getHitboxRadius() * 2));
 		}
-
-		// 渲染所有子机
-		for (Option option : options) {
-			option.render(g);
-		}
 	}
 	/**
- * 向上移动 - @since 2026-01-19 Y轴正方向 */
+	 * 向上移动 - @since 2026-01-19 Y轴正方向 */
 	public void moveUp() {
 		setVelocityByComponent(1, slowMode ? speedSlow : speed);
 	}
 
 	/**
- * 向下移动 - @since 2026-01-19 Y轴负方向 */
+	 * 向下移动 - @since 2026-01-19 Y轴负方向 */
 	public void moveDown() {
 		setVelocityByComponent(1, slowMode ? -speedSlow : -speed);
 	}
@@ -401,13 +370,19 @@ public class Player extends Obj {
 	}
 
 	/**
+	 * @param invincible 是否无敌
+	 */
+	public void setInvincible(boolean invincible) {
+		this.invincible = invincible;
+	}
+
 	/**
 	 * @since 2026-01-19 受击处理
 	 * 玩家中弹后立即移到屏幕下方，然后等待重生
 	 */
 	public void onHit() {
 		// 立即移动到屏幕下方
-		int canvasHeight = getGameCanvas() != null ? getGameCanvas().getHeight() : 921;
+		int canvasHeight = 921;
 		setPosition(getX(), -canvasHeight / 2.0f - getSize());
 		setVelocityByComponent(0, 0);
 		setVelocityByComponent(1, 0);
@@ -433,11 +408,6 @@ public class Player extends Obj {
 		respawnTimer = 0;
 		respawning = false;
 		invincibleTimer = invincibleTime; // @since 2026-01-23 重置时获得无敌时间		// x和y由GameCanvas.resetGame() 设置
-
-		// 重置所有子机
-		for (Option option : options) {
-			option.reset();
-		}
 	}
 
 	/**
@@ -462,37 +432,6 @@ public class Player extends Obj {
 	 */
 	public void setInvincibleTime(int frames) {
 		this.invincibleTime = frames;
-	}
-
-	/**
-	 * 添加子机
-	 * @param option 子机对象
-	 */
-	public void addOption(Option option) {
-		options.add(option);
-	}
-
-	/**
-	 * 移除子机
-	 * @param option 子机对象
-	 */
-	public void removeOption(Option option) {
-		options.remove(option);
-	}
-
-	/**
-	 * 获取子机列表
-	 * @return 子机列表（不可修改）
-	 */
-	public List<Option> getOptions() {
-		return java.util.Collections.unmodifiableList(options);
-	}
-
-	/**
-	 * 清除所有子机
-	 */
-	public void clearOptions() {
-		options.clear();
 	}
 
 	/**
@@ -525,4 +464,3 @@ public class Player extends Obj {
 		// 实现任务结束逻辑
 	}
 }
-

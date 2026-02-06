@@ -3,7 +3,6 @@ package stg.game.stage;
 import java.util.List;
 import stg.game.enemy.Enemy;
 import stg.game.ui.GameCanvas;
-import user.stage.StageState;
 
 /**
  * 关卡类 - 管理单个关卡的逻辑
@@ -12,12 +11,19 @@ import user.stage.StageState;
 public abstract class Stage {
     private final String stageName;
     private final int stageId;
-    private StageState state;
+    private State state;
     private final GameCanvas gameCanvas;
     private StageCompletionCondition completionCondition;
     
     // 波次管理相关字段
     protected int currentFrame = 0;
+
+    /**
+     * 关卡状态枚举
+     */
+    private enum State {
+        CREATED, LOADED, STARTED, COMPLETED, CLEANED_UP
+    }
 
     /**
      * 构造函数
@@ -29,7 +35,7 @@ public abstract class Stage {
         this.stageId = stageId;
         this.stageName = stageName;
         this.gameCanvas = gameCanvas;
-        this.state = StageState.CREATED;
+        this.state = State.CREATED;
         initStage();
         // 移除自动加载和开始逻辑，由调用者显式调用load()和start()
     }
@@ -47,8 +53,8 @@ public abstract class Stage {
      * 由调用者显式调用，开始关卡逻辑
      */
     public void start() {
-        if (state == StageState.LOADED) {
-            state = StageState.STARTED;
+        if (state == State.LOADED) {
+            state = State.STARTED;
             onStageStart();
         }
     }
@@ -58,8 +64,8 @@ public abstract class Stage {
      * 由调用者显式调用，结束关卡逻辑
      */
     public void end() {
-        if (state == StageState.STARTED) {
-            state = StageState.COMPLETED;
+        if (state == State.STARTED) {
+            state = State.COMPLETED;
             onStageEnd();
         }
     }
@@ -69,7 +75,7 @@ public abstract class Stage {
      * @return 是否激活
      */
     public boolean isActive() {
-        return state == StageState.STARTED;
+        return state == State.STARTED;
     }
 
     /**
@@ -88,16 +94,16 @@ public abstract class Stage {
      * 由子类在load()方法完成后调用，标记关卡为已加载
      */
     protected void setLoaded() {
-        this.state = StageState.LOADED;
+        this.state = State.LOADED;
     }
 
     /**
      * 清理关卡资源
      */
     public void cleanup() {
-        if (state != StageState.CLEANED_UP) {
+        if (state != State.CLEANED_UP) {
             // 敌人清理逻辑由GameWorld负责
-            state = StageState.CLEANED_UP;
+            state = State.CLEANED_UP;
         }
     }
 
@@ -133,7 +139,7 @@ public abstract class Stage {
      * @return 是否完成
      */
     public boolean isCompleted() {
-        return state == StageState.COMPLETED;
+        return state == State.COMPLETED;
     }
 
     /**
@@ -141,7 +147,7 @@ public abstract class Stage {
      * @return 是否已开始
      */
     public boolean isStarted() {
-        return state == StageState.STARTED;
+        return state == State.STARTED;
     }
 
     /**
@@ -246,7 +252,7 @@ public abstract class Stage {
      * 重置关卡
      */
     public void reset() {
-        this.state = StageState.CREATED;
+        this.state = State.CREATED;
         initStage();
     }
 }

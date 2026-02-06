@@ -2,7 +2,6 @@ package stg.game.enemy;
 
 import java.awt.*;
 import stg.game.obj.Obj;
-import stg.game.ui.GameCanvas;
 
 /**
  * 敌方单位
@@ -14,15 +13,15 @@ public abstract class Enemy extends Obj {
 	protected int maxHp; // 最大生命值
 
 	public Enemy(int x, int y) {
-		this(x, y, 0, 0, 20, Color.BLUE, 10, null);
+		this(x, y, 0, 0, 20, Color.BLUE, 10);
 	}
 
 	public Enemy(float x, float y) {
-		this(x, y, 0, 0, 20, Color.BLUE, 10, null);
+		this(x, y, 0, 0, 20, Color.BLUE, 10);
 	}
 
-	public Enemy(float x, float y, float vx, float vy, float size, Color color, int hp, GameCanvas gameCanvas) {
-		super(x, y, vx, vy, size, color, gameCanvas);
+	public Enemy(float x, float y, float vx, float vy, float size, Color color, int hp) {
+		super(x, y, vx, vy, size, color);
 		this.hp = hp;
 		this.maxHp = hp;
 	}

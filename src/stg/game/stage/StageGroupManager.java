@@ -7,10 +7,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import stg.game.ui.GameCanvas;
-import user.stage.AdvancedStageGroup;
-import user.stage.BeginnerStageGroup;
-import user.stage.ExpertStageGroup;
-import user.stage.IntermediateStageGroup;
 
 /**
  * 关卡组管理器 - 负责管理所有关卡组，包括自动发现和创建实例
@@ -47,11 +43,6 @@ public class StageGroupManager {
         
         // 自动发现并创建关卡组实例
         discoverStageGroups(gameCanvas);
-        
-        // 如果没有自动发现到关卡组，添加默认关卡组
-        if (stageGroups.isEmpty()) {
-            addDefaultStageGroups(gameCanvas);
-        }
     }
 
     /**
@@ -103,18 +94,6 @@ public class StageGroupManager {
             System.out.println("自动发现关卡组失败");
             e.printStackTrace();
         }
-    }
-
-    /**
-     * 添加默认关卡组
-     * @param gameCanvas 游戏画布引用
-     */
-    private void addDefaultStageGroups(GameCanvas gameCanvas) {
-        System.out.println("添加默认关卡组");
-        stageGroups.add(new BeginnerStageGroup(gameCanvas));
-        stageGroups.add(new IntermediateStageGroup(gameCanvas));
-        stageGroups.add(new AdvancedStageGroup(gameCanvas));
-        stageGroups.add(new ExpertStageGroup(gameCanvas));
     }
 
     /**

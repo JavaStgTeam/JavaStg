@@ -6,18 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import stg.game.bullet.Bullet;
 import stg.game.enemy.Enemy;
-import user.enemy.EnemyBullet;
 import stg.game.item.Item;
-import user.laser.EnemyLaser;
 
 /**
- * 游戏世界�?- 管理游戏中的所有实�? */
+ * 游戏世界�?- 管理游戏中的所有实�? */
 public class GameWorld {
     private final List<Enemy> enemies = new ArrayList<>();
     private final List<Bullet> playerBullets = new ArrayList<>();
-    private final List<EnemyBullet> enemyBullets = new ArrayList<>();
     private final List<Item> items = new ArrayList<>();
-    private final List<EnemyLaser> enemyLasers = new ArrayList<>();
     
     /**
      * 添加敌人
@@ -38,15 +34,6 @@ public class GameWorld {
     }
     
     /**
-     * 添加敌方子弹
-     */
-    public void addEnemyBullet(EnemyBullet bullet) {
-        if (bullet != null) {
-            enemyBullets.add(bullet);
-        }
-    }
-    
-    /**
      * 添加物品
      */
     public void addItem(Item item) {
@@ -56,20 +43,11 @@ public class GameWorld {
     }
     
     /**
-     * 添加敌方激�?     */
-    public void addEnemyLaser(EnemyLaser laser) {
-        if (laser != null) {
-            enemyLasers.add(laser);
-        }
-    }
-    
-    /**
-     * 更新所有实�?     */
+     * 更新所有实�?     */
     public void update(int canvasWidth, int canvasHeight) {
         updateEnemies(canvasWidth, canvasHeight);
         updateBullets(canvasWidth, canvasHeight);
         updateItems(canvasWidth, canvasHeight);
-        updateLasers(canvasWidth, canvasHeight);
     }
     
     /**
@@ -100,16 +78,6 @@ public class GameWorld {
                 playerBulletIterator.remove();
             }
         }
-        
-        // 更新敌方子弹
-        Iterator<EnemyBullet> enemyBulletIterator = enemyBullets.iterator();
-        while (enemyBulletIterator.hasNext()) {
-            EnemyBullet bullet = enemyBulletIterator.next();
-            bullet.update();
-            if (bullet.isOutOfBounds(canvasWidth, canvasHeight)) {
-                enemyBulletIterator.remove();
-            }
-        }
     }
     
     /**
@@ -121,19 +89,6 @@ public class GameWorld {
             Item item = iterator.next();
             item.update();
             if (!item.isActive() || item.isOutOfBounds(canvasWidth, canvasHeight)) {
-                iterator.remove();
-            }
-        }
-    }
-    
-    /**
-     * 更新激�?     */
-    private void updateLasers(int canvasWidth, int canvasHeight) {
-        Iterator<EnemyLaser> iterator = enemyLasers.iterator();
-        while (iterator.hasNext()) {
-            EnemyLaser laser = iterator.next();
-            laser.update();
-            if (laser.isOutOfBounds(canvasWidth, canvasHeight)) {
                 iterator.remove();
             }
         }
@@ -154,13 +109,6 @@ public class GameWorld {
     }
     
     /**
-     * 获取敌方子弹列表（只读）
-     */
-    public List<EnemyBullet> getEnemyBullets() {
-        return Collections.unmodifiableList(enemyBullets);
-    }
-    
-    /**
      * 获取物品列表（只读）
      */
     public List<Item> getItems() {
@@ -168,41 +116,21 @@ public class GameWorld {
     }
     
     /**
-     * 获取敌方激光列表（只读�?     */
-    public List<EnemyLaser> getEnemyLasers() {
-        return Collections.unmodifiableList(enemyLasers);
-    }
-    
-    /**
-     * 清除所有实�?     */
+     * 清除所有实�?     */
     public void clear() {
         enemies.clear();
         playerBullets.clear();
-        enemyBullets.clear();
         items.clear();
-        enemyLasers.clear();
     }
     
     /**
-     * 移除指定的敌方激�?     */
-    public void removeEnemyLasers(List<EnemyLaser> lasersToRemove) {
-        enemyLasers.removeAll(lasersToRemove);
-    }
-    
-    /**
-     * 清除所有物�?     */
+     * 清除所有物�?     */
     public void clearItems() {
         items.clear();
     }
     
     /**
-     * 清除所有敌方激�?     */
-    public void clearEnemyLasers() {
-        enemyLasers.clear();
-    }
-    
-    /**
-     * 移除指定的物�?     */
+     * 移除指定的物�?     */
     public void removeItem(Item item) {
         items.remove(item);
     }

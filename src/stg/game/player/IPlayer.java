@@ -1,7 +1,6 @@
 package stg.game.player;
 
 import stg.game.IGameObject;
-import user.player.Option;
 
 /**
  * 玩家接口 - 定义玩家的行为和属性
@@ -71,16 +70,6 @@ public interface IPlayer extends IGameObject {
      * 重置玩家状态
      */
     void reset();
-    
-    /**
-     * 获取子机列表
-     */
-    java.util.List<Option> getOptions();
-    
-    /**
-     * 添加子机
-     */
-    void addOption(Option option);
     
     /**
      * 获取射击间隔

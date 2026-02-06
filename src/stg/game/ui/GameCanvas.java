@@ -2,7 +2,6 @@ package stg.game.ui;
 
 import java.awt.Component;
 import stg.base.KeyStateProvider;
-import user.player.PlayerType;
 import stg.game.player.Player;
 import stg.util.CoordinateSystem;
 
@@ -139,7 +138,7 @@ public class GameCanvas extends Component implements KeyStateProvider {
     /**
      * 设置玩家
      */
-    public void setPlayer(PlayerType playerType, float x, float y) {
+    public void setPlayer(float x, float y) {
         // 这里只是一个占位实现，实际应该创建对应的玩家对象
         this.player = new Player(x, y);
     }

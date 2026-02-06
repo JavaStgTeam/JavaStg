@@ -7,7 +7,6 @@ import stg.game.GameLoop;
 import stg.game.player.Player;
 import stg.game.ui.GameCanvas;
 import stg.game.ui.GameStatusPanel;
-import user.player.PlayerType;
 
 /**
  * 窗口类 - STG游戏主窗口
@@ -119,7 +118,7 @@ public class Window extends JFrame {
 
         // 根据参数决定是否立即初始化玩家
         if (initPlayer) {
-            initializePlayer(PlayerType.DEFAULT);
+            initializePlayer();
             // 启动游戏循环（仅在初始化玩家时启动）
             new GameLoop(gameCanvas).start();
         }
@@ -204,12 +203,11 @@ public class Window extends JFrame {
     }
 
     /**
-     * 初始化玩家（使用指定类型）
-     * @param type 自机类型
+     * 初始化玩家
      */
-    public void initializePlayer(PlayerType type) {
-        // 使用工厂创建玩家
-        gameCanvas.setPlayer(type, 0.0f, 0.0f);
+    public void initializePlayer() {
+        // 创建默认玩家
+        gameCanvas.setPlayer(0.0f, 0.0f);
         player = gameCanvas.getPlayer(); // 获取创建的玩家
         // 添加窗口监听器，在窗口显示后设置正确的玩家位置
         addComponentListener(new ComponentAdapter() {

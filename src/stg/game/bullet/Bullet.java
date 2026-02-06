@@ -20,7 +20,7 @@ public abstract class Bullet extends Obj {
      * @param color 子弹颜色
      */
     public Bullet(float x, float y, float vx, float vy, float size, Color color) {
-        super(x, y, vx, vy, size, color, null);
+        super(x, y, vx, vy, size, color);
         // @since 2026-01-23 设置碰撞判定半径为size的5倍，确保高速子弹不会穿透敌人
         setHitboxRadius(size * 5.0f);
     }

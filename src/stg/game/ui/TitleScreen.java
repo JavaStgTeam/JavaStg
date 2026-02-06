@@ -5,7 +5,6 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import javax.swing.*;
 import stg.base.KeyStateProvider;
-import user.player.PlayerType;
 import stg.util.AudioManager;
 import stg.util.ResourceManager;
 
@@ -23,7 +22,6 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 
 	private enum MenuState {
 		MAIN_MENU,
-		PLAYER_SELECT,
 		STAGE_GROUP_SELECT
 	}
 
@@ -33,7 +31,6 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 	};
 
 	private int selectedIndex = 0;
-	private PlayerType selectedPlayerType = PlayerType.DEFAULT;
 	private MenuState currentState = MenuState.MAIN_MENU;
 	private Timer animationTimer;
 	private int animationFrame = 0;
@@ -51,8 +48,8 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 	private boolean xPressed = false;
 
 	public interface TitleCallback {
-		void onStageGroupSelect(PlayerType playerType);
-	void onGameStart(stg.game.stage.StageGroup stageGroup, PlayerType playerType);
+		void onStageGroupSelect();
+	void onGameStart(stg.game.stage.StageGroup stageGroup);
 		void onExit();
 	}
 
@@ -109,9 +106,6 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 			case MAIN_MENU:
 				handleMainMenuKey(e);
 				break;
-			case PLAYER_SELECT:
-				handlePlayerSelectKey(e);
-				break;
 		}
 	}
 
@@ -135,37 +129,11 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 		}
 	}
 
-	private void handlePlayerSelectKey(KeyEvent e) {
-		switch (e.getKeyCode()) {
-			case KeyEvent.VK_UP:
-			case KeyEvent.VK_RIGHT:
-				selectedPlayerType = PlayerType.values()[(selectedPlayerType.ordinal() + 1) % PlayerType.values().length];
-				repaint();
-				break;
-			case KeyEvent.VK_DOWN:
-			case KeyEvent.VK_LEFT:
-				int prevIndex = selectedPlayerType.ordinal() - 1;
-				if (prevIndex < 0) {
-					prevIndex = PlayerType.values().length - 1;
-				}
-				selectedPlayerType = PlayerType.values()[prevIndex];
-				repaint();
-				break;
-			case KeyEvent.VK_Z:
-		case KeyEvent.VK_ENTER:
-			callback.onStageGroupSelect(selectedPlayerType);
-			break;
-			case KeyEvent.VK_ESCAPE:
-				currentState = MenuState.MAIN_MENU;
-				repaint();
-				break;
-		}
-	}
-
 	private void handleMainMenuSelection() {
 		switch (selectedIndex) {
 			case 0:
-				currentState = MenuState.PLAYER_SELECT;
+				// 直接进入关卡组选择
+				callback.onStageGroupSelect();
 				break;
 			case 1:
 				callback.onExit();
@@ -208,9 +176,6 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 			case MAIN_MENU:
 				drawMainMenu(g2d, width, height);
 				break;
-			case PLAYER_SELECT:
-				drawPlayerSelect(g2d, width, height);
-				break;
 		}
 	}
 
@@ -238,49 +203,6 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 		g2d.setColor(Color.GRAY);
 		g2d.drawString("上下 选择菜单", width / 2 - 80, height - 40);
 		g2d.drawString("Z/Enter 确认", width / 2 - 80, height - 20);
-	}
-
-	private void drawPlayerSelect(Graphics2D g2d, int width, int height) {
-		g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 24));
-		g2d.setColor(Color.WHITE);
-		String title = "选择自机";
-		int titleWidth = g2d.getFontMetrics().stringWidth(title);
-		g2d.drawString(title, width / 2 - titleWidth / 2, height / 2 - 80);
-
-		// 绘制玩家类型
-		PlayerType[] playerTypes = PlayerType.values();
-		for (int i = 0; i < playerTypes.length; i++) {
-			PlayerType type = playerTypes[i];
-			String typeName = type.name();
-			int x = width / 2 + (i - playerTypes.length / 2) * 150;
-			int y = height / 2;
-
-			if (type == selectedPlayerType) {
-				g2d.setColor(SELECTED_COLOR);
-				// 绘制选中效果
-				g2d.drawRect(x - 60, y - 20, 120, 40);
-			} else {
-				g2d.setColor(UNSELECTED_COLOR);
-			}
-			g2d.drawString(typeName, x - g2d.getFontMetrics().stringWidth(typeName) / 2, y);
-		}
-
-		// 绘制操作提示
-		g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 14));
-		g2d.setColor(Color.GRAY);
-		g2d.drawString("上下 切换自机", width / 2 - 100, height - 60);
-		g2d.drawString("Z/Enter 确认选择", width / 2 - 100, height - 40);
-		g2d.drawString("ESC  返回主菜单", width / 2 - 100, height - 20);
-	}
-
-	private Color getPlayerColor(PlayerType type) {
-		if (type == PlayerType.REIMU) {
-			return new Color(255, 200, 220);
-		} else if (type == PlayerType.MARISA) {
-			return new Color(255, 220, 100);
-		} else {
-			return new Color(255, 100, 100);
-		}
 	}
 
 	// 虚拟键盘接口实现

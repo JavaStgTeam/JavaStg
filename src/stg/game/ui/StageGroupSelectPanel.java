@@ -8,7 +8,6 @@ import javax.swing.*;
 import stg.base.KeyStateProvider;
 import stg.game.stage.StageGroup;
 import stg.util.ResourceManager;
-import user.player.PlayerType;
 
 /**
  * 关卡组选择界面 - 允许玩家选择要挑战的关卡组
@@ -24,7 +23,6 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
 
     private int selectedIndex = 0;
     private List<StageGroup> stageGroups;
-    private PlayerType selectedPlayerType;
     private Timer animationTimer;
     private int animationFrame = 0;
     private ResourceManager resourceManager;
@@ -39,15 +37,14 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
     private boolean xPressed = false;
 
     public interface StageGroupSelectCallback {
-        void onStageGroupSelected(StageGroup stageGroup, PlayerType playerType);
+        void onStageGroupSelected(StageGroup stageGroup);
         void onBack();
     }
 
     private StageGroupSelectCallback callback;
 
-    public StageGroupSelectPanel(StageGroupSelectCallback callback, PlayerType playerType) {
+    public StageGroupSelectPanel(StageGroupSelectCallback callback) {
         this.callback = callback;
-        this.selectedPlayerType = playerType;
         this.resourceManager = ResourceManager.getInstance();
         this.stageGroups = new ArrayList<>();
         
@@ -103,7 +100,7 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
             case KeyEvent.VK_Z:
             case KeyEvent.VK_ENTER:
                 if (!stageGroups.isEmpty() && stageGroups.get(selectedIndex).isUnlockable()) {
-                    callback.onStageGroupSelected(stageGroups.get(selectedIndex), selectedPlayerType);
+                    callback.onStageGroupSelected(stageGroups.get(selectedIndex));
                 }
                 break;
             case KeyEvent.VK_ESCAPE:
@@ -129,13 +126,6 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
         String title = "选择关卡组";
         int titleWidth = g2d.getFontMetrics().stringWidth(title);
         g2d.drawString(title, width / 2 - titleWidth / 2, 100);
-
-        // 绘制玩家信息
-        g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 20));
-        g2d.setColor(Color.LIGHT_GRAY);
-        String playerInfo = "当前自机: " + selectedPlayerType.name();
-        int playerInfoWidth = g2d.getFontMetrics().stringWidth(playerInfo);
-        g2d.drawString(playerInfo, width / 2 - playerInfoWidth / 2, 150);
 
         // 绘制关卡组列表
         g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 24));

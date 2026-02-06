@@ -1,5 +1,34 @@
 # 更新日志
 
+## 2026-02-06
+
+### 依赖移除
+- 解除项目对 `user` 包的所有依赖
+- 移除了多个文件中对 `user.*` 包的引用
+
+### 修改
+- `Main.java` - 移除对 `user.player.PlayerType` 的依赖，简化游戏启动流程
+- `Window.java` - 移除对 `user.player.PlayerType` 的依赖，修改玩家初始化方法
+- `GameCanvas.java` - 移除对 `user.player.PlayerType` 的依赖，简化玩家设置方法
+- `TitleScreen.java` - 移除对 `user.player.PlayerType` 的依赖，简化菜单流程
+- `StageGroupSelectPanel.java` - 移除对 `user.player.PlayerType` 的依赖，简化关卡选择界面
+- `StageGroupManager.java` - 移除对 `user.stage` 包的依赖，不再添加默认关卡组
+- `Player.java` - 移除对 `user.bullet` 和 `user.player` 包的依赖，简化射击逻辑
+- `IPlayer.java` - 移除对 `user.player.Option` 的依赖
+- `IGameWorld.java` - 移除对 `user.enemy.EnemyBullet` 和 `user.laser.EnemyLaser` 的依赖
+- `GameWorld.java` - 移除对 `user.enemy.EnemyBullet` 和 `user.laser.EnemyLaser` 的依赖
+- `GameRenderer.java` - 移除对 `user.enemy.EnemyBullet` 和 `user.laser.EnemyLaser` 的依赖
+- `CollisionSystem.java` - 移除对 `user.enemy.EnemyBullet` 和 `user.laser.EnemyLaser` 的依赖
+
+### 修复
+- 修复 `StageCompletionCondition.java` 文件中的乱码字符
+- 修复 `Player.java`、`Enemy.java` 和 `Item.java` 文件中的构造函数调用问题
+- 移除所有对 `getGameCanvas()` 方法的调用，使用默认画布尺寸
+
+### 测试
+- 成功编译项目，无错误
+- 成功运行项目，验证依赖移除后的功能完整性
+
 ## 2026-02-04
 
 ### 修复

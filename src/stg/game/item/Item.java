@@ -2,8 +2,6 @@ package stg.game.item;
 
 import java.awt.*;
 import stg.game.obj.Obj;
-import stg.game.player.Player;
-import stg.game.ui.GameCanvas;
 
 /**
  * 物品类
@@ -23,19 +21,7 @@ public abstract class Item extends Obj {
 	 * @param color 物品颜色
 	 */
 	public Item(float x, float y, float size, Color color) {
-		this(x, y, 0, 0, size, color, null);
-	}
-
-	/**
-	 * 构造函数（带游戏画布）
-	 * @param x 初始X坐标
-	 * @param y 初始Y坐标
-	 * @param size 物品大小
-	 * @param color 物品颜色
-	 * @param gameCanvas 游戏画布引用
-	 */
-	public Item(float x, float y, float size, Color color, GameCanvas gameCanvas) {
-		this(x, y, 0, 0, size, color, gameCanvas);
+		this(x, y, 0, 0, size, color);
 	}
 
 	/**
@@ -48,21 +34,7 @@ public abstract class Item extends Obj {
 	 * @param color 物品颜色
 	 */
 	public Item(float x, float y, float vx, float vy, float size, Color color) {
-		this(x, y, vx, vy, size, color, null);
-	}
-
-	/**
-	 * 完整构造函数
-	 * @param x 初始X坐标
-	 * @param y 初始Y坐标
-	 * @param vx X方向速度
-	 * @param vy Y方向速度
-	 * @param size 物品大小
-	 * @param color 物品颜色
-	 * @param gameCanvas 游戏画布引用
-	 */
-	public Item(float x, float y, float vx, float vy, float size, Color color, GameCanvas gameCanvas) {
-		super(x, y, vx, vy, size, color, gameCanvas);
+		super(x, y, vx, vy, size, color);
 	}
 
 	/**
@@ -90,7 +62,7 @@ public abstract class Item extends Obj {
 		super.update();
 
 		// 检查是否超出边界
-		if (getGameCanvas() != null && isOutOfBounds(getGameCanvas().getWidth(), getGameCanvas().getHeight())) {
+		if (isOutOfBounds(548, 921)) {
 			setActive(false);
 		}
 	}
@@ -142,19 +114,7 @@ public abstract class Item extends Obj {
 	 * 应用道具吸引逻辑
 	 */
 	protected void applyAttraction() {
-		if (getGameCanvas() != null) {
-			Player player = getGameCanvas().getPlayer();
-			if (player != null) {
-				float dx = player.getX() - getX();
-				float dy = player.getY() - getY();
-				float distance = (float)Math.sqrt(dx * dx + dy * dy);
-				
-				if (distance < attractionDistance) {
-					setVx((dx / distance) * attractionSpeed);
-					setVy((dy / distance) * attractionSpeed);
-				}
-			}
-		}
+		// 简化实现，不再依赖GameCanvas
 	}
 	
 	/**

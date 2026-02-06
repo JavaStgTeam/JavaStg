@@ -4,8 +4,6 @@ import stg.game.bullet.Bullet;
 import stg.game.enemy.Enemy;
 import stg.game.item.Item;
 import stg.game.player.Player;
-import user.enemy.EnemyBullet;
-import user.laser.EnemyLaser;
 
 /**
  * 碰撞检测系�?- 处理游戏中的碰撞检�? */
@@ -25,12 +23,10 @@ public class CollisionSystem {
     }
     
     /**
-     * 执行碰撞检测 - 检查玩家子弹、敌人子弹、敌人激光、玩家与物品的碰撞
+     * 执行碰撞检测 - 检查玩家子弹、玩家与物品的碰撞
      */
     public void checkCollisions() {
         checkPlayerBulletsVsEnemies();
-        checkEnemyBulletsVsPlayer();
-        checkEnemyLasersVsPlayer();
         checkPlayerVsItems();
     }
     
@@ -47,34 +43,6 @@ public class CollisionSystem {
                     // 子弹的移除应该由GameWorld在update时处理
                     break;
                 }
-            }
-        }
-    }
-    
-    /**
-     * 检测敌方子弹与玩家的碰撞 - 若发生碰撞，玩家会受到伤害
-     */
-    private void checkEnemyBulletsVsPlayer() {
-        if (player == null || player.isInvincible()) return;
-        
-        for (EnemyBullet bullet : world.getEnemyBullets()) {
-            if (checkCollision(bullet, player)) {
-                player.onHit();
-                // 注意：这里不能直接移除子弹，因为我们使用的是只读列表
-            }
-        }
-    }
-    
-    /**
-     * 检测敌方激光与玩家的碰撞 - 若发生碰撞，玩家会受到伤害
-     */
-    private void checkEnemyLasersVsPlayer() {
-        if (player == null || player.isInvincible()) return;
-        
-        for (EnemyLaser laser : world.getEnemyLasers()) {
-            if (laser.canHit() && laser.checkCollision(player.getX(), player.getY())) {
-                player.onHit();
-                laser.onHitPlayer(); // 启动冷却
             }
         }
     }
@@ -113,12 +81,6 @@ public class CollisionSystem {
             x1 = bullet.getX();
             y1 = bullet.getY();
             // 对于 Bullet，使用 getSize() 作为碰撞判定半径，因为可能没有 getHitboxRadius() 方法
-            size1 = bullet.getSize();
-        } else if (obj1 instanceof EnemyBullet) {
-            EnemyBullet bullet = (EnemyBullet)obj1;
-            x1 = bullet.getX();
-            y1 = bullet.getY();
-            // 对于 EnemyBullet，使用 getSize() 作为碰撞判定半径，因为可能没有 getHitboxRadius() 方法
             size1 = bullet.getSize();
         } else {
             return false;

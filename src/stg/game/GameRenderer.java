@@ -28,8 +28,6 @@ public class GameRenderer {
         enableAntiAliasing(g);
         
         renderEnemies(g);
-        renderEnemyBullets(g);
-        renderEnemyLasers(g);
         renderItems(g);
         renderPlayerBullets(g);
         renderPlayer(g);
@@ -47,23 +45,6 @@ public class GameRenderer {
     private void renderEnemies(Graphics2D g) {
         for (stg.game.enemy.Enemy enemy : world.getEnemies()) {
             enemy.render(g);
-        }
-    }
-    
-    /**
-     * 渲染敌方子弹
-     */
-    private void renderEnemyBullets(Graphics2D g) {
-        for (user.enemy.EnemyBullet bullet : world.getEnemyBullets()) {
-            bullet.render(g);
-        }
-    }
-    
-    /**
-     * 渲染敌方激�?     */
-    private void renderEnemyLasers(Graphics2D g) {
-        for (user.laser.EnemyLaser laser : world.getEnemyLasers()) {
-            laser.render(g);
         }
     }
     

@@ -1,7 +1,6 @@
 package stg.game.obj;
 
 import java.awt.*;
-import stg.game.ui.GameCanvas;
 
 /**
  * 游戏物体基类 - 所有游戏中的物体都继承自此类
@@ -17,7 +16,6 @@ public abstract class Obj {
     protected float vy; // Y方向速度
     protected float size; // 物体大小
     protected Color color; // 物体颜色
-    protected GameCanvas gameCanvas; // 游戏画布引用
     protected float hitboxRadius; // 碰撞判定半径
     protected boolean active; // 激活状态
     protected int frame; // 帧计数器
@@ -33,9 +31,6 @@ public abstract class Obj {
      * @return 屏幕坐标数组 [x, y]
      */
     protected float[] toScreenCoords(float worldX, float worldY) {
-        if (gameCanvas != null) {
-            return gameCanvas.getCoordinateSystem().toScreenCoords(worldX, worldY);
-        }
         return new float[]{
             worldX + DEFAULT_CANVAS_WIDTH / 2.0f,
             DEFAULT_CANVAS_HEIGHT / 2.0f - worldY
@@ -50,16 +45,14 @@ public abstract class Obj {
      * @param vy Y方向速度
      * @param size 物体大小
      * @param color 物体颜色
-     * @param gameCanvas 游戏画布引用
      */
-    public Obj(float x, float y, float vx, float vy, float size, Color color, GameCanvas gameCanvas) {
+    public Obj(float x, float y, float vx, float vy, float size, Color color) {
         this.x = x;
         this.y = y;
         this.vx = vx;
         this.vy = vy;
         this.size = size;
         this.color = color;
-        this.gameCanvas = gameCanvas;
         this.hitboxRadius = size;
         this.active = true;
         this.frame = 0;
@@ -201,14 +194,6 @@ public abstract class Obj {
     }
 
     /**
-     * 获取游戏画布引用
-     * @return 游戏画布引用
-     */
-    public GameCanvas getGameCanvas() {
-        return gameCanvas;
-    }
-
-    /**
      * 设置X坐标
      * @param x X坐标
      */
@@ -254,5 +239,21 @@ public abstract class Obj {
      */
     public float getVy() {
         return vy;
+    }
+
+    /**
+     * 设置碰撞判定半径
+     * @param hitboxRadius 碰撞判定半径
+     */
+    public void setHitboxRadius(float hitboxRadius) {
+        this.hitboxRadius = hitboxRadius;
+    }
+
+    /**
+     * 获取碰撞判定半径
+     * @return 碰撞判定半径
+     */
+    public float getHitboxRadius() {
+        return hitboxRadius;
     }
 }
