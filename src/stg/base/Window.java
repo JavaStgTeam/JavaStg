@@ -95,6 +95,7 @@ public class Window extends JFrame {
 
         // 创建游戏画布
         gameCanvas = new GameCanvas();
+        gameCanvas.setSize(centerWidth, totalHeight);
         centerPanel.add(gameCanvas, BorderLayout.CENTER);
 
         // 创建虚拟键盘面板（需要先创建gameCanvas）

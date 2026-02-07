@@ -51,45 +51,67 @@ public class StageGroupManager {
      */
     private void discoverStageGroups(GameCanvas gameCanvas) {
         try {
-            // 获取当前包名
-            String packageName = StageGroup.class.getPackage().getName();
-            String packagePath = packageName.replace('.', '/');
+            System.out.println("开始发现关卡组...");
+            // 扫描多个包
+            String[] packageNames = {
+                StageGroup.class.getPackage().getName(),
+                "user.stageGroup"
+            };
             
-            // 获取包下的所有类文件
-            Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources(packagePath);
-            while (resources.hasMoreElements()) {
-                URL resource = resources.nextElement();
-                File directory = new File(resource.getFile());
+            for (String packageName : packageNames) {
+                System.out.println("扫描包: " + packageName);
+                String packagePath = packageName.replace('.', '/');
+                System.out.println("包路径: " + packagePath);
                 
-                if (directory.exists()) {
-                    File[] files = directory.listFiles();
-                    if (files != null) {
-                        for (File file : files) {
-                            if (file.isFile() && file.getName().endsWith(".class")) {
-                                String className = packageName + "." + file.getName().substring(0, file.getName().length() - 6);
-                                try {
-                                    Class<?> clazz = Class.forName(className);
-                                    // 检查是否是StageGroup的子类且不是抽象类
-                                    if (StageGroup.class.isAssignableFrom(clazz) && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers()) && clazz != StageGroup.class) {
-                                        // 尝试创建实例
-                                        try {
-                                            StageGroup stageGroup = (StageGroup) clazz.getConstructor(GameCanvas.class).newInstance(gameCanvas);
-                                            stageGroups.add(stageGroup);
-                                            System.out.println("自动发现关卡组 " + stageGroup.getDisplayName());
-                                        } catch (Exception e) {
-                                            System.out.println("创建关卡组实例失败 " + className);
-                                            e.printStackTrace();
+                // 获取包下的所有类文件
+                System.out.println("获取包下的所有类文件...");
+                Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources(packagePath);
+                System.out.println("资源数量: " + (resources.hasMoreElements() ? "至少一个" : "零"));
+                while (resources.hasMoreElements()) {
+                    URL resource = resources.nextElement();
+                    System.out.println("资源URL: " + resource.getFile());
+                    File directory = new File(resource.getFile());
+                    System.out.println("目录路径: " + directory.getAbsolutePath());
+                    System.out.println("目录是否存在: " + directory.exists());
+                    
+                    if (directory.exists()) {
+                        File[] files = directory.listFiles();
+                        System.out.println("文件数量: " + (files != null ? files.length : 0));
+                        if (files != null) {
+                            for (File file : files) {
+                                System.out.println("文件名: " + file.getName());
+                                if (file.isFile() && file.getName().endsWith(".class")) {
+                                    String className = packageName + "." + file.getName().substring(0, file.getName().length() - 6);
+                                    System.out.println("类名: " + className);
+                                    try {
+                                        Class<?> clazz = Class.forName(className);
+                                        System.out.println("加载类成功: " + className);
+                                        // 检查是否是StageGroup的子类且不是抽象类
+                                        if (StageGroup.class.isAssignableFrom(clazz) && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers()) && clazz != StageGroup.class) {
+                                            System.out.println("是StageGroup的子类且不是抽象类: " + className);
+                                            // 尝试创建实例
+                                            try {
+                                                System.out.println("尝试创建实例: " + className);
+                                                StageGroup stageGroup = (StageGroup) clazz.getConstructor(GameCanvas.class).newInstance(gameCanvas);
+                                                System.out.println("创建实例成功: " + className);
+                                                stageGroups.add(stageGroup);
+                                                System.out.println("自动发现关卡组 " + stageGroup.getDisplayName());
+                                            } catch (Exception e) {
+                                                System.out.println("创建关卡组实例失败 " + className);
+                                                e.printStackTrace();
+                                            }
                                         }
+                                    } catch (ClassNotFoundException e) {
+                                        System.out.println("加载类失败 " + className);
+                                        e.printStackTrace();
                                     }
-                                } catch (ClassNotFoundException e) {
-                                    System.out.println("加载类失败 " + className);
-                                    e.printStackTrace();
                                 }
                             }
                         }
                     }
                 }
             }
+            System.out.println("发现关卡组完成，共发现 " + stageGroups.size() + " 个关卡组");
         } catch (IOException e) {
             System.out.println("自动发现关卡组失败");
             e.printStackTrace();

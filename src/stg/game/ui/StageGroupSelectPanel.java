@@ -103,6 +103,7 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
                     callback.onStageGroupSelected(stageGroups.get(selectedIndex));
                 }
                 break;
+            case KeyEvent.VK_X:
             case KeyEvent.VK_ESCAPE:
                 callback.onBack();
                 break;
@@ -217,7 +218,7 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
         g2d.setColor(Color.GRAY);
         g2d.drawString("上下 选择关卡组", width / 2 - 100, height - 60);
         g2d.drawString("Z/Enter 确认选择", width / 2 - 100, height - 40);
-        g2d.drawString("ESC  返回", width / 2 - 100, height - 20);
+        g2d.drawString("X/ESC  返回", width / 2 - 100, height - 20);
     }
 
     // 虚拟键盘接口实现

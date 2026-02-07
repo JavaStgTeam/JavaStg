@@ -44,10 +44,11 @@ public class GameLoop implements Runnable {
 			long startTime = System.nanoTime();
 
 			canvas.update(); // 更新游戏状态
-			// 计算休眠时间以维持目标帧率（使用纳秒精度）
-			long elapsedTime = System.nanoTime() - startTime;	
-			long targetFrameTime = 1000000000L / targetFPS; // 纳秒
-			long sleepTime = targetFrameTime - elapsedTime;
+        canvas.repaint(); // 触发重绘
+        // 计算休眠时间以维持目标帧率（使用纳秒精度）
+        long elapsedTime = System.nanoTime() - startTime;    
+        long targetFrameTime = 1000000000L / targetFPS; // 纳秒
+        long sleepTime = targetFrameTime - elapsedTime;
 
 			if (sleepTime > 0) {
 				try {

@@ -72,24 +72,33 @@ public class Main {
 			}
 		);
 
-		// 使用StageGroupManager获取关卡组列表
-		stg.game.ui.GameCanvas gameCanvas = window.getGameCanvas();
-		StageGroupManager stageGroupManager = StageGroupManager.getInstance();
-		stageGroupManager.init(gameCanvas);
-
-		// 添加所有关卡组到选择面板
-		java.util.List<StageGroup> stageGroups = stageGroupManager.getStageGroups();
-		for (StageGroup group : stageGroups) {
-			selectPanel.addStageGroup(group);
-			System.out.println("添加关卡组 " + group.getGroupName() + " - " + group.getDisplayName());
-		}
-
 		window.getCenterPanel().removeAll();
 		window.getCenterPanel().add(selectPanel);
 		window.getVirtualKeyboardPanel().setKeyStateProvider(selectPanel);
 		selectPanel.requestFocusInWindow();
 		window.revalidate();
 		window.repaint();
+
+		// 在单独的线程中获取关卡组列表，以避免阻塞UI线程
+		new Thread(() -> {
+			// 使用StageGroupManager获取关卡组列表
+			stg.game.ui.GameCanvas gameCanvas = window.getGameCanvas();
+			StageGroupManager stageGroupManager = StageGroupManager.getInstance();
+			stageGroupManager.init(gameCanvas);
+
+			// 添加所有关卡组到选择面板
+			java.util.List<StageGroup> stageGroups = stageGroupManager.getStageGroups();
+			for (StageGroup group : stageGroups) {
+				selectPanel.addStageGroup(group);
+				System.out.println("添加关卡组 " + group.getGroupName() + " - " + group.getDisplayName());
+			}
+
+			// 更新UI
+			javax.swing.SwingUtilities.invokeLater(() -> {
+				window.revalidate();
+				window.repaint();
+			});
+		}).start();
 	}
 
 	private static void startGame(StageGroup stageGroup) {

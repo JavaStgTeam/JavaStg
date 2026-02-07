@@ -54,6 +54,7 @@ public class StageGroup {
         this.currentStageIndex = -1;
         this.completed = false;
         this.gameCanvas = gameCanvas;
+        initStages();
     }
 
     /**
