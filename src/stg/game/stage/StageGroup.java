@@ -3,7 +3,6 @@ package stg.game.stage;
 import java.util.ArrayList;
 import java.util.List;
 import stg.game.ui.GameCanvas;
-import stg.game.stage.Stage;
 
 /**
  * 关卡组类 - 管理多个关卡的顺序、切换和状态

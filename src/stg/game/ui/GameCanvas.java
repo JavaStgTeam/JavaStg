@@ -4,6 +4,7 @@ import java.awt.Component;
 import stg.base.KeyStateProvider;
 import stg.game.player.Player;
 import stg.util.CoordinateSystem;
+import user.player.DefaultPlayer;
 
 /**
  * 游戏画布类 - 负责游戏的渲染和输入处理
@@ -24,25 +25,12 @@ public class GameCanvas extends Component implements KeyStateProvider {
     private int height = 600;
     
     /**
-     * 获取画布宽度
-     */
-    public int getWidth() {
-        return width;
-    }
-    
-    /**
-     * 获取画布高度
-     */
-    public int getHeight() {
-        return height;
-    }
-    
-    /**
      * 设置画布尺寸
      */
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
+        super.setSize(width, height);
     }
     
     /**
@@ -121,6 +109,12 @@ public class GameCanvas extends Component implements KeyStateProvider {
     // 坐标系统
     private CoordinateSystem coordinateSystem;
     
+    // 游戏渲染器
+    private stg.game.GameRenderer gameRenderer;
+    
+    // 游戏世界
+    private stg.game.GameWorld gameWorld;
+    
     // 关卡组
     private stg.game.stage.StageGroup stageGroup;
     
@@ -129,6 +123,12 @@ public class GameCanvas extends Component implements KeyStateProvider {
      */
     public GameCanvas() {
         this.coordinateSystem = new CoordinateSystem(width, height);
+        
+        // 初始化游戏世界
+        this.gameWorld = new stg.game.GameWorld();
+        
+        // 初始化游戏渲染器
+        this.gameRenderer = new stg.game.GameRenderer(gameWorld, null, coordinateSystem);
         
         // 设置为可聚焦
         setFocusable(true);
@@ -218,6 +218,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
     public void setPlayer(float x, float y) {
         // 使用默认自机类，发射两个主炮
         this.player = new user.player.DefaultPlayer(x, y);
+        
+        // 更新游戏渲染器中的玩家引用
+        if (gameRenderer != null) {
+            gameRenderer.setPlayer(player);
+        }
     }
     
     /**
@@ -252,6 +257,10 @@ public class GameCanvas extends Component implements KeyStateProvider {
      * 更新游戏
      */
     public void update() {
+        // 获取实际的画布尺寸
+        int actualWidth = getWidth();
+        int actualHeight = getHeight();
+        
         // 根据按键状态更新玩家移动
         if (player != null) {
             // 水平方向:同时按下左右键时保持静止
@@ -286,6 +295,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
             player.update();
         }
         
+        // 更新游戏世界
+        if (gameWorld != null) {
+            gameWorld.update(actualWidth, actualHeight);
+        }
+        
         // 更新关卡组状态
         if (stageGroup != null) {
             stageGroup.update();
@@ -302,9 +316,8 @@ public class GameCanvas extends Component implements KeyStateProvider {
     /**
      * 获取游戏世界
      */
-    public Object getWorld() {
-        // 这里只是一个占位实现，实际应该返回游戏世界对象
-        return null;
+    public stg.game.GameWorld getWorld() {
+        return gameWorld;
     }
     
     /**
@@ -314,14 +327,23 @@ public class GameCanvas extends Component implements KeyStateProvider {
     public void paint(java.awt.Graphics g) {
         java.awt.Graphics2D g2d = (java.awt.Graphics2D) g;
         
+        // 获取实际的画布尺寸
+        int actualWidth = getWidth();
+        int actualHeight = getHeight();
+        
         // 绘制背景
         g2d.setColor(java.awt.Color.BLACK);
-        g2d.fillRect(0, 0, width, height);
+        g2d.fillRect(0, 0, actualWidth, actualHeight);
         
-        // 绘制玩家
+        // 直接绘制玩家，使用实际的画布尺寸
         if (player != null) {
+            // 计算玩家在屏幕上的位置
+            float screenX = player.getX() + actualWidth / 2;
+            float screenY = -player.getY() + actualHeight / 2;
+            
+            // 绘制玩家
             g2d.setColor(java.awt.Color.WHITE);
-            g2d.fillOval((int)(player.getX() + width / 2), (int)(-player.getY() + height / 2), 20, 20);
+            g2d.fillOval((int)(screenX - 10), (int)(screenY - 10), 20, 20);
         }
         
         // 绘制关卡组信息
