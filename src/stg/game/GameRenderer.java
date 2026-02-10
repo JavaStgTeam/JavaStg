@@ -6,7 +6,7 @@ import stg.game.player.Player;
 import stg.util.CoordinateSystem;
 
 /**
- * 游戏渲染�?- 处理游戏的渲染逻辑
+ * 游戏渲染器 - 处理游戏的渲染逻辑
  */
 public class GameRenderer {
     private GameWorld world;
@@ -14,7 +14,8 @@ public class GameRenderer {
     private CoordinateSystem coordinateSystem;
     
     /**
-     * 构造函�?     */
+     * 构造函数
+     */
     public GameRenderer(GameWorld world, Player player, CoordinateSystem coordinateSystem) {
         this.world = world;
         this.player = player;
@@ -27,14 +28,15 @@ public class GameRenderer {
     public void render(Graphics2D g) {
         enableAntiAliasing(g);
         
+        renderPlayerBullets(g);
         renderEnemies(g);
         renderItems(g);
-        renderPlayerBullets(g);
         renderPlayer(g);
     }
     
     /**
-     * 启用抗锯�?     */
+     * 启用抗锯齿
+     */
     private void enableAntiAliasing(Graphics2D g) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     }

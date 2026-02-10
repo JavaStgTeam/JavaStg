@@ -1,6 +1,7 @@
 package stg.game.player;
 
 import java.awt.*;
+import stg.game.GameWorld;
 import stg.game.obj.Obj;
 
 /**
@@ -23,8 +24,9 @@ public class Player extends Obj {
 	private boolean respawning; // @since 2026-01-19 重生动画标志
 	private final float respawnSpeed = 8.0f; // @since 2026-01-19 重生移动速度
 	private int invincibleTimer; // 无敌时间计时(帧数)
-	private int invincibleTime = 120; // 无敌时间(120f)
-	protected int bulletDamage = 2; // @since 2026-01-23 子弹伤害，DPS = (2 × 2 × 60) / 2 = 120
+private int invincibleTime = 120; // 无敌时间(120f)
+protected int bulletDamage = 2; // @since 2026-01-23 子弹伤害，DPS = (2 × 2 × 60) / 2 = 120
+private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 
 	public Player() {
 		this(0, 0, 5.0f, 2.0f, 20);
@@ -448,6 +450,22 @@ public class Player extends Obj {
 	 */
 	public void setBulletDamage(int bulletDamage) {
 		this.bulletDamage = bulletDamage;
+	}
+
+	/**
+	 * 设置游戏世界引用
+	 * @param gameWorld 游戏世界实例
+	 */
+	public void setGameWorld(GameWorld gameWorld) {
+		this.gameWorld = gameWorld;
+	}
+
+	/**
+	 * 获取游戏世界引用
+	 * @return 游戏世界实例
+	 */
+	protected GameWorld getGameWorld() {
+		return gameWorld;
 	}
 
 	/**

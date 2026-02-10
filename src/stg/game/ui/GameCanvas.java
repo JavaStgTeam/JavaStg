@@ -4,7 +4,6 @@ import java.awt.Component;
 import stg.base.KeyStateProvider;
 import stg.game.player.Player;
 import stg.util.CoordinateSystem;
-import user.player.DefaultPlayer;
 
 /**
  * 游戏画布类 - 负责游戏的渲染和输入处理
@@ -124,6 +123,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
     public GameCanvas() {
         this.coordinateSystem = new CoordinateSystem(width, height);
         
+        // 设置共享坐标系统，确保所有游戏对象使用一致的坐标转换
+        stg.game.obj.Obj.setSharedCoordinateSystem(coordinateSystem);
+        
         // 初始化游戏世界
         this.gameWorld = new stg.game.GameWorld();
         
@@ -218,6 +220,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
     public void setPlayer(float x, float y) {
         // 使用默认自机类，发射两个主炮
         this.player = new user.player.DefaultPlayer(x, y);
+        
+        // 设置游戏世界引用，用于发射子弹
+        this.player.setGameWorld(gameWorld);
         
         // 更新游戏渲染器中的玩家引用
         if (gameRenderer != null) {
@@ -331,19 +336,18 @@ public class GameCanvas extends Component implements KeyStateProvider {
         int actualWidth = getWidth();
         int actualHeight = getHeight();
         
+        // 更新坐标系统的画布尺寸
+        if (coordinateSystem != null) {
+            coordinateSystem.updateCanvasSize(actualWidth, actualHeight);
+        }
+        
         // 绘制背景
         g2d.setColor(java.awt.Color.BLACK);
         g2d.fillRect(0, 0, actualWidth, actualHeight);
         
-        // 直接绘制玩家，使用实际的画布尺寸
-        if (player != null) {
-            // 计算玩家在屏幕上的位置
-            float screenX = player.getX() + actualWidth / 2;
-            float screenY = -player.getY() + actualHeight / 2;
-            
-            // 绘制玩家
-            g2d.setColor(java.awt.Color.WHITE);
-            g2d.fillOval((int)(screenX - 10), (int)(screenY - 10), 20, 20);
+        // 使用游戏渲染器渲染所有游戏对象
+        if (gameRenderer != null) {
+            gameRenderer.render(g2d);
         }
         
         // 绘制关卡组信息

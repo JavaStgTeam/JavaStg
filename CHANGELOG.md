@@ -1,5 +1,16 @@
 # 更新日志
 
+## 2026-02-10
+
+### 新增
+- 创建了 `user.bullet.SimpleBullet` 类，实现了简单的子弹功能
+
+### 修改
+- 修改了 `stg.game.player.Player` 类，添加了 `GameWorld` 引用和相关方法
+- 修改了 `stg.game.ui.GameCanvas` 类，在设置玩家时传递 `GameWorld` 引用
+- 完善了 `user.player.DefaultPlayer` 类的 `shoot()` 方法，实现发射两个主炮的功能
+
+
 ## 2026-02-07
 
 ### 新增

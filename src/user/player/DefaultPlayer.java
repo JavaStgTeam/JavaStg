@@ -1,12 +1,17 @@
 package user.player;
 
+import java.awt.Color;
 import stg.game.player.Player;
+import user.bullet.SimpleBullet;
 
 /**
  * 默认自机类 - 发射两个主炮，方向竖直向上
  * @since 2026-02-07
  */
 public class DefaultPlayer extends Player {
+    private static final Color BULLET_COLOR = new Color(255, 255, 255); // 子弹颜色
+    private static final float BULLET_SPEED = 48.0f; // 子弹速度
+    private static final float BULLET_SIZE = 4.0f; // 子弹大小
     
     public DefaultPlayer() {
         super(0, 0, 5.0f, 2.0f, 20);
@@ -32,9 +37,21 @@ public class DefaultPlayer extends Player {
         float rightBulletX = getX() + bulletOffset;
         float rightBulletY = getY() + getSize(); // 从自机顶部发射
         
-        // 发射两个子弹，方向竖直向上（Y轴正方向）
-        System.out.println("发射子弹: 左侧 (" + leftBulletX + ", " + leftBulletY + ")，右侧 (" + rightBulletX + ", " + rightBulletY + ")");
+        // 获取游戏世界引用
+        stg.game.GameWorld gameWorld = getGameWorld();
+        if (gameWorld != null) {
+            // 创建左侧子弹
+            SimpleBullet leftBullet = new SimpleBullet(leftBulletX, leftBulletY, 0, BULLET_SPEED, BULLET_SIZE, BULLET_COLOR);
+            leftBullet.setDamage(getBulletDamage());
+            gameWorld.addPlayerBullet(leftBullet);
+            
+            // 创建右侧子弹
+            SimpleBullet rightBullet = new SimpleBullet(rightBulletX, rightBulletY, 0, BULLET_SPEED, BULLET_SIZE, BULLET_COLOR);
+            rightBullet.setDamage(getBulletDamage());
+            gameWorld.addPlayerBullet(rightBullet);
+        }
         
-        // 注意：这里只是打印日志，实际游戏中应该创建并添加子弹到游戏世界
+        // 打印发射信息
+        System.out.println("发射子弹: 左侧 (" + leftBulletX + ", " + leftBulletY + ")，右侧 (" + rightBulletX + ", " + rightBulletY + ")");
     }
 }

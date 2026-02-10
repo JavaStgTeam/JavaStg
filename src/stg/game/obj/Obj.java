@@ -1,6 +1,7 @@
 package stg.game.obj;
 
 import java.awt.*;
+import stg.util.CoordinateSystem;
 
 /**
  * 游戏物体基类 - 所有游戏中的物体都继承自此类
@@ -23,6 +24,25 @@ public abstract class Obj {
     // 默认画布尺寸常量
     protected static final float DEFAULT_CANVAS_WIDTH = 548;
     protected static final float DEFAULT_CANVAS_HEIGHT = 921;
+    
+    // 坐标系统（用于动态坐标转换）
+    private static CoordinateSystem sharedCoordinateSystem;
+
+    /**
+     * 设置共享的坐标系统
+     * @param coordinateSystem 坐标系统实例
+     */
+    public static void setSharedCoordinateSystem(CoordinateSystem coordinateSystem) {
+        sharedCoordinateSystem = coordinateSystem;
+    }
+
+    /**
+     * 获取共享的坐标系统
+     * @return 坐标系统实例
+     */
+    public static CoordinateSystem getSharedCoordinateSystem() {
+        return sharedCoordinateSystem;
+    }
 
     /**
      * 将游戏坐标转换为屏幕坐标
@@ -31,6 +51,9 @@ public abstract class Obj {
      * @return 屏幕坐标数组 [x, y]
      */
     protected float[] toScreenCoords(float worldX, float worldY) {
+        if (sharedCoordinateSystem != null) {
+            return sharedCoordinateSystem.toScreenCoords(worldX, worldY);
+        }
         return new float[]{
             worldX + DEFAULT_CANVAS_WIDTH / 2.0f,
             DEFAULT_CANVAS_HEIGHT / 2.0f - worldY
