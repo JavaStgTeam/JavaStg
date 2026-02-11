@@ -2,7 +2,7 @@ package user.player;
 
 import java.awt.Color;
 import stg.game.player.Player;
-import user.bullet.SimpleBullet;
+import user.bullet.DefaultPlayerMainBullet;
 
 /**
  * 默认自机类 - 发射两个主炮，方向竖直向上
@@ -41,12 +41,12 @@ public class DefaultPlayer extends Player {
         stg.game.GameWorld gameWorld = getGameWorld();
         if (gameWorld != null) {
             // 创建左侧子弹
-            SimpleBullet leftBullet = new SimpleBullet(leftBulletX, leftBulletY, 0, BULLET_SPEED, BULLET_SIZE, BULLET_COLOR);
+            DefaultPlayerMainBullet leftBullet = new DefaultPlayerMainBullet(leftBulletX, leftBulletY);
             leftBullet.setDamage(getBulletDamage());
             gameWorld.addPlayerBullet(leftBullet);
             
             // 创建右侧子弹
-            SimpleBullet rightBullet = new SimpleBullet(rightBulletX, rightBulletY, 0, BULLET_SPEED, BULLET_SIZE, BULLET_COLOR);
+            DefaultPlayerMainBullet rightBullet = new DefaultPlayerMainBullet(rightBulletX, rightBulletY);
             rightBullet.setDamage(getBulletDamage());
             gameWorld.addPlayerBullet(rightBullet);
         }
