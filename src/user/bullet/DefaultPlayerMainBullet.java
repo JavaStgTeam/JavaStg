@@ -5,11 +5,11 @@ import stg.game.bullet.Bullet;
 
 /**
  * 默认玩家主子弹类 - 沿y方向竖直向上的子弹
- * 弹速为15像素/tick
+ * 弹速为75像素/tick（原速度的五倍）
  * @since 2026-02-11
  */
 public class DefaultPlayerMainBullet extends Bullet {
-    private static final float BULLET_SPEED = 15.0f; // 弹速：15像素/tick
+    private static final float BULLET_SPEED = 75.0f; // 弹速：75像素/tick（原速度的五倍）
     private static final float BULLET_SIZE = 4.0f; // 子弹大小
     private static final Color BULLET_COLOR = new Color(255, 255, 255); // 子弹颜色：白色
 
