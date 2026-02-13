@@ -67,13 +67,25 @@ public class DefaultEnemy extends Enemy {
      */
     @Override
     public void update() {
+        // 调用无参数版本的update
+        update(800, 600); // 默认画布尺寸
+    }
+    
+    /**
+     * 更新敌人状态
+     * 处理水平移动和边界反弹
+     * @param canvasWidth 画布宽度
+     * @param canvasHeight 画布高度
+     */
+    @Override
+    public void update(int canvasWidth, int canvasHeight) {
         // 先检查边界，再更新位置
         float x = getX();
         float vx = getVx();
         
         // 计算边界
-        float leftBound = -DEFAULT_CANVAS_WIDTH / 2.0f + getSize();
-        float rightBound = DEFAULT_CANVAS_WIDTH / 2.0f - getSize();
+        float leftBound = -canvasWidth / 2.0f + getSize();
+        float rightBound = canvasWidth / 2.0f - getSize();
         
         // 碰到左边界，开始向右移动
         if (x <= leftBound && vx < 0) {
@@ -89,7 +101,7 @@ public class DefaultEnemy extends Enemy {
         }
         
         // 然后更新位置
-        super.update();
+        super.update(canvasWidth, canvasHeight);
     }
 
     /**

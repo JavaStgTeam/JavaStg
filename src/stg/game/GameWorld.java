@@ -102,7 +102,7 @@ public class GameWorld {
         Iterator<Enemy> iterator = enemies.iterator();
         while (iterator.hasNext()) {
             Enemy enemy = iterator.next();
-            enemy.update();
+            enemy.update(canvasWidth, canvasHeight);
             
             if (!enemy.isAlive() || enemy.isOutOfBounds(canvasWidth, canvasHeight)) {
                 iterator.remove();

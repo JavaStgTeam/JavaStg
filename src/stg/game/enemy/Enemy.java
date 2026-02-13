@@ -32,6 +32,17 @@ public abstract class Enemy extends Obj {
 	 */
 	@Override
 	public void update() {
+		// 调用无参数版本的update
+		update(800, 600); // 默认画布尺寸
+	}
+	
+	/**
+	 * 更新敌人状态
+	 * @param canvasWidth 画布宽度
+	 * @param canvasHeight 画布高度
+	 * @since 2026-02-13 支持动态画布尺寸
+	 */
+	public void update(int canvasWidth, int canvasHeight) {
 		super.update();
 
 		// 检查生命值
