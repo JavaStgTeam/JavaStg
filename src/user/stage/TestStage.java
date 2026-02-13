@@ -2,11 +2,15 @@ package user.stage;
 
 import stg.game.stage.Stage;
 import stg.game.ui.GameCanvas;
+import user.enemy.DefaultEnemy;
 
 /**
  * 测试关卡
  */
 public class TestStage extends Stage {
+    private int enemyCount = 0; // 已生成的敌人数量
+    private static final int MAX_ENEMIES = 10; // 最大敌人数量
+
     public TestStage(int stageId, String stageName, GameCanvas gameCanvas) {
         super(stageId, stageName, gameCanvas);
     }
@@ -19,6 +23,7 @@ public class TestStage extends Stage {
     @Override
     protected void onStageStart() {
         // 关卡开始逻辑
+        enemyCount = 0; // 重置敌人计数器
     }
 
     @Override
@@ -28,10 +33,13 @@ public class TestStage extends Stage {
 
     @Override
     protected void updateWaveLogic() {
-        // 每60帧生成一个敌人
-        if (getCurrentFrame() % 60 == 0) {
-            // 生成一个敌人
-            System.out.println("生成敌人");
+        // 每60帧生成一个敌人，最多生成10个
+        if (getCurrentFrame() % 60 == 0 && enemyCount < MAX_ENEMIES) {
+            // 生成一个敌人，位置在(0, 100)
+            DefaultEnemy enemy = new DefaultEnemy(0, 100);
+            getGameCanvas().getGameWorld().addEnemy(enemy);
+            System.out.println("生成敌人，位置: (0, 100)，总数: " + (enemyCount + 1));
+            enemyCount++;
         }
     }
 
