@@ -13,8 +13,7 @@ public class DefaultEnemy extends Enemy {
     private static final Color ENEMY_COLOR = new Color(255, 0, 0); // 敌人颜色：红色
     private static final int ENEMY_HP = 50; // 敌人生命值
     
-    private static final int CANVAS_WIDTH = 800; // 画布宽度
-    private static final int CANVAS_HEIGHT = 600; // 画布高度
+    private static final int DEFAULT_CANVAS_WIDTH = 800; // 默认画布宽度
 
     /**
      * 构造函数
@@ -68,24 +67,29 @@ public class DefaultEnemy extends Enemy {
      */
     @Override
     public void update() {
-        super.update();
-        
-        // 检查是否碰到版边
+        // 先检查边界，再更新位置
         float x = getX();
         float vx = getVx();
         
         // 计算边界
-        float leftBound = -CANVAS_WIDTH / 2.0f + getSize();
-        float rightBound = CANVAS_WIDTH / 2.0f - getSize();
+        float leftBound = -DEFAULT_CANVAS_WIDTH / 2.0f + getSize();
+        float rightBound = DEFAULT_CANVAS_WIDTH / 2.0f - getSize();
         
         // 碰到左边界，开始向右移动
         if (x <= leftBound && vx < 0) {
             setVx(ENEMY_SPEED);
+            // 调整位置，确保敌人不会卡在边界外
+            setX(leftBound);
         }
         // 碰到右边界，开始向左移动
         else if (x >= rightBound && vx > 0) {
             setVx(-ENEMY_SPEED);
+            // 调整位置，确保敌人不会卡在边界外
+            setX(rightBound);
         }
+        
+        // 然后更新位置
+        super.update();
     }
 
     /**

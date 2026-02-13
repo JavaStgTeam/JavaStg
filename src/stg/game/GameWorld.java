@@ -48,6 +48,51 @@ public class GameWorld {
         updateEnemies(canvasWidth, canvasHeight);
         updateBullets(canvasWidth, canvasHeight);
         updateItems(canvasWidth, canvasHeight);
+        
+        // 检测子弹与敌人的碰撞
+        checkBulletEnemyCollision();
+    }
+    
+    /**
+     * 检测子弹与敌人的碰撞
+     */
+    private void checkBulletEnemyCollision() {
+        // 遍历所有敌人
+        Iterator<Enemy> enemyIterator = enemies.iterator();
+        while (enemyIterator.hasNext()) {
+            Enemy enemy = enemyIterator.next();
+            if (!enemy.isAlive()) continue;
+            
+            float enemyX = enemy.getX();
+            float enemyY = enemy.getY();
+            float enemyRadius = enemy.getHitboxRadius();
+            
+            // 遍历所有玩家子弹
+            Iterator<Bullet> bulletIterator = playerBullets.iterator();
+            while (bulletIterator.hasNext()) {
+                Bullet bullet = bulletIterator.next();
+                if (!bullet.isActive()) continue;
+                
+                float bulletX = bullet.getX();
+                float bulletY = bullet.getY();
+                float bulletRadius = bullet.getHitboxRadius();
+                
+                // 计算子弹与敌人之间的距离
+                float distance = (float) Math.sqrt(
+                    Math.pow(bulletX - enemyX, 2) + Math.pow(bulletY - enemyY, 2)
+                );
+                
+                // 如果距离小于两者半径之和，发生碰撞
+                if (distance < enemyRadius + bulletRadius) {
+                    // 敌人受到伤害
+                    enemy.takeDamage(10); // 假设每发子弹造成10点伤害
+                    
+                    // 子弹消失
+                    bullet.setActive(false);
+                    bulletIterator.remove();
+                }
+            }
+        }
     }
     
     /**
