@@ -37,7 +37,7 @@ public class TestStage extends Stage {
         if (getCurrentFrame() % 60 == 0 && enemyCount < MAX_ENEMIES) {
             // 生成一个敌人，位置在(0, 100)
             DefaultEnemy enemy = new DefaultEnemy(0, 100);
-            getGameCanvas().getGameWorld().addEnemy(enemy);
+            getGameCanvas().getWorld().addEnemy(enemy);
             System.out.println("生成敌人，位置: (0, 100)，总数: " + (enemyCount + 1));
             enemyCount++;
         }
