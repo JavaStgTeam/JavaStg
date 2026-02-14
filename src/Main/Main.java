@@ -81,23 +81,35 @@ public class Main {
 
 		// 在单独的线程中获取关卡组列表，以避免阻塞UI线程
 		new Thread(() -> {
-			// 使用StageGroupManager获取关卡组列表
-			stg.game.ui.GameCanvas gameCanvas = window.getGameCanvas();
-			StageGroupManager stageGroupManager = StageGroupManager.getInstance();
-			stageGroupManager.init(gameCanvas);
+			try {
+				// 使用StageGroupManager获取关卡组列表
+				stg.game.ui.GameCanvas gameCanvas = window.getGameCanvas();
+				StageGroupManager stageGroupManager = StageGroupManager.getInstance();
+				stageGroupManager.init(gameCanvas);
 
-			// 添加所有关卡组到选择面板
-			java.util.List<StageGroup> stageGroups = stageGroupManager.getStageGroups();
-			for (StageGroup group : stageGroups) {
-				selectPanel.addStageGroup(group);
-				System.out.println("添加关卡组 " + group.getGroupName() + " - " + group.getDisplayName());
+				// 获取关卡组列表
+				final java.util.List<StageGroup> stageGroups = stageGroupManager.getStageGroups();
+				
+				// 添加所有关卡组到选择面板（在EDT线程中执行）
+				javax.swing.SwingUtilities.invokeLater(() -> {
+					try {
+						for (StageGroup group : stageGroups) {
+							selectPanel.addStageGroup(group);
+							System.out.println("添加关卡组 " + group.getGroupName() + " - " + group.getDisplayName());
+						}
+
+						// 更新UI
+						window.revalidate();
+						window.repaint();
+					} catch (Exception e) {
+						System.out.println("添加关卡组到选择面板时出错:");
+						e.printStackTrace();
+					}
+				});
+			} catch (Exception e) {
+				System.out.println("获取关卡组列表时出错:");
+				e.printStackTrace();
 			}
-
-			// 更新UI
-			javax.swing.SwingUtilities.invokeLater(() -> {
-				window.revalidate();
-				window.repaint();
-			});
 		}).start();
 	}
 

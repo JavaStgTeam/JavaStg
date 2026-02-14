@@ -114,14 +114,11 @@ public abstract class Stage {
     public void addEnemy(Enemy enemy) {
         if (enemy != null) {
             if (gameCanvas != null) {
-                // 暂时注释掉，因为 getWorld() 返回 Object 类型，可能没有 addEnemy 方法
-                // GameCanvas 可能也没有 addEnemy 方法
-                // Object world = gameCanvas.getWorld();
-                // if (world != null) {
-                //     // 这里需要类型转换，但是暂时注释掉
-                //     // ((GameWorld)world).addEnemy(enemy);
-                // }
-                // gameCanvas.addEnemy(enemy);
+                // 获取游戏世界并添加敌人
+                stg.game.GameWorld world = gameCanvas.getWorld();
+                if (world != null) {
+                    world.addEnemy(enemy);
+                }
             }
         }
     }
@@ -172,12 +169,11 @@ public abstract class Stage {
      */
     public List<Enemy> getEnemies() {
         if (gameCanvas != null) {
-            // 暂时注释掉，因为 getWorld() 返回 Object 类型，可能没有 getEnemies 方法
-            // Object world = gameCanvas.getWorld();
-            // if (world != null) {
-            //     // 这里需要类型转换，但是暂时注释掉
-            //     // return ((GameWorld)world).getEnemies();
-            // }
+            // 获取游戏世界并返回敌人列表
+            stg.game.GameWorld world = gameCanvas.getWorld();
+            if (world != null) {
+                return world.getEnemies();
+            }
         }
         return java.util.Collections.emptyList();
     }

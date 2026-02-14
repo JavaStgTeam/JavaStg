@@ -11,7 +11,7 @@ public class DefaultEnemy extends Enemy {
     private static final float ENEMY_SPEED = 5.0f; // 敌人移动速度
     private static final float ENEMY_SIZE = 20.0f; // 敌人大小
     private static final Color ENEMY_COLOR = new Color(255, 0, 0); // 敌人颜色：红色
-    private static final int ENEMY_HP = 50; // 敌人生命值
+    private static final int ENEMY_HP = 200; // 敌人生命值
     
     private static final int DEFAULT_CANVAS_WIDTH = 800; // 默认画布宽度
 

@@ -347,13 +347,13 @@ public class GameCanvas extends Component implements KeyStateProvider {
         
         // 使用游戏渲染器渲染所有游戏对象
         if (gameRenderer != null) {
-            gameRenderer.render(g2d);
+            gameRenderer.render(g2d, actualWidth, actualHeight);
         }
         
         // 绘制关卡组信息
         if (stageGroup != null) {
             g2d.setColor(java.awt.Color.WHITE);
-            g2d.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 12));
+            g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
             g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
             g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
         }

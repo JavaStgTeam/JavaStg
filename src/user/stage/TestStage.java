@@ -2,6 +2,7 @@ package user.stage;
 
 import stg.game.stage.Stage;
 import stg.game.ui.GameCanvas;
+import user.boss.testBoss;
 import user.enemy.DefaultEnemy;
 
 /**
@@ -10,6 +11,7 @@ import user.enemy.DefaultEnemy;
 public class TestStage extends Stage {
     private int enemyCount = 0; // 已生成的敌人数量
     private static final int MAX_ENEMIES = 10; // 最大敌人数量
+    private boolean hasSpawnedBoss = false; // 是否已经生成Boss
 
     public TestStage(int stageId, String stageName, GameCanvas gameCanvas) {
         super(stageId, stageName, gameCanvas);
@@ -24,6 +26,7 @@ public class TestStage extends Stage {
     protected void onStageStart() {
         // 关卡开始逻辑
         enemyCount = 0; // 重置敌人计数器
+        hasSpawnedBoss = false; // 重置Boss生成状态
     }
 
     @Override
@@ -37,9 +40,18 @@ public class TestStage extends Stage {
         if (getCurrentFrame() % 60 == 0 && enemyCount < MAX_ENEMIES) {
             // 生成一个敌人，位置在(0, 100)
             DefaultEnemy enemy = new DefaultEnemy(0, 100);
-            getGameCanvas().getWorld().addEnemy(enemy);
+            addEnemy(enemy);
             System.out.println("生成敌人，位置: (0, 100)，总数: " + (enemyCount + 1));
             enemyCount++;
+        }
+        
+        // 关卡开始12秒时生成Boss（假设60帧/秒）
+        if (getCurrentFrame() == 720 && !hasSpawnedBoss) {
+            // 生成testBoss，位置在(0, 100)，屏幕上半部分
+            testBoss boss = new testBoss(0, 100);
+            addEnemy(boss);
+            System.out.println("生成Boss，位置: (0, 100)");
+            hasSpawnedBoss = true;
         }
     }
 

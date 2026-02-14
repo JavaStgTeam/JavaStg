@@ -134,7 +134,7 @@ public class VirtualKeyboardPanel extends JPanel {
 		}
 
 		g.setColor(Color.WHITE);
-		g.setFont(new Font("Arial", Font.BOLD, 12));
+		g.setFont(new Font("Monospace", Font.BOLD, 12));
 		FontMetrics fm = g.getFontMetrics();
 		int textWidth = fm.stringWidth(text);
 		int textHeight = fm.getHeight();
