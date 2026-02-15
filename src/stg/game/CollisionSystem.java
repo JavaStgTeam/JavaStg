@@ -6,7 +6,8 @@ import stg.game.item.Item;
 import stg.game.player.Player;
 
 /**
- * 碰撞检测系�?- 处理游戏中的碰撞检�? */
+ * 碰撞检测系统 - 处理游戏中的碰撞检测
+ */
 public class CollisionSystem {
     private GameWorld world;
     private Player player;

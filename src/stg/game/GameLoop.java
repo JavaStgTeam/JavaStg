@@ -11,6 +11,7 @@ public class GameLoop implements Runnable {
 	private boolean running; // 运行标志
 	private final int targetFPS = 60; // 目标帧率
 	private static GameLoop activeLoop; // 当前活跃的游戏循环实例
+	private Thread gameThread; // 游戏线程引用
 	/**
 	 * 构造函数 - 创建游戏循环实例
 	 * @param canvas 游戏画布（需为 public 或位于 stg.game.ui 包内）
@@ -31,7 +32,8 @@ public class GameLoop implements Runnable {
 			}
 			activeLoop = this;
 			running = true;
-			new Thread(this).start();
+			gameThread = new Thread(this);
+			gameThread.start();
 		}
 	}
 
@@ -40,7 +42,7 @@ public class GameLoop implements Runnable {
 	 */
 	@Override
 	public void run() {
-		while (running) {
+		while (running && !Thread.interrupted()) {
 			long startTime = System.nanoTime();
 
 			canvas.update(); // 更新游戏状态
@@ -61,6 +63,16 @@ public class GameLoop implements Runnable {
 				}
 			}
 		}
+		// 循环结束后清理资源
+		cleanup();
+	}
+
+	/**
+	 * 清理资源
+	 */
+	private void cleanup() {
+		// 清理资源的代码
+		System.out.println("Game loop cleanup completed");
 	}
 
 	/**
@@ -68,9 +80,24 @@ public class GameLoop implements Runnable {
 	 */
 	public void stop() {
 		running = false;
+		// 中断线程以确保它能及时退出
+		if (gameThread != null && gameThread.isAlive()) {
+			gameThread.interrupt();
+			// 等待线程结束（可选，根据需要调整超时时间）
+			try {
+				// 使用较短的超时时间，避免阻塞主线程
+				gameThread.join(500);
+			} catch (InterruptedException e) {
+				// 重新设置当前线程的中断状态
+				Thread.currentThread().interrupt();
+				System.out.println("Interrupted while waiting for game thread to stop");
+			}
+		}
 		if (activeLoop == this) {
 			activeLoop = null;
 		}
+		// 清空线程引用
+		gameThread = null;
 	}
 
 	/**

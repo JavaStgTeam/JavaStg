@@ -1,11 +1,12 @@
 package stg.game;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.Font;
-import java.awt.Color;
-import stg.game.player.Player;
 import stg.game.enemy.Boss;
+import stg.game.enemy.EnemySpellcard;
+import stg.game.player.Player;
 import stg.util.CoordinateSystem;
 
 /**
@@ -47,23 +48,66 @@ public class GameRenderer {
         if (currentBoss != null) {
             // 获取当前符卡
             var spellcard = currentBoss.getCurrentSpellcard();
-            if (spellcard != null && spellcard.isActive() && spellcard.isSpellcardPhase()) {
+            if (spellcard != null && spellcard.isActive()) {
                 // 渲染符卡名称在右上角
-                g.setFont(new Font("Monospace", Font.BOLD, 20));
-                g.setColor(Color.WHITE);
-                String spellcardName = spellcard.getName();
-                int stringWidth = g.getFontMetrics().stringWidth(spellcardName);
-                int x = canvasWidth - stringWidth - 20;
-                int y = 40;
+                if (spellcard.isSpellcardPhase()) {
+                    g.setFont(new Font("Monospace", Font.BOLD, 20));
+                    g.setColor(Color.WHITE);
+                    String spellcardName = spellcard.getName();
+                    int stringWidth = g.getFontMetrics().stringWidth(spellcardName);
+                    int x = canvasWidth - stringWidth - 20;
+                    int y = 40;
+                    
+                    // 绘制背景矩形增强可读性
+                    g.setColor(new Color(0, 0, 0, 150));
+                    g.fillRect(x - 10, y - 25, stringWidth + 20, 30);
+                    
+                    // 绘制符卡名称
+                    g.setColor(Color.WHITE);
+                    g.drawString(spellcardName, x, y);
+                }
                 
-                // 绘制背景矩形增强可读性
-                g.setColor(new Color(0, 0, 0, 150));
-                g.fillRect(x - 10, y - 25, stringWidth + 20, 30);
-                
-                // 绘制符卡名称
-                g.setColor(Color.WHITE);
-                g.drawString(spellcardName, x, y);
+                // 渲染倒计时在屏幕上方中央
+                renderPhaseTimer(g, canvasWidth, canvasHeight, spellcard);
             }
+        }
+    }
+    
+    /**
+     * 渲染阶段倒计时
+     */
+    private void renderPhaseTimer(Graphics2D g, int canvasWidth, int canvasHeight, EnemySpellcard spellcard) {
+        // 所有阶段都显示倒计时，只要有持续时间
+        if (spellcard.getDuration() > 0) {
+            int totalFrames = spellcard.getDuration();
+            int currentFrame = spellcard.getCurrentFrame();
+            int remainingFrames = Math.max(0, totalFrames - currentFrame);
+            
+            // 转换为秒数，保留一位小数
+            double remainingSeconds = remainingFrames / 60.0;
+            
+            // 应用显示规则：超过100秒显示99.9，否则显示实际秒数
+            String timeString;
+            if (remainingSeconds > 100) {
+                timeString = "99.9";
+            } else {
+                timeString = String.format("%.1f", remainingSeconds);
+            }
+            
+            // 渲染倒计时在屏幕上方中央
+            g.setFont(new Font("Monospace", Font.BOLD, 24));
+            g.setColor(Color.WHITE);
+            int stringWidth = g.getFontMetrics().stringWidth(timeString);
+            int x = (canvasWidth - stringWidth) / 2;
+            int y = 60;
+            
+            // 绘制背景矩形增强可读性
+            g.setColor(new Color(0, 0, 0, 150));
+            g.fillRect(x - 15, y - 30, stringWidth + 30, 40);
+            
+            // 绘制倒计时
+            g.setColor(Color.WHITE);
+            g.drawString(timeString, x, y);
         }
     }
     

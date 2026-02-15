@@ -2,7 +2,7 @@ package user.stage;
 
 import stg.game.stage.Stage;
 import stg.game.ui.GameCanvas;
-import user.boss.testBoss;
+import user.boss.TestBoss;
 import user.enemy.DefaultEnemy;
 
 /**
@@ -47,8 +47,8 @@ public class TestStage extends Stage {
         
         // 关卡开始12秒时生成Boss（假设60帧/秒）
         if (getCurrentFrame() == 720 && !hasSpawnedBoss) {
-            // 生成testBoss，位置在(0, 100)，屏幕上半部分
-            testBoss boss = new testBoss(0, 100);
+            // 生成TestBoss，位置在(0, 100)，屏幕上半部分
+            TestBoss boss = new TestBoss(0, 100);
             addEnemy(boss);
             System.out.println("生成Boss，位置: (0, 100)");
             hasSpawnedBoss = true;

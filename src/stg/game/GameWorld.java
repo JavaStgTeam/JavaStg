@@ -1,19 +1,18 @@
 package stg.game;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import stg.game.bullet.Bullet;
 import stg.game.enemy.Enemy;
 import stg.game.item.Item;
 
 /**
- * 游戏世界�?- 管理游戏中的所有实�? */
+ * 游戏世界 - 管理游戏中的所有实体
+ */
 public class GameWorld {
-    private final List<Enemy> enemies = new ArrayList<>();
-    private final List<Bullet> playerBullets = new ArrayList<>();
-    private final List<Item> items = new ArrayList<>();
+    private final List<Enemy> enemies = new CopyOnWriteArrayList<>();
+    private final List<Bullet> playerBullets = new CopyOnWriteArrayList<>();
+    private final List<Item> items = new CopyOnWriteArrayList<>();
     
     /**
      * 添加敌人
@@ -43,7 +42,8 @@ public class GameWorld {
     }
     
     /**
-     * 更新所有实�?     */
+     * 更新所有实体
+     */
     public void update(int canvasWidth, int canvasHeight) {
         updateEnemies(canvasWidth, canvasHeight);
         updateBullets(canvasWidth, canvasHeight);
@@ -58,9 +58,7 @@ public class GameWorld {
      */
     private void checkBulletEnemyCollision() {
         // 遍历所有敌人
-        Iterator<Enemy> enemyIterator = enemies.iterator();
-        while (enemyIterator.hasNext()) {
-            Enemy enemy = enemyIterator.next();
+        for (Enemy enemy : enemies) {
             if (!enemy.isAlive()) continue;
             
             float enemyX = enemy.getX();
@@ -68,9 +66,7 @@ public class GameWorld {
             float enemyRadius = enemy.getHitboxRadius();
             
             // 遍历所有玩家子弹
-            Iterator<Bullet> bulletIterator = playerBullets.iterator();
-            while (bulletIterator.hasNext()) {
-                Bullet bullet = bulletIterator.next();
+            for (Bullet bullet : playerBullets) {
                 if (!bullet.isActive()) continue;
                 
                 float bulletX = bullet.getX();
@@ -89,7 +85,7 @@ public class GameWorld {
                     
                     // 子弹消失
                     bullet.setActive(false);
-                    bulletIterator.remove();
+                    playerBullets.remove(bullet);
                 }
             }
         }
@@ -99,13 +95,11 @@ public class GameWorld {
      * 更新敌人
      */
     private void updateEnemies(int canvasWidth, int canvasHeight) {
-        Iterator<Enemy> iterator = enemies.iterator();
-        while (iterator.hasNext()) {
-            Enemy enemy = iterator.next();
+        for (Enemy enemy : enemies) {
             enemy.update(canvasWidth, canvasHeight);
             
             if (!enemy.isAlive() || enemy.isOutOfBounds(canvasWidth, canvasHeight)) {
-                iterator.remove();
+                enemies.remove(enemy);
             }
         }
     }
@@ -115,12 +109,10 @@ public class GameWorld {
      */
     private void updateBullets(int canvasWidth, int canvasHeight) {
         // 更新玩家子弹
-        Iterator<Bullet> playerBulletIterator = playerBullets.iterator();
-        while (playerBulletIterator.hasNext()) {
-            Bullet bullet = playerBulletIterator.next();
+        for (Bullet bullet : playerBullets) {
             bullet.update();
             if (bullet.isOutOfBounds(canvasWidth, canvasHeight)) {
-                playerBulletIterator.remove();
+                playerBullets.remove(bullet);
             }
         }
     }
@@ -129,39 +121,38 @@ public class GameWorld {
      * 更新物品
      */
     private void updateItems(int canvasWidth, int canvasHeight) {
-        Iterator<Item> iterator = items.iterator();
-        while (iterator.hasNext()) {
-            Item item = iterator.next();
+        for (Item item : items) {
             item.update();
             if (!item.isActive() || item.isOutOfBounds(canvasWidth, canvasHeight)) {
-                iterator.remove();
+                items.remove(item);
             }
         }
     }
     
     /**
-     * 获取敌人列表（只读）
+     * 获取敌人列表
      */
     public List<Enemy> getEnemies() {
-        return Collections.unmodifiableList(enemies);
+        return enemies;
     }
     
     /**
-     * 获取玩家子弹列表（只读）
+     * 获取玩家子弹列表
      */
     public List<Bullet> getPlayerBullets() {
-        return Collections.unmodifiableList(playerBullets);
+        return playerBullets;
     }
     
     /**
-     * 获取物品列表（只读）
+     * 获取物品列表
      */
     public List<Item> getItems() {
-        return Collections.unmodifiableList(items);
+        return items;
     }
     
     /**
-     * 清除所有实�?     */
+     * 清除所有实体
+     */
     public void clear() {
         enemies.clear();
         playerBullets.clear();
@@ -169,13 +160,15 @@ public class GameWorld {
     }
     
     /**
-     * 清除所有物�?     */
+     * 清除所有物品
+     */
     public void clearItems() {
         items.clear();
     }
     
     /**
-     * 移除指定的物�?     */
+     * 移除指定的物品
+     */
     public void removeItem(Item item) {
         items.remove(item);
     }

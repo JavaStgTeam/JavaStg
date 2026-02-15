@@ -5,15 +5,16 @@ import stg.game.enemy.EnemySpellcard;
 
 /**
  * 测试符卡3（无名）
+ * @since 2026-02-15
  */
-public class testSpellcard_3 extends EnemySpellcard {
+public class TestSpellcard_3 extends EnemySpellcard {
     
     /**
      * 构造函数
      * @param boss 所属Boss
      */
-    public testSpellcard_3(Boss boss) {
-        super("", 3, boss, 4000);
+    public TestSpellcard_3(Boss boss) {
+        super("", 3, boss, 4000, 3000); // 3000帧 = 50秒
     }
     
     @Override

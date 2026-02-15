@@ -1,6 +1,7 @@
 package stg.game.ui;
 
 import java.awt.Component;
+import java.util.concurrent.atomic.AtomicBoolean;
 import stg.base.KeyStateProvider;
 import stg.game.player.Player;
 import stg.util.CoordinateSystem;
@@ -11,13 +12,13 @@ import stg.util.CoordinateSystem;
  */
 public class GameCanvas extends Component implements KeyStateProvider {
     // 按键状态
-    private boolean upPressed = false;
-    private boolean downPressed = false;
-    private boolean leftPressed = false;
-    private boolean rightPressed = false;
-    private boolean zPressed = false;
-    private boolean shiftPressed = false;
-    private boolean xPressed = false;
+    private AtomicBoolean upPressed = new AtomicBoolean(false);
+    private AtomicBoolean downPressed = new AtomicBoolean(false);
+    private AtomicBoolean leftPressed = new AtomicBoolean(false);
+    private AtomicBoolean rightPressed = new AtomicBoolean(false);
+    private AtomicBoolean zPressed = new AtomicBoolean(false);
+    private AtomicBoolean shiftPressed = new AtomicBoolean(false);
+    private AtomicBoolean xPressed = new AtomicBoolean(false);
     
     // 画布尺寸
     private int width = 800;
@@ -36,67 +37,67 @@ public class GameCanvas extends Component implements KeyStateProvider {
      * 设置按键状态
      */
     public void setUpPressed(boolean upPressed) {
-        this.upPressed = upPressed;
+        this.upPressed.set(upPressed);
     }
-    
+
     public void setDownPressed(boolean downPressed) {
-        this.downPressed = downPressed;
+        this.downPressed.set(downPressed);
     }
-    
+
     public void setLeftPressed(boolean leftPressed) {
-        this.leftPressed = leftPressed;
+        this.leftPressed.set(leftPressed);
     }
-    
+
     public void setRightPressed(boolean rightPressed) {
-        this.rightPressed = rightPressed;
+        this.rightPressed.set(rightPressed);
     }
-    
+
     public void setZPressed(boolean zPressed) {
-        this.zPressed = zPressed;
+        this.zPressed.set(zPressed);
     }
-    
+
     public void setShiftPressed(boolean shiftPressed) {
-        this.shiftPressed = shiftPressed;
+        this.shiftPressed.set(shiftPressed);
     }
-    
+
     public void setXPressed(boolean xPressed) {
-        this.xPressed = xPressed;
+        this.xPressed.set(xPressed);
     }
-    
+
     // 实现KeyStateProvider接口
     @Override
     public boolean isUpPressed() {
-        return upPressed;
+        return upPressed.get();
     }
-    
+
     @Override
     public boolean isDownPressed() {
-        return downPressed;
+        return downPressed.get();
     }
-    
+
     @Override
     public boolean isLeftPressed() {
-        return leftPressed;
+        return leftPressed.get();
     }
-    
+
     @Override
     public boolean isRightPressed() {
-        return rightPressed;
+        return rightPressed.get();
     }
-    
+
     @Override
     public boolean isZPressed() {
-        return zPressed;
+        return zPressed.get();
     }
-    
+
     @Override
     public boolean isShiftPressed() {
-        return shiftPressed;
+        return shiftPressed.get();
     }
-    
+
     @Override
     public boolean isXPressed() {
-        return xPressed;
+        return xPressed.get();
     }
     
     // 游戏状态面板
