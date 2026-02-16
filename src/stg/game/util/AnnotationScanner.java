@@ -9,6 +9,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import stg.util.LogUtil;
 
 /**
  * 注解扫描工具类
@@ -53,8 +54,7 @@ public class AnnotationScanner {
                 }
             }
         } catch (Exception e) {
-            System.err.println("扫描注解类时发生错误: " + e.getMessage());
-            e.printStackTrace();
+            LogUtil.error("AnnotationScanner", "扫描注解类时发生错误", e);
         }
         
         return annotatedClasses;

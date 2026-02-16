@@ -42,8 +42,7 @@ public class ResourceManager {
 				System.out.println("【资源】从文件系统加载图片: " + filename);
 				return image;
 			} catch (IOException e) {
-				System.err.println("【资源加载失败】无法加载图片 " + filename);
-				e.printStackTrace();
+				LogUtil.error("ResourceManager", "无法加载图片: " + filename, e);
 				return null;
 			}
 		}
@@ -55,8 +54,7 @@ public class ResourceManager {
 			System.out.println("【资源】从类路径加载图片 " + filename);
 			return image;
 		} catch (IOException e) {
-			System.err.println("【资源加载失败】无法加载图片 " + filename);
-			e.printStackTrace();
+			LogUtil.error("ResourceManager", "无法加载图片: " + filename, e);
 			return null;
 		} catch (IllegalArgumentException e) {
 			System.err.println("【资源加载失败】图片文件不存在: " + resourcePath + filename);
@@ -79,8 +77,7 @@ public class ResourceManager {
 				System.out.println("【资源】从文件系统加载图片: " + fullPath);
 				return image;
 			} catch (IOException e) {
-				System.err.println("【资源加载失败】无法加载图片 " + fullPath);
-				e.printStackTrace();
+				LogUtil.error("ResourceManager", "无法加载图片: " + fullPath, e);
 				return null;
 			}
 		}
@@ -92,8 +89,7 @@ public class ResourceManager {
 			System.out.println("【资源】从类路径加载图片 " + fullPath);
 			return image;
 		} catch (IOException e) {
-			System.err.println("【资源加载失败】无法加载图片 " + fullPath);
-			e.printStackTrace();
+			LogUtil.error("ResourceManager", "无法加载图片: " + fullPath, e);
 			return null;
 		} catch (IllegalArgumentException e) {
 			System.err.println("【资源加载失败】图片文件不存在: " + resourcePath + fullPath);

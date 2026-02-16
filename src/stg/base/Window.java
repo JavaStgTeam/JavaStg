@@ -40,13 +40,6 @@ public class Window extends JFrame {
         initialize(initPlayer);
     }
 
-    /**
-     * 初始化窗口
-     */
-    private void initialize() {
-        initialize(true);
-    }
-
     // 拖拽相关变量
     private boolean isDragging = false;
     private int dragStartX, dragStartY;

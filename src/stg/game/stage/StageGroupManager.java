@@ -7,6 +7,7 @@ import java.util.Enumeration;
 import java.util.List;
 import stg.game.ui.GameCanvas;
 import stg.game.util.AnnotationScanner;
+import stg.util.LogUtil;
 
 /**
  * 关卡组管理器 - 负责管理所有关卡组，包括自动发现和创建实例
@@ -86,8 +87,7 @@ public class StageGroupManager {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("处理关卡组类时发生错误: " + clazz.getName());
-                    e.printStackTrace();
+                    LogUtil.error("StageGroupManager", "处理关卡组类时发生错误: " + clazz.getName(), e);
                 }
             }
             
@@ -180,8 +180,7 @@ public class StageGroupManager {
             
             System.out.println("发现关卡组完成，共发现 " + stageGroups.size() + " 个关卡组");
         } catch (Exception e) {
-            System.err.println("自动发现关卡组失败: " + e.getMessage());
-            e.printStackTrace();
+            LogUtil.error("StageGroupManager", "自动发现关卡组失败", e);
         }
     }
 

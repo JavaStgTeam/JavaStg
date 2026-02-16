@@ -7,6 +7,7 @@ import stg.game.stage.StageGroup;
 import stg.game.stage.StageGroupManager;
 import stg.game.ui.GameCanvas;
 import stg.game.ui.TitleScreen;
+import stg.util.LogUtil;
 
 public class Main {
 	private static Window window;
