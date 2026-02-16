@@ -3,133 +3,181 @@ package stg.util;
 /**
  * 坐标系统工具类
  * 提供坐标转换功能,将屏幕坐标系转换为画布中心原点坐标系
+ * 游戏逻辑尺寸固定为360*480，支持屏幕尺寸变化的拉伸适配
  * @since 2026-01-19
  */
 public class CoordinateSystem {
-	private int canvasWidth;
-	private int canvasHeight;
+	private int screenWidth;
+	private int screenHeight;
+	private float scaleX;
+	private float scaleY;
 
 	/**
-	 * 构造函�?	 * @param canvasWidth 画布宽度
-	 * @param canvasHeight 画布高度
+	 * 构造函数
+	 * @param screenWidth 屏幕宽度
+	 * @param screenHeight 屏幕高度
+	 * @throws IllegalArgumentException 如果屏幕尺寸小于等于0
 	 */
-	public CoordinateSystem(int canvasWidth, int canvasHeight) {
-		this.canvasWidth = canvasWidth;
-		this.canvasHeight = canvasHeight;
+	public CoordinateSystem(int screenWidth, int screenHeight) {
+		updateScreenSize(screenWidth, screenHeight);
 	}
 
 	/**
-	 * 更新画布尺寸
-	 * @param width 新宽度
-	 * @param height 新高度
+	 * 更新屏幕尺寸
+	 * @param width 新屏幕宽度
+	 * @param height 新屏幕高度
+	 * @throws IllegalArgumentException 如果屏幕尺寸小于等于0
 	 * @since 2026-01-19
 	 */
-	public void updateCanvasSize(int width, int height) {
-		this.canvasWidth = width;
-		this.canvasHeight = height;
+	public void updateScreenSize(int width, int height) {
+		if (width <= 0 || height <= 0) {
+			throw new IllegalArgumentException("Screen dimensions must be positive: width=" + width + ", height=" + height);
+		}
+		this.screenWidth = width;
+		this.screenHeight = height;
+		// 使用统一的缩放因子，保持游戏内容的正确比例
+		// 计算基于宽度和高度的缩放因子，取较小值以确保内容完全显示
+		float scaleByWidth = (float) screenWidth / GameConstants.GAME_WIDTH;
+		float scaleByHeight = (float) screenHeight / GameConstants.GAME_HEIGHT;
+		this.scaleX = Math.min(scaleByWidth, scaleByHeight);
+		this.scaleY = this.scaleX;
 	}
 
 	/**
-	 * 将画布中心原点坐标转换为屏幕左上角原点坐标
-	 * 坐标系说明: 右上角为(+,+),左下角为(-,-)
-	 * @param x 中心原点X坐标(向右为正)
-	 * @param y 中心原点Y坐标(向上为正)
+	 * 将游戏逻辑坐标转换为屏幕坐标
+	 * 坐标系说明: 游戏逻辑坐标右上角为(+,+),左下角为(-,-)
+	 * @param x 游戏逻辑X坐标(向右为正)
+	 * @param y 游戏逻辑Y坐标(向上为正)
 	 * @return 屏幕左上角原点坐标[screenX, screenY]
 	 * @since 2026-01-19
 	 */
 	public float[] toScreenCoords(float x, float y) {
-		// X: 中心向右为正,所�?+ width/2
-		// Y: 中心向上为正,但屏幕Y轴向下为�?所�?- height/2
-		float screenX = x + canvasWidth / 2.0f;
-		float screenY = canvasHeight / 2.0f - y;
+		// 计算游戏内容在屏幕中的实际尺寸
+		float gameContentWidth = GameConstants.GAME_WIDTH * scaleX;
+		float gameContentHeight = GameConstants.GAME_HEIGHT * scaleY;
+		
+		// 计算游戏内容在屏幕中的偏移量，确保居中显示
+		float offsetX = (screenWidth - gameContentWidth) / 2.0f;
+		float offsetY = (screenHeight - gameContentHeight) / 2.0f;
+		
+		// 先转换到游戏逻辑中心原点，再应用缩放，最后添加偏移量
+		float logicCenterX = GameConstants.GAME_WIDTH / 2.0f;
+		float logicCenterY = GameConstants.GAME_HEIGHT / 2.0f;
+		float screenX = (x + logicCenterX) * scaleX + offsetX;
+		float screenY = offsetY + gameContentHeight - (y + logicCenterY) * scaleY;
 		return new float[]{screenX, screenY};
 	}
 
 	/**
-	 * 将屏幕左上角原点坐标转换为画布中心原点坐标
+	 * 将屏幕坐标转换为游戏逻辑坐标
 	 * @param screenX 屏幕X坐标
 	 * @param screenY 屏幕Y坐标
-	 * @return 中心原点坐标 [x, y]
+	 * @return 游戏逻辑坐标 [x, y]
 	 * @since 2026-01-19
 	 */
-	public float[] toCenterCoords(float screenX, float screenY) {
-		// X: 屏幕坐标 - 中心坐标
-		// Y: 中心坐标 - 屏幕坐标(因为Y轴翻�?
-		float x = screenX - canvasWidth / 2.0f;
-		float y = canvasHeight / 2.0f - screenY;
+	public float[] toGameCoords(float screenX, float screenY) {
+		// 计算游戏内容在屏幕中的实际尺寸
+		float gameContentWidth = GameConstants.GAME_WIDTH * scaleX;
+		float gameContentHeight = GameConstants.GAME_HEIGHT * scaleY;
+		
+		// 计算游戏内容在屏幕中的偏移量
+		float offsetX = (screenWidth - gameContentWidth) / 2.0f;
+		float offsetY = (screenHeight - gameContentHeight) / 2.0f;
+		
+		// 先减去偏移量，再应用缩放，最后转换到游戏逻辑中心原点
+		float logicCenterX = GameConstants.GAME_WIDTH / 2.0f;
+		float logicCenterY = GameConstants.GAME_HEIGHT / 2.0f;
+		float x = ((screenX - offsetX) / scaleX) - logicCenterX;
+		float y = logicCenterY - ((screenY - offsetY) / scaleY);
 		return new float[]{x, y};
 	}
 
 	/**
-	 * 获取画布中心X坐标
-	 * @return 中心X
+	 * 获取屏幕中心X坐标
+	 * @return 屏幕中心X
 	 * @since 2026-01-19
 	 */
-	public float getCenterX() {
-		return canvasWidth / 2.0f;
+	public float getScreenCenterX() {
+		return screenWidth / 2.0f;
 	}
 
 	/**
-	 * 获取画布中心Y坐标
-	 * @return 中心Y
+	 * 获取屏幕中心Y坐标
+	 * @return 屏幕中心Y
 	 * @since 2026-01-19
 	 */
-	public float getCenterY() {
-		return canvasHeight / 2.0f;
+	public float getScreenCenterY() {
+		return screenHeight / 2.0f;
 	}
 
 	/**
-	 * 获取画布宽度
-	 * @return 画布宽度
+	 * 获取屏幕宽度
+	 * @return 屏幕宽度
 	 * @since 2026-01-19
 	 */
-	public int getCanvasWidth() {
-		return canvasWidth;
+	public int getScreenWidth() {
+		return screenWidth;
 	}
 
 	/**
-	 * 获取画布高度
-	 * @return 画布高度
+	 * 获取屏幕高度
+	 * @return 屏幕高度
 	 * @since 2026-01-19
 	 */
-	public int getCanvasHeight() {
-		return canvasHeight;
+	public int getScreenHeight() {
+		return screenHeight;
 	}
 
 	/**
-	 * 获取画布左边界(中心原点坐标系)
+	 * 获取游戏逻辑左边界
 	 * @return 左边界X坐标
 	 * @since 2026-01-19
 	 */
 	public float getLeftBound() {
-		return -canvasWidth / 2.0f;
+		return -GameConstants.GAME_WIDTH / 2.0f;
 	}
 
 	/**
-	 * 获取画布右边界(中心原点坐标系)
+	 * 获取游戏逻辑右边界
 	 * @return 右边界X坐标
 	 * @since 2026-01-19
 	 */
 	public float getRightBound() {
-		return canvasWidth / 2.0f;
+		return GameConstants.GAME_WIDTH / 2.0f;
 	}
 
 	/**
-	 * 获取画布上边界(中心原点坐标系)
+	 * 获取游戏逻辑上边界
 	 * @return 上边界Y坐标
 	 * @since 2026-01-19
 	 */
 	public float getTopBound() {
-		return -canvasHeight / 2.0f;
+		return GameConstants.GAME_HEIGHT / 2.0f;
 	}
 
 	/**
-	 * 获取画布下边界(中心原点坐标系)
+	 * 获取游戏逻辑下边界
 	 * @return 下边界Y坐标
 	 * @since 2026-01-19
 	 */
 	public float getBottomBound() {
-		return canvasHeight / 2.0f;
+		return -GameConstants.GAME_HEIGHT / 2.0f;
+	}
+
+	/**
+	 * 获取X轴缩放因子
+	 * @return X轴缩放因子
+	 */
+	public float getScaleX() {
+		return scaleX;
+	}
+
+	/**
+	 * 获取Y轴缩放因子
+	 * @return Y轴缩放因子
+	 */
+	public float getScaleY() {
+		return scaleY;
 	}
 }
 

@@ -47,6 +47,10 @@ public class Window extends JFrame {
         initialize(true);
     }
 
+    // 拖拽相关变量
+    private boolean isDragging = false;
+    private int dragStartX, dragStartY;
+
     /**
      * 初始化窗口
      * @param initPlayer 是否立即初始化玩家
@@ -56,8 +60,39 @@ public class Window extends JFrame {
         setSize(totalWidth, totalHeight); // 设置大小
         setLocationRelativeTo(null); // 居中显示
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE); // 关闭操作
-        setResizable(false); // 禁止调整大小
+        setResizable(true); // 允许调整大小
         setLayout(new BorderLayout());
+        
+        // 添加鼠标事件监听器实现窗口拖拽
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    // 检查是否点击在标题栏区域
+                    if (e.getY() < getInsets().top) {
+                        isDragging = true;
+                        dragStartX = e.getX();
+                        dragStartY = e.getY();
+                    }
+                }
+            }
+            
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                isDragging = false;
+            }
+        });
+        
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (isDragging) {
+                    int newX = getLocation().x + (e.getX() - dragStartX);
+                    int newY = getLocation().y + (e.getY() - dragStartY);
+                    setLocation(newX, newY);
+                }
+            }
+        });
 
         // 计算三个面板的宽度(1:1.5:1)
         int leftWidth = (int)(totalWidth / 3.5); // 左侧面板宽度
@@ -67,8 +102,8 @@ public class Window extends JFrame {
         // 创建左侧面板
         leftPanel = new JPanel();
         leftPanel.setPreferredSize(new Dimension(leftWidth, totalHeight));
-        leftPanel.setMinimumSize(new Dimension(leftWidth, totalHeight));
-        leftPanel.setMaximumSize(new Dimension(leftWidth, totalHeight));
+        leftPanel.setMinimumSize(new Dimension(100, totalHeight)); // 只设置最小宽度
+        leftPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, totalHeight)); // 移除最大宽度限制
         leftPanel.setBackground(new Color(30, 30, 40));
         leftPanel.setLayout(new BorderLayout());
 
@@ -88,8 +123,8 @@ public class Window extends JFrame {
         // 创建中间面板
         centerPanel = new JPanel();
         centerPanel.setPreferredSize(new Dimension(centerWidth, totalHeight));
-        centerPanel.setMinimumSize(new Dimension(centerWidth, totalHeight));
-        centerPanel.setMaximumSize(new Dimension(centerWidth, totalHeight));
+        centerPanel.setMinimumSize(new Dimension(300, totalHeight)); // 只设置最小宽度
+        centerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, totalHeight)); // 移除最大宽度限制
         centerPanel.setBackground(new Color(20, 20, 30));
         centerPanel.setLayout(new BorderLayout());
 
@@ -105,8 +140,8 @@ public class Window extends JFrame {
         // 创建右侧面板
         rightPanel = new JPanel();
         rightPanel.setPreferredSize(new Dimension(rightWidth, totalHeight));
-        rightPanel.setMinimumSize(new Dimension(rightWidth, totalHeight));
-        rightPanel.setMaximumSize(new Dimension(rightWidth, totalHeight));
+        rightPanel.setMinimumSize(new Dimension(100, totalHeight)); // 只设置最小宽度
+        rightPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, totalHeight)); // 移除最大宽度限制
         rightPanel.setBackground(new Color(30, 30, 40));
         rightPanel.setLayout(new BorderLayout());
 
@@ -215,11 +250,119 @@ public class Window extends JFrame {
             @Override
             public void componentShown(ComponentEvent e) {
                 SwingUtilities.invokeLater(() -> {
-                    int canvasWidth = gameCanvas.getWidth();
-                    int canvasHeight = gameCanvas.getHeight();
+                    // 使用游戏逻辑坐标系的固定高度计算初始位置，确保玩家始终在屏幕内出生
+                    // 游戏逻辑坐标系：Y轴向上为正，底部是-240，顶部是240
                     float actualPlayerX = 0;
-                    float actualPlayerY = -canvasHeight / 2.0f + 40;
+                    // 在屏幕底部上方40像素处出生
+                    float actualPlayerY = -stg.util.GameConstants.GAME_HEIGHT / 2.0f + 40;
                     player.setPosition(actualPlayerX, actualPlayerY);
+                });
+            }
+            
+            @Override
+            public void componentResized(ComponentEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    // 更新窗口尺寸
+                    totalWidth = getWidth();
+                    totalHeight = getHeight();
+                    
+                    // 计算中间面板的理想宽度（保持3:4的比例）
+                    // 3:4比例意味着宽度是高度的0.75倍
+                    float idealRatio = 3.0f / 4.0f; // 明确设置为3:4比例
+                    int centerWidth = (int)(totalHeight * idealRatio);
+                    
+                    // 确保中间面板宽度严格符合3:4比例，避免整数取整误差
+                    // 重新计算，确保宽度是高度的3/4
+                    centerWidth = (totalHeight * 3) / 4;
+                    
+                    // 计算剩余宽度，分配给左右侧面板
+                    int remainingWidth = totalWidth - centerWidth;
+                    int leftWidth = remainingWidth / 2;
+                    int rightWidth = remainingWidth - leftWidth;
+                    
+                    // 确保中间面板至少有最小宽度
+                    if (centerWidth < 300) {
+                        centerWidth = 300;
+                        remainingWidth = totalWidth - centerWidth;
+                        leftWidth = remainingWidth / 2;
+                        rightWidth = remainingWidth - leftWidth;
+                    }
+                    
+                    // 确保左右侧面板至少有最小宽度
+                    if (leftWidth < 100) {
+                        leftWidth = 100;
+                        rightWidth = totalWidth - centerWidth - leftWidth;
+                    }
+                    if (rightWidth < 100) {
+                        rightWidth = 100;
+                        leftWidth = totalWidth - centerWidth - rightWidth;
+                    }
+                    
+                    // 确保所有面板宽度之和等于窗口宽度，避免白边
+                    int totalPanelWidth = leftWidth + centerWidth + rightWidth;
+                    if (totalPanelWidth != totalWidth) {
+                        // 调整右侧面板宽度以填充剩余空间
+                        rightWidth += (totalWidth - totalPanelWidth);
+                    }
+                    
+                    // 确保右侧面板不会为负数
+                    if (rightWidth < 100) {
+                        rightWidth = 100;
+                        // 重新计算左侧面板宽度
+                        leftWidth = totalWidth - centerWidth - rightWidth;
+                        // 确保左侧面板也不为负数
+                        if (leftWidth < 100) {
+                            leftWidth = 100;
+                            // 最后调整中间面板宽度
+                            centerWidth = totalWidth - leftWidth - rightWidth;
+                        }
+                    }
+                    
+                    // 更新左侧面板尺寸
+                    leftPanel.setPreferredSize(new Dimension(leftWidth, totalHeight));
+                    leftPanel.setMinimumSize(new Dimension(leftWidth, totalHeight));
+                    leftPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, totalHeight)); // 移除最大宽度限制
+                    leftPanel.setSize(leftWidth, totalHeight);
+                    
+                    // 更新中间面板尺寸
+                    centerPanel.setPreferredSize(new Dimension(centerWidth, totalHeight));
+                    centerPanel.setMinimumSize(new Dimension(centerWidth, totalHeight));
+                    centerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, totalHeight)); // 移除最大宽度限制
+                    centerPanel.setSize(centerWidth, totalHeight);
+                    
+                    // 更新右侧面板尺寸
+                    rightPanel.setPreferredSize(new Dimension(rightWidth, totalHeight));
+                    rightPanel.setMinimumSize(new Dimension(rightWidth, totalHeight));
+                    rightPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, totalHeight)); // 移除最大宽度限制
+                    rightPanel.setSize(rightWidth, totalHeight);
+                    
+                    // 更新游戏画布尺寸
+                    gameCanvas.setSize(centerWidth, totalHeight);
+                    
+                    // 确保内部组件也调整大小
+                    if (virtualKeyboardPanel != null) {
+                        virtualKeyboardPanel.setSize(leftWidth, totalHeight);
+                        virtualKeyboardPanel.revalidate();
+                        virtualKeyboardPanel.repaint();
+                    }
+                    
+                    if (gameStatusPanel != null) {
+                        gameStatusPanel.setSize(rightWidth, totalHeight);
+                        gameStatusPanel.revalidate();
+                        gameStatusPanel.repaint();
+                    }
+                    
+                    // 重新布局
+                    revalidate();
+                    repaint();
+                    
+                    // 如果玩家存在，更新玩家位置
+                    if (player != null) {
+                        // 使用游戏逻辑坐标系的固定高度计算位置，确保玩家始终在屏幕内
+                        float actualPlayerX = 0;
+                        float actualPlayerY = -stg.util.GameConstants.GAME_HEIGHT / 2.0f + 40;
+                        player.setPosition(actualPlayerX, actualPlayerY);
+                    }
                 });
             }
         });

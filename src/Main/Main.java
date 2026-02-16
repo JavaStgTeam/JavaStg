@@ -102,13 +102,11 @@ public class Main {
 						window.revalidate();
 						window.repaint();
 					} catch (Exception e) {
-						System.out.println("添加关卡组到选择面板时出错:");
-						e.printStackTrace();
+						LogUtil.error("Main", "添加关卡组到选择面板时出错", e);
 					}
 				});
 			} catch (Exception e) {
-				System.out.println("获取关卡组列表时出错:");
-				e.printStackTrace();
+				LogUtil.error("Main", "获取关卡组列表时出错", e);
 			}
 		}).start();
 	}

@@ -67,25 +67,15 @@ public class DefaultEnemy extends Enemy {
      */
     @Override
     public void update() {
-        // 调用无参数版本的update
-        update(800, 600); // 默认画布尺寸
-    }
-    
-    /**
-     * 更新敌人状态
-     * 处理水平移动和边界反弹
-     * @param canvasWidth 画布宽度
-     * @param canvasHeight 画布高度
-     */
-    @Override
-    public void update(int canvasWidth, int canvasHeight) {
         // 先检查边界，再更新位置
         float x = getX();
         float vx = getVx();
         
-        // 计算边界
-        float leftBound = -canvasWidth / 2.0f + getSize();
-        float rightBound = canvasWidth / 2.0f - getSize();
+        // 使用游戏逻辑坐标系的固定边界
+        stg.game.obj.Obj.requireCoordinateSystem();
+        stg.util.CoordinateSystem cs = stg.game.obj.Obj.getSharedCoordinateSystem();
+        float leftBound = cs.getLeftBound() + getSize();
+        float rightBound = cs.getRightBound() - getSize();
         
         // 碰到左边界，开始向右移动
         if (x <= leftBound && vx < 0) {
@@ -101,7 +91,18 @@ public class DefaultEnemy extends Enemy {
         }
         
         // 然后更新位置
-        super.update(canvasWidth, canvasHeight);
+        super.update();
+    }
+    
+    /**
+     * 更新敌人状态
+     * 处理水平移动和边界反弹
+     * @param canvasWidth 画布宽度（兼容参数，不使用）
+     * @param canvasHeight 画布高度（兼容参数，不使用）
+     */
+    @Override
+    public void update(int canvasWidth, int canvasHeight) {
+        update(); // 调用无参数版本
     }
 
     /**

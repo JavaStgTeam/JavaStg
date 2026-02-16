@@ -1,6 +1,7 @@
 package stg.game.enemy;
 
 import java.awt.*;
+import stg.game.GameWorld;
 import stg.game.obj.Obj;
 
 /**
@@ -11,6 +12,7 @@ import stg.game.obj.Obj;
 public abstract class Enemy extends Obj {
 	protected int hp; // 生命值
 	protected int maxHp; // 最大生命值
+	protected GameWorld gameWorld; // 游戏世界引用
 
 	public Enemy(int x, int y) {
 		this(x, y, 0, 0, 20, Color.BLUE, 10);
@@ -32,8 +34,12 @@ public abstract class Enemy extends Obj {
 	 */
 	@Override
 	public void update() {
-		// 调用无参数版本的update
-		update(800, 600); // 默认画布尺寸
+		super.update();
+
+		// 检查生命值
+		if (hp <= 0) {
+			setActive(false);
+		}
 	}
 	
 	/**
@@ -43,12 +49,7 @@ public abstract class Enemy extends Obj {
 	 * @since 2026-02-13 支持动态画布尺寸
 	 */
 	public void update(int canvasWidth, int canvasHeight) {
-		super.update();
-
-		// 检查生命值
-		if (hp <= 0) {
-			setActive(false);
-		}
+		update(); // 调用无参数版本
 	}
 
 	/**
@@ -116,21 +117,28 @@ public abstract class Enemy extends Obj {
 	}
 
 	/**
-	 * 检查是否越界 - @since 2026-01-19 使用中心原点坐标系
-	 * @param canvasWidth 画布宽度
-	 * @param canvasHeight 画布高度
+	 * 检查是否越界 - @since 2026-01-19 使用游戏逻辑坐标系
 	 * @return 是否越界
 	 */
 	@Override
-	public boolean isOutOfBounds(int canvasWidth, int canvasHeight) {
-		if (canvasWidth <= 0 || canvasHeight <= 0) {
-			return false;
-		}
+	public boolean isOutOfBounds() {
+		return isOutOfBounds(0, 0); // 调用兼容版本
+	}
 
-		float leftBound = -canvasWidth / 2.0f - getSize() * 2;
-		float rightBound = canvasWidth / 2.0f + getSize() * 2;
-		float topBound = -canvasHeight / 2.0f - getSize() * 2;
-		float bottomBound = canvasHeight / 2.0f + getSize() * 2;
+	/**
+	 * 检查是否越界 - @since 2026-01-19 使用游戏逻辑坐标系
+	 * @param canvasWidth 画布宽度（兼容参数，不使用）
+	 * @param canvasHeight 画布高度（兼容参数，不使用）
+	 * @return 是否越界
+	 */
+	public boolean isOutOfBounds(int canvasWidth, int canvasHeight) {
+		// 使用游戏逻辑坐标系的固定边界
+		stg.game.obj.Obj.requireCoordinateSystem();
+		stg.util.CoordinateSystem cs = stg.game.obj.Obj.getSharedCoordinateSystem();
+		float leftBound = cs.getLeftBound() - getSize() * 2;
+		float rightBound = cs.getRightBound() + getSize() * 2;
+		float topBound = cs.getBottomBound() - getSize() * 2;
+		float bottomBound = cs.getTopBound() + getSize() * 2;
 
 		return getX() < leftBound || getX() > rightBound ||
 		       getY() < topBound || getY() > bottomBound;
@@ -166,6 +174,22 @@ public abstract class Enemy extends Obj {
 	 */
 	public int getMaxHp() {
 		return maxHp;
+	}
+
+	/**
+	 * 设置游戏世界引用
+	 * @param gameWorld 游戏世界引用
+	 */
+	public void setGameWorld(GameWorld gameWorld) {
+		this.gameWorld = gameWorld;
+	}
+
+	/**
+	 * 获取游戏世界引用
+	 * @return 游戏世界引用
+	 */
+	public GameWorld getGameWorld() {
+		return gameWorld;
 	}
 
 	/**

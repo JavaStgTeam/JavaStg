@@ -1,9 +1,7 @@
 package user.enemy;
 
 import java.awt.Color;
-import stg.game.bullet.Bullet;
 import stg.game.enemy.Enemy;
-import stg.game.ui.GameCanvas;
 import user.bullet.SimpleBullet;
 
 public class __MidFairyEnemy extends Enemy {
@@ -13,12 +11,10 @@ public class __MidFairyEnemy extends Enemy {
     private static final float MID_FAIRY_SPEED = 2.0f;
     private static final int SHOOT_INTERVAL = 45;
     private int shootTimer = 0;
-    private GameCanvas gameCanvas;
     private float moveDirection;
 
-    public __MidFairyEnemy(float x, float y, GameCanvas gameCanvas) {
+    public __MidFairyEnemy(float x, float y) {
         super(x, y, 0, MID_FAIRY_SPEED, MID_FAIRY_SIZE, MID_FAIRY_COLOR, MID_FAIRY_HP);
-        this.gameCanvas = gameCanvas;
         this.moveDirection = 1.0f;
     }
 
@@ -40,7 +36,7 @@ public class __MidFairyEnemy extends Enemy {
         
         super.update(canvasWidth, canvasHeight);
         
-        if (gameCanvas != null) {
+        if (getGameWorld() != null) {
             shootTimer++;
             if (shootTimer >= SHOOT_INTERVAL) {
                 shoot();
@@ -65,8 +61,8 @@ public class __MidFairyEnemy extends Enemy {
                 Color.ORANGE
             );
             
-            if (gameCanvas != null) {
-                gameCanvas.addBullet(bullet);
+            if (getGameWorld() != null) {
+                getGameWorld().addEnemyBullet(bullet);
             }
         }
     }

@@ -62,7 +62,7 @@ public abstract class Item extends Obj {
 		super.update();
 
 		// 检查是否超出边界
-		if (isOutOfBounds(548, 921)) {
+		if (isOutOfBounds()) {
 			setActive(false);
 		}
 	}

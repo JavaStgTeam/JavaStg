@@ -8,6 +8,7 @@ import stg.util.CoordinateSystem;
  * @since 2026-01-19
  * @since 2026-01-20 将类移动到stg.game.obj
  * @since 2026-01-29
+ * @since 2026-02-16 重构坐标系统，使用固定360*480游戏逻辑尺寸
  * @author JavaSTG Team
  */
 public abstract class Obj {
@@ -20,10 +21,6 @@ public abstract class Obj {
     protected float hitboxRadius; // 碰撞判定半径
     protected boolean active; // 激活状态
     protected int frame; // 帧计数器
-    
-    // 默认画布尺寸常量
-    protected static final float DEFAULT_CANVAS_WIDTH = 548;
-    protected static final float DEFAULT_CANVAS_HEIGHT = 921;
     
     // 坐标系统（用于动态坐标转换）
     private static CoordinateSystem sharedCoordinateSystem;
@@ -45,19 +42,36 @@ public abstract class Obj {
     }
 
     /**
+     * 检查坐标系统是否已初始化
+     * @return 是否已初始化
+     */
+    public static boolean isCoordinateSystemInitialized() {
+        return sharedCoordinateSystem != null;
+    }
+
+    /**
+     * 要求坐标系统必须已初始化
+     * @throws IllegalStateException 如果坐标系统未初始化
+     */
+    public static void requireCoordinateSystem() {
+        if (sharedCoordinateSystem == null) {
+            throw new IllegalStateException(
+                "CoordinateSystem not initialized. " +
+                "Please call Obj.setSharedCoordinateSystem() before using game objects."
+            );
+        }
+    }
+
+    /**
      * 将游戏坐标转换为屏幕坐标
      * @param worldX 游戏世界X坐标
      * @param worldY 游戏世界Y坐标
      * @return 屏幕坐标数组 [x, y]
+     * @throws IllegalStateException 如果坐标系统未初始化
      */
     protected float[] toScreenCoords(float worldX, float worldY) {
-        if (sharedCoordinateSystem != null) {
-            return sharedCoordinateSystem.toScreenCoords(worldX, worldY);
-        }
-        return new float[]{
-            worldX + DEFAULT_CANVAS_WIDTH / 2.0f,
-            DEFAULT_CANVAS_HEIGHT / 2.0f - worldY
-        };
+        requireCoordinateSystem();
+        return sharedCoordinateSystem.toScreenCoords(worldX, worldY);
     }
 
     /**
@@ -124,10 +138,12 @@ public abstract class Obj {
     /**
      * 渲染物体
      * @param g 图形上下文
+     * @throws IllegalStateException 如果坐标系统未初始化
      */
     public void render(Graphics2D g) {
         if (!active) return;
 
+        requireCoordinateSystem();
         float[] screenCoords = toScreenCoords(x, y);
         float screenX = screenCoords[0];
         float screenY = screenCoords[1];
@@ -138,15 +154,16 @@ public abstract class Obj {
 
     /**
      * 检查物体是否超出边界
-     * @param width 画布宽度
-     * @param height 画布高度
      * @return 是否超出边界
+     * @throws IllegalStateException 如果坐标系统未初始化
      */
-    public boolean isOutOfBounds(int width, int height) {
-        float leftBound = -width / 2.0f - size;
-        float rightBound = width / 2.0f + size;
-        float topBound = -height / 2.0f - size;
-        float bottomBound = height / 2.0f + size;
+    public boolean isOutOfBounds() {
+        requireCoordinateSystem();
+        CoordinateSystem cs = sharedCoordinateSystem;
+        float leftBound = cs.getLeftBound() - size;
+        float rightBound = cs.getRightBound() + size;
+        float topBound = cs.getTopBound() - size;
+        float bottomBound = cs.getBottomBound() + size;
         return x < leftBound || x > rightBound || y < topBound || y > bottomBound;
     }
 

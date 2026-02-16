@@ -114,9 +114,12 @@ public abstract class Stage {
     public void addEnemy(Enemy enemy) {
         if (enemy != null) {
             if (gameCanvas != null) {
-                // 获取游戏世界并添加敌人
+                // 获取游戏世界
                 stg.game.GameWorld world = gameCanvas.getWorld();
                 if (world != null) {
+                    // 设置敌人的游戏世界引用
+                    enemy.setGameWorld(world);
+                    // 添加敌人到游戏世界
                     world.addEnemy(enemy);
                 }
             }

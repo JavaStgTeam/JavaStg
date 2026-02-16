@@ -42,14 +42,14 @@ public class __MountainPathStage extends Stage {
         
         if (frame >= 60 && frame % 90 == 0 && fairyCount < MAX_FAIRIES) {
             float x = (float) (Math.random() * 600 - 300);
-            __FairyEnemy fairy = new __FairyEnemy(x, -400, getGameCanvas());
+            __FairyEnemy fairy = new __FairyEnemy(x, -400);
             addEnemy(fairy);
             fairyCount++;
         }
         
         if (frame >= 300 && frame % 180 == 0 && midFairyCount < MAX_MID_FAIRIES) {
             float x = (float) (Math.random() * 400 - 200);
-            __MidFairyEnemy midFairy = new __MidFairyEnemy(x, -400, getGameCanvas());
+            __MidFairyEnemy midFairy = new __MidFairyEnemy(x, -400);
             addEnemy(midFairy);
             midFairyCount++;
         }

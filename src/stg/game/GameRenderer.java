@@ -33,6 +33,7 @@ public class GameRenderer {
         enableAntiAliasing(g);
         
         renderPlayerBullets(g);
+        renderEnemyBullets(g);
         renderEnemies(g);
         renderItems(g);
         renderPlayer(g);
@@ -160,6 +161,15 @@ public class GameRenderer {
      */
     private void renderPlayerBullets(Graphics2D g) {
         for (stg.game.bullet.Bullet bullet : world.getPlayerBullets()) {
+            bullet.render(g);
+        }
+    }
+    
+    /**
+     * 渲染敌人子弹
+     */
+    private void renderEnemyBullets(Graphics2D g) {
+        for (stg.game.bullet.Bullet bullet : world.getEnemyBullets()) {
             bullet.render(g);
         }
     }

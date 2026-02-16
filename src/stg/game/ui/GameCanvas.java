@@ -337,9 +337,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
         int actualWidth = getWidth();
         int actualHeight = getHeight();
         
-        // 更新坐标系统的画布尺寸
+        // 更新坐标系统的屏幕尺寸
         if (coordinateSystem != null) {
-            coordinateSystem.updateCanvasSize(actualWidth, actualHeight);
+            coordinateSystem.updateScreenSize(actualWidth, actualHeight);
         }
         
         // 绘制背景

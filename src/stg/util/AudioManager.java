@@ -74,16 +74,13 @@ public class AudioManager {
 			musicClips.put(filename, clip);
 			return clip;
 		} catch (UnsupportedAudioFileException e) {
-			System.err.println("【音频加载失败】不支持的音频格式 " + filename);
-			e.printStackTrace();
+			LogUtil.error("AudioManager", "不支持的音频格式: " + filename, e);
 			return null;
 		} catch (IOException e) {
-			System.err.println("【音频加载失败】无法读取音频文件 " + filename);
-			e.printStackTrace();
+			LogUtil.error("AudioManager", "无法读取音频文件: " + filename, e);
 			return null;
 		} catch (LineUnavailableException e) {
-			System.err.println("【音频加载失败】音频线路不可用: " + filename);
-			e.printStackTrace();
+			LogUtil.error("AudioManager", "音频线路不可用: " + filename, e);
 			return null;
 		}
 	}
@@ -107,16 +104,13 @@ public class AudioManager {
 			soundEffects.put(filename, clip);
 			return clip;
 		} catch (UnsupportedAudioFileException e) {
-			System.err.println("【音频加载失败】不支持的音频格式 " + filename);
-			e.printStackTrace();
+			LogUtil.error("AudioManager", "不支持的音频格式: " + filename, e);
 			return null;
 		} catch (IOException e) {
-			System.err.println("【音频加载失败】无法读取音频文件 " + filename);
-			e.printStackTrace();
+			LogUtil.error("AudioManager", "无法读取音频文件: " + filename, e);
 			return null;
 		} catch (LineUnavailableException e) {
-			System.err.println("【音频加载失败】音频线路不可用: " + filename);
-			e.printStackTrace();
+			LogUtil.error("AudioManager", "音频线路不可用: " + filename, e);
 			return null;
 		}
 	}

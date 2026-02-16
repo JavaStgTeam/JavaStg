@@ -48,8 +48,9 @@ public class __MinorikoNonSpellcard1 extends EnemySpellcard {
                 Color.RED
             );
             
-            // 暂时注释掉添加子弹的代码，需要先修改GameWorld类支持敌人子弹
-            // TODO: 添加敌人子弹到游戏世界
+            if (boss.getGameWorld() != null) {
+                boss.getGameWorld().addEnemyBullet(bullet);
+            }
         }
     }
 }

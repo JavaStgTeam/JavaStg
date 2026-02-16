@@ -50,11 +50,9 @@ public abstract class Boss extends Enemy {
     
     /**
      * 更新Boss状态
-     * @param canvasWidth 画布宽度
-     * @param canvasHeight 画布高度
      */
     @Override
-    public void update(int canvasWidth, int canvasHeight) {
+    public void update() {
         // 只更新位置，不调用super.update避免生命值检查
         frame++;
         onUpdate();
@@ -88,6 +86,16 @@ public abstract class Boss extends Enemy {
     }
     
     /**
+     * 更新Boss状态
+     * @param canvasWidth 画布宽度（兼容参数，不使用）
+     * @param canvasHeight 画布高度（兼容参数，不使用）
+     */
+    @Override
+    public void update(int canvasWidth, int canvasHeight) {
+        update(); // 调用无参数版本
+    }
+    
+    /**
      * 更新入场逻辑
      */
     protected void updateEnterLogic() {
@@ -95,8 +103,13 @@ public abstract class Boss extends Enemy {
         
         // 入场动画：从屏幕上方移动到指定位置
         float targetY = getY();
-        // 从屏幕上方（游戏世界坐标 200）移动到目标位置
-        setY(200 - (200 - targetY) * (float)enterFrameCount / ENTER_DURATION);
+        // 从游戏逻辑坐标系的顶部边界上方进入
+        stg.game.obj.Obj.requireCoordinateSystem();
+        stg.util.CoordinateSystem cs = stg.game.obj.Obj.getSharedCoordinateSystem();
+        float topBound = cs.getTopBound();
+        float enterStartY = topBound + 50; // 从顶部边界上方50像素处开始入场
+        
+        setY(enterStartY - (enterStartY - targetY) * (float)enterFrameCount / ENTER_DURATION);
         
         if (enterFrameCount >= ENTER_DURATION) {
             isEntering = false;

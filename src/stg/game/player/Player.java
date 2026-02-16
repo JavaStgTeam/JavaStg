@@ -144,11 +144,14 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 		if (respawnTimer > 0) {
 			respawnTimer--;
 			if (respawnTimer == 0) {
-				respawning = true;
-				int canvasHeight = 921;
-				setPosition(spawnX, -canvasHeight / 2.0f - getSize());
-				setVelocityByComponent(1, respawnSpeed);
-			}
+	respawning = true;
+	// 使用游戏逻辑坐标系的底部边界作为重生起点
+	stg.game.obj.Obj.requireCoordinateSystem();
+	stg.util.CoordinateSystem cs = stg.game.obj.Obj.getSharedCoordinateSystem();
+	float bottomBound = cs.getBottomBound();
+	setPosition(spawnX, bottomBound - getSize());
+	setVelocityByComponent(1, respawnSpeed);
+}
 			return;
 		}
 
@@ -178,13 +181,13 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 		// 更新位置
 		moveOn(getVelocityX(), getVelocityY());
 
-		// 获取画布尺寸和坐标系
-		int canvasWidth = 548;
-		int canvasHeight = 921;
-		float leftBound = -canvasWidth / 2.0f;
-		float rightBound = canvasWidth / 2.0f;
-		float bottomBound = -canvasHeight / 2.0f;
-		float topBound = canvasHeight / 2.0f;
+		// 使用游戏逻辑坐标系的固定边界进行边界检测
+		stg.game.obj.Obj.requireCoordinateSystem();
+		stg.util.CoordinateSystem cs = stg.game.obj.Obj.getSharedCoordinateSystem();
+		float leftBound = cs.getLeftBound();
+		float rightBound = cs.getRightBound();
+		float bottomBound = cs.getBottomBound();
+		float topBound = cs.getTopBound();
 
 		// @since 2026-01-19 边界限制(中心原点坐标系 * 坐标系 右上为+,+),左下为-,-))
 		if (getX() < leftBound + getSize()) setPosition(leftBound + getSize(), getY());

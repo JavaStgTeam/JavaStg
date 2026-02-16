@@ -3,7 +3,6 @@ package user.enemy;
 import java.awt.Color;
 import stg.game.bullet.Bullet;
 import stg.game.enemy.Enemy;
-import stg.game.ui.GameCanvas;
 import user.bullet.SimpleBullet;
 
 public class __FairyEnemy extends Enemy {
@@ -13,18 +12,16 @@ public class __FairyEnemy extends Enemy {
     private static final float FAIRY_SPEED = 3.0f;
     private static final int SHOOT_INTERVAL = 60;
     private int shootTimer = 0;
-    private GameCanvas gameCanvas;
 
-    public __FairyEnemy(float x, float y, GameCanvas gameCanvas) {
+    public __FairyEnemy(float x, float y) {
         super(x, y, 0, FAIRY_SPEED, FAIRY_SIZE, FAIRY_COLOR, FAIRY_HP);
-        this.gameCanvas = gameCanvas;
     }
 
     @Override
     public void update(int canvasWidth, int canvasHeight) {
         super.update(canvasWidth, canvasHeight);
         
-        if (gameCanvas != null) {
+        if (getGameWorld() != null) {
             shootTimer++;
             if (shootTimer >= SHOOT_INTERVAL) {
                 shoot();
@@ -46,8 +43,8 @@ public class __FairyEnemy extends Enemy {
             Color.RED
         );
         
-        if (gameCanvas != null) {
-            gameCanvas.addBullet(bullet);
+        if (getGameWorld() != null) {
+            getGameWorld().addEnemyBullet(bullet);
         }
     }
 
