@@ -18,7 +18,8 @@ JavaSTG是一个使用Java Swing框架开发的弹幕射击(STG)游戏引擎，�
 - **标题界面**：主菜单、角色选择（灵梦、魔理沙）、动画效果和颜色预览
 - **暂停菜单**：ESC键暂停/恢复，支持继续游戏、重新开始、返回主菜单
 
-### 玩家系统
+### 输入系统
+- **GameCanvas 统一处理**：游戏输入由 GameCanvas 类统一管理
 - 键盘控制移动（上下左右方向键）
 - Z键发射子弹
 - Shift键切换低速模式
@@ -48,6 +49,11 @@ JavaSTG是一个使用Java Swing框架开发的弹幕射击(STG)游戏引擎，�
 - 随机数生成
 - 角度/弧度转换
 
+### 关卡系统
+- **StageGroupDiscovery**：负责发现所有StageGroup的子类
+- **StageGroupFactory**：负责创建StageGroup实例
+- **StageGroupManager**：负责管理StageGroup实例
+
 ## 项目结构
 
 ```
@@ -65,7 +71,13 @@ JavaSTG/
 │   │   │   ├── obj/               # 游戏对象
 │   │   │   ├── player/            # 玩家系统
 │   │   │   ├── stage/             # 关卡系统
+│   │   │   │   ├── StageGroup.java            # 关卡组基类
+│   │   │   │   ├── StageGroupManager.java     # 关卡组管理器
+│   │   │   │   ├── StageGroupDiscovery.java   # 关卡组发现器
+│   │   │   │   ├── StageGroupFactory.java      # 关卡组工厂
+│   │   │   │   └── StageGroupInfo.java         # 关卡组信息注解
 │   │   │   └── ui/               # 用户界面
+│   │   │       └── GameCanvas.java            # 游戏画布（统一处理输入）
 │   │   └── util/                   # 工具类
 │   │       └── math/             # 数学工具
 │   └── user/                       # 用户自定义内容

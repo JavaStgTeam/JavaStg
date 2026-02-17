@@ -13,7 +13,7 @@ public class LogUtil {
         DEBUG, INFO, WARN, ERROR
     }
     
-    private static Level currentLevel = Level.INFO;
+    private static Level currentLevel = Level.ERROR;
     private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     
     private LogUtil() {}

@@ -1,7 +1,6 @@
 package user.spellcard;
 
 import java.awt.Color;
-import stg.game.bullet.Bullet;
 import stg.game.enemy.Boss;
 import stg.game.enemy.EnemySpellcard;
 import user.bullet.SimpleBullet;

@@ -13,7 +13,6 @@ public class Player extends Obj {
 	private float speedSlow; // 低速移动速度
 
 	private boolean slowMode; // 低速模式标志
-	private boolean invincible; // 无敌标志
 	private boolean shooting; // 射击标志
 	private int shootCooldown; // 射击冷却时间
 	private int shootInterval = 1;
@@ -54,6 +53,7 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 	 * 设置碰撞判定半径
 	 * @param radius 碰撞判定半径
 	 */
+	@Override
 	public void setHitboxRadius(float radius) {
 		// 碰撞判定半径在父类 Obj 中定义
 	}
@@ -62,6 +62,7 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 	 * 获取碰撞判定半径
 	 * @return 碰撞判定半径
 	 */
+	@Override
 	public float getHitboxRadius() {
 		return 2.0f; // 默认碰撞判定半径
 	}
@@ -121,6 +122,7 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 	/**
 	 * 实现每帧的自定义更新逻辑
 	 */
+	@Override
 	protected void onUpdate() {
 		// 子类可以重写此方法实现每帧的自定义更新逻辑
 	}
@@ -128,6 +130,7 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 	/**
 	 * 实现自定义移动逻辑
 	 */
+	@Override
 	protected void onMove() {
 		// 子类可以重写此方法实现自定义移动逻辑
 	}
@@ -374,12 +377,7 @@ private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
 		return slowMode;
 	}
 
-	/**
-	 * @param invincible 是否无敌
-	 */
-	public void setInvincible(boolean invincible) {
-		this.invincible = invincible;
-	}
+
 
 	/**
 	 * @since 2026-01-19 受击处理

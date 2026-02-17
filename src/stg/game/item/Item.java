@@ -37,21 +37,7 @@ public abstract class Item extends Obj {
 		super(x, y, vx, vy, size, color);
 	}
 
-	/**
-	 * 初始化行为参数
-	 * 在构造函数中调用，用于初始化行为参数
-	 */
-	protected abstract void initBehavior();
 
-	/**
-	 * 实现每帧的自定义更新逻辑
-	 */
-	protected abstract void onUpdate();
-
-	/**
-	 * 实现自定义移动逻辑
-	 */
-	protected abstract void onMove();
 
 	/**
 	 * 更新物品状态

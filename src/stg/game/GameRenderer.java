@@ -7,7 +7,6 @@ import java.awt.RenderingHints;
 import stg.game.enemy.Boss;
 import stg.game.enemy.EnemySpellcard;
 import stg.game.player.Player;
-import stg.util.CoordinateSystem;
 
 /**
  * 游戏渲染器 - 处理游戏的渲染逻辑
@@ -15,15 +14,13 @@ import stg.util.CoordinateSystem;
 public class GameRenderer {
     private GameWorld world;
     private Player player;
-    private CoordinateSystem coordinateSystem;
     
     /**
      * 构造函数
      */
-    public GameRenderer(GameWorld world, Player player, CoordinateSystem coordinateSystem) {
+    public GameRenderer(GameWorld world, Player player) {
         this.world = world;
         this.player = player;
-        this.coordinateSystem = coordinateSystem;
     }
     
     /**
@@ -195,12 +192,5 @@ public class GameRenderer {
      */
     public void setPlayer(stg.game.player.Player player) {
         this.player = player;
-    }
-    
-    /**
-     * 设置坐标系统
-     */
-    public void setCoordinateSystem(CoordinateSystem coordinateSystem) {
-        this.coordinateSystem = coordinateSystem;
     }
 }

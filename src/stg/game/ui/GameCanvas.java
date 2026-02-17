@@ -10,6 +10,7 @@ import stg.util.CoordinateSystem;
  * 游戏画布类 - 负责游戏的渲染和输入处理
  * @since 2026-01-20
  */
+@SuppressWarnings("FieldMayBeFinal")
 public class GameCanvas extends Component implements KeyStateProvider {
     // 按键状态
     private AtomicBoolean upPressed = new AtomicBoolean(false);
@@ -27,6 +28,7 @@ public class GameCanvas extends Component implements KeyStateProvider {
     /**
      * 设置画布尺寸
      */
+    @Override
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
@@ -100,7 +102,7 @@ public class GameCanvas extends Component implements KeyStateProvider {
         return xPressed.get();
     }
     
-    // 游戏状态面板
+    @SuppressWarnings("unused")
     private GameStatusPanel gameStatusPanel;
     
     // 玩家
@@ -114,6 +116,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
     
     // 游戏世界
     private stg.game.GameWorld gameWorld;
+    
+    // 碰撞检测系统
+    private stg.game.CollisionSystem collisionSystem;
     
     // 关卡组
     private stg.game.stage.StageGroup stageGroup;
@@ -130,8 +135,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
         // 初始化游戏世界
         this.gameWorld = new stg.game.GameWorld();
         
+        // 初始化碰撞检测系统
+        this.collisionSystem = new stg.game.CollisionSystem(gameWorld, null);
+        
         // 初始化游戏渲染器
-        this.gameRenderer = new stg.game.GameRenderer(gameWorld, null, coordinateSystem);
+        this.gameRenderer = new stg.game.GameRenderer(gameWorld, null);
         
         // 设置为可聚焦
         setFocusable(true);
@@ -155,56 +163,25 @@ public class GameCanvas extends Component implements KeyStateProvider {
      */
     private void handleKeyPress(java.awt.event.KeyEvent e) {
         switch (e.getKeyCode()) {
-            case java.awt.event.KeyEvent.VK_UP:
-                setUpPressed(true);
-                break;
-            case java.awt.event.KeyEvent.VK_DOWN:
-                setDownPressed(true);
-                break;
-            case java.awt.event.KeyEvent.VK_LEFT:
-                setLeftPressed(true);
-                break;
-            case java.awt.event.KeyEvent.VK_RIGHT:
-                setRightPressed(true);
-                break;
-            case java.awt.event.KeyEvent.VK_Z:
-                setZPressed(true);
-                break;
-            case java.awt.event.KeyEvent.VK_SHIFT:
-                setShiftPressed(true);
-                break;
-            case java.awt.event.KeyEvent.VK_X:
-                setXPressed(true);
-                break;
+            case java.awt.event.KeyEvent.VK_UP -> setUpPressed(true);
+            case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(true);
+            case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(true);
+            case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(true);
+            case java.awt.event.KeyEvent.VK_Z -> setZPressed(true);
+            case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(true);
+            case java.awt.event.KeyEvent.VK_X -> setXPressed(true);
         }
     }
     
-    /**
-     * 处理按键释放事件
-     */
     private void handleKeyRelease(java.awt.event.KeyEvent e) {
         switch (e.getKeyCode()) {
-            case java.awt.event.KeyEvent.VK_UP:
-                setUpPressed(false);
-                break;
-            case java.awt.event.KeyEvent.VK_DOWN:
-                setDownPressed(false);
-                break;
-            case java.awt.event.KeyEvent.VK_LEFT:
-                setLeftPressed(false);
-                break;
-            case java.awt.event.KeyEvent.VK_RIGHT:
-                setRightPressed(false);
-                break;
-            case java.awt.event.KeyEvent.VK_Z:
-                setZPressed(false);
-                break;
-            case java.awt.event.KeyEvent.VK_SHIFT:
-                setShiftPressed(false);
-                break;
-            case java.awt.event.KeyEvent.VK_X:
-                setXPressed(false);
-                break;
+            case java.awt.event.KeyEvent.VK_UP -> setUpPressed(false);
+            case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(false);
+            case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(false);
+            case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(false);
+            case java.awt.event.KeyEvent.VK_Z -> setZPressed(false);
+            case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(false);
+            case java.awt.event.KeyEvent.VK_X -> setXPressed(false);
         }
     }
     
@@ -228,6 +205,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
         // 更新游戏渲染器中的玩家引用
         if (gameRenderer != null) {
             gameRenderer.setPlayer(player);
+        }
+        
+        // 更新碰撞检测系统中的玩家引用
+        if (collisionSystem != null) {
+            collisionSystem.setPlayer(player);
         }
     }
     
@@ -255,6 +237,7 @@ public class GameCanvas extends Component implements KeyStateProvider {
     /**
      * 请求焦点
      */
+    @Override
     public boolean requestFocusInWindow() {
         return super.requestFocusInWindow();
     }
@@ -304,6 +287,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
         // 更新游戏世界
         if (gameWorld != null) {
             gameWorld.update(actualWidth, actualHeight);
+        }
+        
+        // 执行碰撞检测
+        if (collisionSystem != null) {
+            collisionSystem.checkCollisions();
         }
         
         // 更新关卡组状态

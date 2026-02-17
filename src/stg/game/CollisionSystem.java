@@ -76,31 +76,28 @@ public class CollisionSystem {
         float x1, y1, size1;
         float x2, y2, size2;
         
-        // 获取对象1的属性
-        if (obj1 instanceof Bullet) {
-            Bullet bullet = (Bullet)obj1;
+        if (obj1 instanceof Bullet bullet) {
             x1 = bullet.getX();
             y1 = bullet.getY();
-            // 对于 Bullet，使用 getSize() 作为碰撞判定半径，因为可能没有 getHitboxRadius() 方法
             size1 = bullet.getSize();
         } else {
             return false;
         }
         
-        // 获取对象2的属性
-        if (obj2 instanceof Enemy) {
-            Enemy enemy = (Enemy)obj2;
-            x2 = enemy.getX();
-            y2 = enemy.getY();
-            size2 = enemy.getSize();
-        } else if (obj2 instanceof Player) {
-            Player player = (Player)obj2;
-            x2 = player.getX();
-            y2 = player.getY();
-            // 对于 Player，使用 getSize() 作为碰撞判定半径，因为可能没有 getHitboxRadius() 方法
-            size2 = player.getSize();
-        } else {
-            return false;
+        switch (obj2) {
+            case Enemy enemy -> {
+                x2 = enemy.getX();
+                y2 = enemy.getY();
+                size2 = enemy.getSize();
+            }
+            case Player p -> {
+                x2 = p.getX();
+                y2 = p.getY();
+                size2 = p.getSize();
+            }
+            default -> {
+                return false;
+            }
         }
         
         // 计算距离

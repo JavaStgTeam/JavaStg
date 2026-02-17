@@ -1,5 +1,18 @@
 # 更新日志
 
+## 2026-02-17
+
+### 架构重构
+- 统一输入处理系统：移除未使用的 `InputHandler` 类，使用 `GameCanvas` 统一处理
+- 优化碰撞检测：移除 `GameWorld` 中的碰撞检测逻辑，统一到 `CollisionSystem`
+- 分离 `StageGroupManager` 职责：新增 `StageGroupDiscovery` 和 `StageGroupFactory` 类
+- 统一 `Obj` 子类设计模式：修改 `Item` 类，移除强制实现的抽象方法
+
+### 其他
+- 验证所有重构功能正常工作，无回归问题
+- 更新项目文档，反映架构变更
+- 清理临时测试文件
+
 ## 2026-02-16
 
 ### 修复

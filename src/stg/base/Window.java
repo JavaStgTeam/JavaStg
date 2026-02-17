@@ -261,12 +261,7 @@ public class Window extends JFrame {
                     
                     // 计算中间面板的理想宽度（保持3:4的比例）
                     // 3:4比例意味着宽度是高度的0.75倍
-                    float idealRatio = 3.0f / 4.0f; // 明确设置为3:4比例
-                    int centerWidth = (int)(totalHeight * idealRatio);
-                    
-                    // 确保中间面板宽度严格符合3:4比例，避免整数取整误差
-                    // 重新计算，确保宽度是高度的3/4
-                    centerWidth = (totalHeight * 3) / 4;
+                    int centerWidth = (totalHeight * 3) / 4;
                     
                     // 计算剩余宽度，分配给左右侧面板
                     int remainingWidth = totalWidth - centerWidth;
