@@ -1,7 +1,7 @@
 package user.boss;
 
 import java.awt.Color;
-import stg.game.enemy.Boss;
+import stg.entity.enemy.Boss;
 import user.spellcard.TestSpellcard_1;
 import user.spellcard.TestSpellcard_2;
 import user.spellcard.TestSpellcard_3;

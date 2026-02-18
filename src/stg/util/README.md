@@ -1,314 +1,202 @@
-# stg.util 包
+# util 包说明
 
-## 功能描述
-stg.util 包是 JavaStg 游戏引擎的工具系统包，提供了游戏开发中常用的各种工具类，包括音频管理、坐标转换、事件总线、渲染工具、资源管理和数学工具等。这些工具类为游戏引擎的其他部分提供了基础支持，使得游戏开发更加高效和便捷。
+## 功能概述
 
-## 包含文件
-1. **AudioManager.java**：音频管理类，负责加载和播放游戏音频（背景音乐、音效等）。
-2. **CoordinateSystem.java**：坐标系统工具类，提供坐标转换功能，将屏幕坐标系转换为画布中心原点坐标系。
-3. **EventBus.java**：事件总线，用于游戏对象间的通信，支持事件的发布和订阅。
-4. **RenderUtils.java**：渲染工具类，提供统一的渲染设置和优化方法。
-5. **ResourceManager.java**：资源管理类，负责加载和管理游戏资源（图片等）。
-6. **math/**：数学工具包，包含以下文件：
-   - **MathUtils.java**：数学工具类，提供常用的数学计算方法。
-   - **RandomGenerator.java**：随机数生成器，提供随机数的生成方法。
-   - **Vector2.java**：二维向量类，提供向量的基本运算方法。
+**util 包**是游戏的工具类包，包含了各种工具类和辅助功能。这些工具类为游戏的其他模块提供支持，如数学计算、资源管理、事件总线等。
 
-## 核心功能
-1. **音频管理**：实现游戏音频的加载、播放、暂停、恢复和停止等功能，支持背景音乐和音效的管理，支持音量调节。
-2. **坐标系统**：实现屏幕坐标系和画布中心原点坐标系之间的转换，提供画布边界的计算方法。
-3. **事件总线**：实现游戏对象间的通信，支持事件的发布和订阅，使用泛型和函数式接口提供类型安全的事件处理。
-4. **渲染工具**：提供统一的渲染设置和优化方法，支持抗锯齿和高质量渲染设置。
-5. **资源管理**：实现游戏资源的加载和管理，支持从文件系统和类路径加载资源，支持资源的缓存和卸载。
-6. **数学工具**：提供常用的数学计算方法、随机数生成方法和二维向量的基本运算方法。
+## 包结构
 
-## 设计理念
-stg.util 包采用了工具类设计模式，通过静态方法和单例模式提供功能：
-- **单例模式**：对于需要全局访问的工具类（如 `AudioManager`、`EventBus`、`ResourceManager`），使用单例模式确保全局只有一个实例。
-- **静态方法**：对于不需要维护状态的工具类（如 `RenderUtils`、`MathUtils`），使用静态方法提供功能。
-- **泛型和函数式接口**：使用泛型和函数式接口（如 `Consumer`）提供类型安全和简洁的 API。
-- **资源缓存**：使用哈希表缓存已加载的资源，避免重复加载，提高性能。
+```
+util/
+├── math/          # 数学工具包
+├── AnnotationScanner.java  # 注解扫描器
+├── AudioManager.java       # 音频管理器
+├── CoordinateSystem.java   # 坐标系统
+├── EventBus.java           # 事件总线
+├── GameConstants.java      # 游戏常量
+├── LogUtil.java            # 日志工具
+├── RenderUtils.java        # 渲染工具
+├── ResourceManager.java    # 资源管理器
+└── README.md               # 包说明文档
+```
 
-这种设计使得工具类具有良好的可访问性和可扩展性，可以方便地在游戏引擎的各个部分使用。
+## 包含的类
 
-## 依赖关系
-- **AudioManager**：依赖 `javax.sound.sampled` 包，用于音频处理。
-- **CoordinateSystem**：无外部依赖。
-- **EventBus**：依赖 `java.util.concurrent.ConcurrentHashMap`，用于线程安全的事件订阅管理。
-- **RenderUtils**：依赖 `java.awt.Graphics2D` 和 `java.awt.RenderingHints`，用于渲染设置。
-- **ResourceManager**：依赖 `java.awt.image.BufferedImage` 和 `javax.imageio.ImageIO`，用于图片加载。
-- **MathUtils**：无外部依赖。
-- **RandomGenerator**：无外部依赖。
-- **Vector2**：无外部依赖。
+| 类名 | 功能描述 |
+|------|----------|
+| AnnotationScanner | 注解扫描器，用于扫描和处理注解 |
+| AudioManager | 音频管理器，用于加载和播放音频 |
+| CoordinateSystem | 坐标系统，处理游戏中的坐标转换 |
+| EventBus | 事件总线，用于事件的分发和处理 |
+| GameConstants | 游戏常量，定义游戏中的常量值 |
+| LogUtil | 日志工具，用于记录游戏日志 |
+| RenderUtils | 渲染工具，提供渲染相关的辅助方法 |
+| ResourceManager | 资源管理器，用于加载和管理游戏资源 |
+
+## 主要功能
+
+### AnnotationScanner 类
+- **注解扫描**：扫描指定包中的注解
+- **反射机制**：使用反射机制处理注解
+- **类加载**：动态加载带有特定注解的类
+- **扩展性**：支持自定义注解的处理
+
+### AudioManager 类
+- **音频加载**：加载游戏中的音频文件
+- **音频播放**：播放背景音乐和音效
+- **音量控制**：调节音频的音量
+- **音频管理**：管理音频的播放状态
+
+### CoordinateSystem 类
+- **坐标转换**：处理游戏世界坐标和屏幕坐标的转换
+- **缩放处理**：处理不同分辨率下的坐标缩放
+- **边界检查**：检查坐标是否在有效范围内
+- **坐标系定义**：定义游戏的坐标系
+
+### EventBus 类
+- **事件分发**：分发游戏中的事件
+- **事件监听**：管理事件监听器
+- **事件处理**：处理事件的触发和响应
+- **松耦合**：实现组件间的松耦合通信
+
+### GameConstants 类
+- **常量定义**：定义游戏中的常量值
+- **配置管理**：集中管理游戏配置
+- **可维护性**：便于统一修改和管理常量
+
+### LogUtil 类
+- **日志记录**：记录游戏中的日志信息
+- **日志级别**：支持不同级别的日志
+- **日志输出**：控制日志的输出方式
+- **调试辅助**：辅助游戏的调试
+
+### RenderUtils 类
+- **渲染辅助**：提供渲染相关的辅助方法
+- **图形处理**：处理图形的绘制和变换
+- **视觉效果**：实现各种视觉效果
+- **性能优化**：优化渲染性能
+
+### ResourceManager 类
+- **资源加载**：加载游戏中的各种资源
+- **资源缓存**：缓存已加载的资源
+- **资源释放**：释放不再使用的资源
+- **资源管理**：管理资源的生命周期
+
+## math 子包
+
+### 功能概述
+
+**math 子包**是游戏的数学工具包，包含了数学计算相关的类。这些工具类为游戏的物理模拟、碰撞检测、运动计算等提供支持。
+
+### 包含的类
+
+| 类名 | 功能描述 |
+|------|----------|
+| MathUtils | 数学工具类，提供各种数学计算方法 |
+| RandomGenerator | 随机数生成器，提供随机数生成功能 |
+| Vector2 | 二维向量类，实现二维向量的运算 |
+
+### MathUtils 类
+- **数学计算**：提供各种数学计算方法
+- **角度转换**：处理角度和弧度的转换
+- **插值计算**：实现线性插值等插值方法
+- **边界限制**：限制值在指定范围内
+
+### RandomGenerator 类
+- **随机数生成**：生成各种类型的随机数
+- **种子管理**：管理随机数生成的种子
+- **概率分布**：支持不同的概率分布
+- **随机选择**：从集合中随机选择元素
+
+### Vector2 类
+- **向量运算**：实现二维向量的各种运算
+- **向量属性**：计算向量的长度、角度等属性
+- **向量变换**：实现向量的旋转、缩放等变换
+- **碰撞检测**：辅助实现基于向量的碰撞检测
 
 ## 使用示例
 
-### 使用音频管理器
+### 使用资源管理器
+
 ```java
-// 获取音频管理器实例
-AudioManager audioManager = AudioManager.getInstance();
+// 加载图片资源
+BufferedImage playerImage = ResourceManager.getInstance().loadImage("player.png");
 
-// 设置音频音量
-audioManager.setMusicVolume(0.7f);
-audioManager.setSoundVolume(1.0f);
+// 加载音频资源
+Clip soundEffect = ResourceManager.getInstance().loadSound("shoot.wav");
 
-// 播放背景音乐
-audioManager.playMusic("bgm.wav", true); // true 表示循环播放
+// 播放音频
+AudioManager.getInstance().playSound(soundEffect);
 
-// 暂停背景音乐
-audioManager.pauseMusic();
-
-// 恢复背景音乐
-audioManager.resumeMusic();
-
-// 停止背景音乐
-audioManager.stopMusic();
-
-// 播放音效
-audioManager.playSoundEffect("shot.wav");
-
-// 清理音频资源
-audioManager.clearAll();
-```
-
-### 使用坐标系统
-```java
-// 创建坐标系统
-CoordinateSystem coordinateSystem = new CoordinateSystem(800, 600);
-
-// 更新画布尺寸
-coordinateSystem.updateCanvasSize(1024, 768);
-
-// 转换坐标
-float[] screenCoords = coordinateSystem.toScreenCoords(100, 50); // 中心原点坐标转屏幕坐标
-float[] centerCoords = coordinateSystem.toCenterCoords(512, 384); // 屏幕坐标转中心原点坐标
-
-// 获取画布边界
-float leftBound = coordinateSystem.getLeftBound();
-float rightBound = coordinateSystem.getRightBound();
-float topBound = coordinateSystem.getTopBound();
-float bottomBound = coordinateSystem.getBottomBound();
-
-// 获取画布中心
-float centerX = coordinateSystem.getCenterX();
-float centerY = coordinateSystem.getCenterY();
+// 加载背景音乐
+AudioManager.getInstance().playMusic("bgm.wav");
 ```
 
 ### 使用事件总线
+
 ```java
-// 获取事件总线实例
-EventBus eventBus = EventBus.getInstance();
-
-// 定义事件类
-class PlayerMovedEvent {
-    private final float x;
-    private final float y;
-    
-    public PlayerMovedEvent(float x, float y) {
-        this.x = x;
-        this.y = y;
-    }
-    
-    public float getX() {
-        return x;
-    }
-    
-    public float getY() {
-        return y;
-    }
-}
-
-// 创建订阅者对象
-Object subscriber = new Object();
-
-// 订阅事件
-eventBus.subscribe(subscriber, PlayerMovedEvent.class, event -> {
-    System.out.println("Player moved to: (" + event.getX() + ", " + event.getY() + ")");
+// 注册事件监听器
+eventBus.registerListener(EnemyDestroyedEvent.class, event -> {
+    // 处理敌人被摧毁事件
+    System.out.println("Enemy destroyed! Score: " + event.getScore());
 });
 
-// 发布事件
-eventBus.publish(new PlayerMovedEvent(100, 50));
-
-// 取消特定订阅
-eventBus.unsubscribe(subscriber, PlayerMovedEvent.class, event -> {
-    System.out.println("Player moved to: (" + event.getX() + ", " + event.getY() + ")");
-});
-
-// 取消订阅者的所有订阅
-eventBus.unsubscribeAll(subscriber);
-
-// 清理所有订阅
-eventBus.clear();
-```
-
-### 使用渲染工具
-```java
-// 在绘制方法中使用
-@Override
-public void paint(Graphics g) {
-    Graphics2D g2d = (Graphics2D) g;
-    
-    // 启用抗锯齿
-    RenderUtils.enableAntiAliasing(g2d);
-    
-    // 绘制图形
-    g2d.setColor(Color.RED);
-    g2d.fillOval(100, 100, 50, 50);
-    
-    // 启用高质量渲染
-    RenderUtils.enableHighQualityRendering(g2d);
-    
-    // 绘制文本
-    g2d.setColor(Color.WHITE);
-    g2d.setFont(new Font("Arial", Font.BOLD, 24));
-    g2d.drawString("Hello World", 200, 200);
-    
-    // 重置渲染设置
-    RenderUtils.resetRenderingHints(g2d);
-}
-```
-
-### 使用资源管理器
-```java
-// 获取资源管理器实例
-ResourceManager resourceManager = ResourceManager.getInstance();
-
-// 设置资源路径
-resourceManager.setResourcePath("resources/");
-
-// 加载图片
-BufferedImage playerImage = resourceManager.loadImage("player.png");
-BufferedImage enemyImage = resourceManager.loadImage("enemy.png", "images");
-
-// 检查图片是否已加载
-boolean hasPlayerImage = resourceManager.hasImage("player.png");
-
-// 获取已加载的图片
-BufferedImage loadedImage = resourceManager.getImage("player.png");
-
-// 卸载图片
-resourceManager.unloadImage("player.png");
-
-// 清理所有图片
-resourceManager.clearImages();
+// 触发事件
+eventBus.fireEvent(new EnemyDestroyedEvent(enemy, player, 100));
 ```
 
 ### 使用数学工具
+
 ```java
-// 使用 MathUtils
-float angle = MathUtils.degToRad(45); // 角度转弧度
-float distance = MathUtils.distance(0, 0, 100, 100); // 计算两点间距离
-float clampedValue = MathUtils.clamp(5, 0, 10); // 限制值在范围内
-
-// 使用 RandomGenerator
-RandomGenerator random = RandomGenerator.getInstance();
-int randomInt = random.nextInt(100); // 生成0-99的随机整数
-float randomFloat = random.nextFloat(0, 1); // 生成0-1的随机浮点数
-boolean randomBool = random.nextBoolean(); // 生成随机布尔值
-
-// 使用 Vector2
-Vector2 position = new Vector2(100, 50);
+// 使用向量
+Vector2 position = new Vector2(100, 200);
 Vector2 velocity = new Vector2(1, 0);
-Vector2 newPosition = position.add(velocity.multiply(10)); // 位置更新
-float length = velocity.length(); // 计算向量长度
-Vector2 normalized = velocity.normalize(); // 归一化向量
+Vector2 newPosition = position.add(velocity.multiply(10));
+
+// 使用随机数
+int randomX = RandomGenerator.getInstance().nextInt(800);
+int randomY = RandomGenerator.getInstance().nextInt(600);
+
+// 使用数学工具
+double radians = MathUtils.degToRad(45);
+double interpolatedValue = MathUtils.lerp(0, 100, 0.5);
 ```
 
-## 扩展建议
-1. **添加更多音频格式支持**：可以扩展 `AudioManager` 类，支持更多音频格式，如 MP3、OGG 等。
-2. **添加资源热重载**：可以扩展 `ResourceManager` 类，支持资源的热重载，当资源文件变化时自动重新加载。
-3. **添加更多数学工具**：可以扩展 `math` 包，添加更多数学工具类，如矩阵运算、四元数等。
-4. **添加文件系统工具**：可以添加文件系统工具类，用于文件的读写、目录的遍历等。
-5. **添加时间工具**：可以添加时间工具类，用于游戏时间的管理、帧率的计算等。
-6. **添加网络工具**：可以添加网络工具类，用于游戏的网络通信、多人游戏等。
-7. **添加配置管理工具**：可以添加配置管理工具类，用于游戏配置的加载、保存和管理。
+### 使用坐标系统
 
-## 关键方法
+```java
+// 创建坐标系统
+CoordinateSystem coords = new CoordinateSystem(800, 600);
 
-### AudioManager 类
-- `getInstance()`：获取音频管理器实例。
-- `setResourcePath(String path)`：设置资源路径。
-- `setMusicVolume(float volume)`：设置背景音乐音量。
-- `setSoundVolume(float volume)`：设置音效音量。
-- `loadMusic(String filename)`：加载背景音乐。
-- `loadSoundEffect(String filename)`：加载音效。
-- `playMusic(String filename, boolean loop)`：播放背景音乐。
-- `stopMusic()`：停止背景音乐。
-- `pauseMusic()`：暂停背景音乐。
-- `resumeMusic()`：恢复背景音乐。
-- `playSoundEffect(String filename)`：播放音效。
-- `unloadMusic(String filename)`：卸载背景音乐。
-- `unloadSoundEffect(String filename)`：卸载音效。
-- `clearMusic()`：清理所有背景音乐。
-- `clearSoundEffects()`：清理所有音效。
-- `clearAll()`：清理所有音频资源。
-- `isMusicPlaying()`：检查背景音乐是否正在播放。
-- `isMusicLoaded(String filename)`：检查背景音乐是否已加载。
-- `isSoundEffectLoaded(String filename)`：检查音效是否已加载。
+// 世界坐标转屏幕坐标
+Vector2 screenPos = coords.worldToScreen(worldPos);
 
-### CoordinateSystem 类
-- `CoordinateSystem(int canvasWidth, int canvasHeight)`：构造函数，创建坐标系统对象。
-- `updateCanvasSize(int width, int height)`：更新画布尺寸。
-- `toScreenCoords(float x, float y)`：将画布中心原点坐标转换为屏幕左上角原点坐标。
-- `toCenterCoords(float screenX, float screenY)`：将屏幕左上角原点坐标转换为画布中心原点坐标。
-- `getCenterX()`：获取画布中心X坐标。
-- `getCenterY()`：获取画布中心Y坐标。
-- `getCanvasWidth()`：获取画布宽度。
-- `getCanvasHeight()`：获取画布高度。
-- `getLeftBound()`：获取画布左边界(中心原点坐标系)。
-- `getRightBound()`：获取画布右边界(中心原点坐标系)。
-- `getTopBound()`：获取画布上边界(中心原点坐标系)。
-- `getBottomBound()`：获取画布下边界(中心原点坐标系)。
+// 屏幕坐标转世界坐标
+Vector2 worldPos = coords.screenToWorld(screenPos);
+```
 
-### EventBus 类
-- `getInstance()`：获取事件总线实例。
-- `subscribe(Object subscriber, Class<T> eventType, Consumer<T> handler)`：订阅事件。
-- `publish(T event)`：发布事件。
-- `unsubscribe(Object subscriber, Class<T> eventType, Consumer<T> handler)`：取消订阅。
-- `unsubscribeAll(Object subscriber)`：取消订阅者的所有订阅。
-- `clear()`：清理所有订阅。
+### 使用日志工具
 
-### RenderUtils 类
-- `enableAntiAliasing(Graphics2D g)`：启用抗锯齿渲染。
-- `enableHighQualityRendering(Graphics2D g)`：启用高质量渲染设置。
-- `resetRenderingHints(Graphics2D g)`：重置渲染设置为默认值。
+```java
+// 记录不同级别的日志
+LogUtil.debug("Game", "Debug message");
+LogUtil.info("Game", "Info message");
+LogUtil.warn("Game", "Warning message");
+LogUtil.error("Game", "Error message", exception);
+```
 
-### ResourceManager 类
-- `getInstance()`：获取资源管理器实例。
-- `setResourcePath(String path)`：设置资源路径。
-- `loadImage(String filename)`：加载图片。
-- `loadImage(String filename, String subPath)`：加载指定子路径下的图片。
-- `unloadImage(String filename)`：卸载图片。
-- `clearImages()`：清理所有图片。
-- `getImage(String filename)`：获取已加载的图片。
-- `hasImage(String filename)`：检查图片是否已加载。
+## 设计说明
 
-### MathUtils 类
-- `degToRad(float degrees)`：角度转弧度。
-- `radToDeg(float radians)`：弧度转角度。
-- `distance(float x1, float y1, float x2, float y2)`：计算两点间距离。
-- `clamp(float value, float min, float max)`：限制值在范围内。
-- `lerp(float start, float end, float t)`：线性插值。
+1. **工具类设计**：提供静态方法或单例模式的工具类
+2. **功能模块化**：将不同功能的工具类分开管理
+3. **性能优化**：考虑工具类的性能影响
+4. **可扩展性**：支持工具类的扩展和自定义
+5. **依赖管理**：最小化工具类之间的依赖
 
-### RandomGenerator 类
-- `getInstance()`：获取随机数生成器实例。
-- `nextInt(int bound)`：生成0到bound-1的随机整数。
-- `nextInt(int min, int max)`：生成min到max的随机整数。
-- `nextFloat()`：生成0-1的随机浮点数。
-- `nextFloat(float min, float max)`：生成min到max的随机浮点数。
-- `nextBoolean()`：生成随机布尔值。
+## 开发建议
 
-### Vector2 类
-- `Vector2(float x, float y)`：构造函数，创建二维向量对象。
-- `add(Vector2 other)`：向量加法。
-- `subtract(Vector2 other)`：向量减法。
-- `multiply(float scalar)`：向量乘法（标量）。
-- `divide(float scalar)`：向量除法（标量）。
-- `length()`：计算向量长度。
-- `lengthSquared()`：计算向量长度的平方。
-- `normalize()`：归一化向量。
-- `dot(Vector2 other)`：计算向量点积。
-- `angle()`：计算向量角度。
-- `set(float x, float y)`：设置向量坐标。
-- `getX()`：获取X坐标。
-- `getY()`：获取Y坐标。
+- 当需要使用工具类时，直接调用相应的静态方法或获取单例实例
+- 当需要添加新的工具方法时，添加到相应的工具类中
+- 考虑工具类的性能，避免在高频调用的地方使用复杂的工具方法
+- 为工具类添加适当的注释和文档
+- 可以根据需要创建新的工具类，保持工具类的职责单一

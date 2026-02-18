@@ -1,8 +1,8 @@
 package user.spellcard;
 
 import java.awt.Color;
-import stg.game.enemy.Boss;
-import stg.game.enemy.EnemySpellcard;
+import stg.entity.enemy.Boss;
+import stg.entity.enemy.EnemySpellcard;
 import user.bullet.SimpleBullet;
 
 public class __MinorikoSpellcard2 extends EnemySpellcard {

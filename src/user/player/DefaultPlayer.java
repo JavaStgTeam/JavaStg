@@ -1,7 +1,7 @@
 package user.player;
 
 import java.awt.Color;
-import stg.game.player.Player;
+import stg.entity.player.Player;
 import user.bullet.DefaultPlayerMainBullet;
 
 /**
@@ -38,7 +38,7 @@ public class DefaultPlayer extends Player {
         float rightBulletY = getY() + getSize(); // 从自机顶部发射
         
         // 获取游戏世界引用
-        stg.game.GameWorld gameWorld = getGameWorld();
+        stg.core.GameWorld gameWorld = getGameWorld();
         if (gameWorld != null) {
             // 创建左侧子弹
             DefaultPlayerMainBullet leftBullet = new DefaultPlayerMainBullet(leftBulletX, leftBulletY);

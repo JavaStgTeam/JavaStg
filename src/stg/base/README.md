@@ -1,64 +1,71 @@
-# stg.base 包
+# base 包说明
 
-## 功能描述
-stg.base 包是 JavaStg 游戏引擎的基础组件包，提供了窗口管理、键盘输入处理等基础功能。这些组件是游戏引擎的底层支撑，为上层游戏逻辑提供了必要的运行环境。
+## 功能概述
 
-## 包含文件
-1. **Window.java**：游戏主窗口类，负责创建和管理游戏窗口，包含游戏画布、虚拟键盘面板和游戏状态面板。
-2. **VirtualKeyboardPanel.java**：虚拟键盘面板，显示玩家按键状态，支持不同界面的按键状态切换。
-3. **KeyStateProvider.java**：按键状态提供者接口，定义了获取按键状态的方法，支持标题界面的虚拟键盘显示。
+**base 包**是游戏的基础组件包，提供窗口管理、键盘输入等基础功能。这些组件是游戏运行的基础，被其他模块广泛使用。
+
+## 包含的类
+
+| 类名 | 功能描述 |
+|------|----------|
+| Window | 游戏窗口管理类，负责创建和管理游戏主窗口 |
+| VirtualKeyboardPanel | 虚拟键盘面板，显示按键状态 |
+| KeyStateProvider | 键盘状态提供者接口，为其他组件提供键盘输入状态 |
 
 ## 主要功能
-1. **窗口管理**：通过 `Window` 类创建和管理游戏主窗口，包含三个面板（左侧操作说明、中间游戏画布、右侧游戏状态）。
-2. **虚拟键盘**：通过 `VirtualKeyboardPanel` 类显示玩家按键状态，提供直观的按键反馈。
-3. **按键状态接口**：通过 `KeyStateProvider` 接口统一按键状态的获取方式，支持不同界面的按键状态切换。
-4. **玩家初始化**：通过 `Window` 类的 `initializePlayer` 方法初始化玩家并设置初始位置。
 
-## 设计理念
-stg.base 包采用了模块化设计，将窗口管理和键盘输入处理分离为不同的组件，便于维护和扩展。同时，通过接口定义（如 `KeyStateProvider`）实现了组件间的解耦，提高了代码的可测试性和可扩展性。
+### Window 类
+- 创建和管理游戏主窗口
+- 处理窗口事件和大小调整
+- 提供对游戏画布的访问
+- 管理窗口的显示和隐藏
 
-## 依赖关系
-- 依赖 Java 标准库中的 AWT 和 Swing 包用于界面渲染
-- 依赖 `stg.game` 包中的类（如 `GameLoop`、`GameCanvas` 等）
-- 依赖 `stg.util` 包中的工具类（如 `RenderUtils`）
+### VirtualKeyboardPanel 类
+- 显示键盘按键状态
+- 支持自定义按键布局
+- 与 KeyStateProvider 接口配合使用
+- 可在标题界面和游戏界面中使用
+
+### KeyStateProvider 接口
+- 定义键盘状态获取方法
+- 为其他组件提供统一的键盘输入接口
+- 支持不同的键盘输入实现
 
 ## 使用示例
+
+### 创建游戏窗口
+
 ```java
-// 创建游戏窗口
+// 创建窗口（参数为是否启用调试模式）
 Window window = new Window(false);
-
-// 显示标题界面
-TitleScreen titleScreen = new TitleScreen(new TitleScreen.TitleCallback() {
-    // 实现回调方法
-});
-
-// 更新虚拟键盘以显示标题界面的按键状态
-window.getVirtualKeyboardPanel().setKeyStateProvider(titleScreen);
-
-// 初始化玩家
-window.initializePlayer();
 
 // 获取游戏画布
 GameCanvas gameCanvas = window.getGameCanvas();
+
+// 显示窗口
+window.setVisible(true);
 ```
 
-## 关键方法
-1. **Window 类**：
-   - `Window(boolean initPlayer)`：构造函数，创建游戏窗口
-   - `initializePlayer()`：初始化玩家并设置初始位置
-   - `getGameCanvas()`：获取游戏画布
-   - `getVirtualKeyboardPanel()`：获取虚拟键盘面板
-   - `getCenterPanel()`：获取中间面板，用于显示不同界面
+### 使用虚拟键盘面板
 
-2. **VirtualKeyboardPanel 类**：
-   - `VirtualKeyboardPanel(KeyStateProvider keyStateProvider)`：构造函数，创建虚拟键盘面板
-   - `setKeyStateProvider(KeyStateProvider provider)`：设置按键状态提供者
+```java
+// 创建虚拟键盘面板
+VirtualKeyboardPanel keyboardPanel = new VirtualKeyboardPanel(gameCanvas);
 
-3. **KeyStateProvider 接口**：
-   - `isUpPressed()`：获取上方向键是否按下
-   - `isDownPressed()`：获取下方向键是否按下
-   - `isLeftPressed()`：获取左方向键是否按下
-   - `isRightPressed()`：获取右方向键是否按下
-   - `isZPressed()`：获取Z键是否按下
-   - `isShiftPressed()`：获取Shift键是否按下
-   - `isXPressed()`：获取X键是否按下
+// 添加到界面
+frame.add(keyboardPanel);
+```
+
+## 设计说明
+
+1. **职责单一**：每个类只负责特定的基础功能
+2. **接口分离**：通过接口定义功能契约，便于扩展
+3. **依赖最小化**：尽量减少对其他包的依赖
+4. **可测试性**：设计时考虑测试的便利性
+
+## 开发建议
+
+- 当需要修改窗口行为时，修改 Window 类
+- 当需要扩展键盘输入功能时，实现 KeyStateProvider 接口
+- 当需要自定义虚拟键盘显示时，修改 VirtualKeyboardPanel 类
+- 保持基础组件的稳定性，避免频繁修改

@@ -1,8 +1,8 @@
 package user.stageGroup;
 
-import stg.game.stage.StageGroup;
-import stg.game.stage.StageGroupInfo;
-import stg.game.ui.GameCanvas;
+import stg.stage.StageGroup;
+import stg.stage.StageGroupInfo;
+import stg.ui.GameCanvas;
 import user.stage.__MountainPathStage;
 
 @StageGroupInfo(

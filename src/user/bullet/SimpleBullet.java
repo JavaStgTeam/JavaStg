@@ -1,7 +1,7 @@
 package user.bullet;
 
 import java.awt.Color;
-import stg.game.bullet.Bullet;
+import stg.entity.bullet.Bullet;
 
 /**
  * 简单子弹类 - 提供空的task实现

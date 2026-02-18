@@ -2,7 +2,7 @@ package stg.base;
 
 import java.awt.*;
 import javax.swing.*;
-import stg.game.ui.GameCanvas;
+import stg.ui.GameCanvas;
 
 /**
  * 虚拟键盘面板 - 显示按键状态

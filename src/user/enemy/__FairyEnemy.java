@@ -1,8 +1,8 @@
 package user.enemy;
 
 import java.awt.Color;
-import stg.game.bullet.Bullet;
-import stg.game.enemy.Enemy;
+import stg.entity.bullet.Bullet;
+import stg.entity.enemy.Enemy;
 import user.bullet.SimpleBullet;
 
 public class __FairyEnemy extends Enemy {

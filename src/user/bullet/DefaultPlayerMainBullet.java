@@ -1,7 +1,7 @@
 package user.bullet;
 
 import java.awt.Color;
-import stg.game.bullet.Bullet;
+import stg.entity.bullet.Bullet;
 
 /**
  * 默认玩家主子弹类 - 沿y方向竖直向上的子弹

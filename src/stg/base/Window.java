@@ -3,10 +3,10 @@ package stg.base;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import stg.game.GameLoop;
-import stg.game.player.Player;
-import stg.game.ui.GameCanvas;
-import stg.game.ui.GameStatusPanel;
+import stg.core.GameLoop;
+import stg.entity.player.Player;
+import stg.ui.GameCanvas;
+import stg.ui.GameStatusPanel;
 
 /**
  * 窗口类 - STG游戏主窗口

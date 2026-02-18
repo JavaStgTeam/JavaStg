@@ -1,7 +1,7 @@
 package user.stage;
 
-import stg.game.stage.Stage;
-import stg.game.ui.GameCanvas;
+import stg.stage.Stage;
+import stg.ui.GameCanvas;
 import user.boss.__MinorikoBoss;
 import user.enemy.__FairyEnemy;
 import user.enemy.__MidFairyEnemy;

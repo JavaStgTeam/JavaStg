@@ -1,7 +1,7 @@
 package user.enemy;
 
 import java.awt.Color;
-import stg.game.enemy.Enemy;
+import stg.entity.enemy.Enemy;
 
 /**
  * 默认敌人类 - 水平移动并在碰到版边时反弹
@@ -72,8 +72,8 @@ public class DefaultEnemy extends Enemy {
         float vx = getVx();
         
         // 使用游戏逻辑坐标系的固定边界
-        stg.game.obj.Obj.requireCoordinateSystem();
-        stg.util.CoordinateSystem cs = stg.game.obj.Obj.getSharedCoordinateSystem();
+        stg.entity.base.Obj.requireCoordinateSystem();
+        stg.util.CoordinateSystem cs = stg.entity.base.Obj.getSharedCoordinateSystem();
         float leftBound = cs.getLeftBound() + getSize();
         float rightBound = cs.getRightBound() - getSize();
         

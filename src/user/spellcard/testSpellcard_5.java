@@ -1,7 +1,7 @@
 package user.spellcard;
 
-import stg.game.enemy.Boss;
-import stg.game.enemy.EnemySpellcard;
+import stg.entity.enemy.Boss;
+import stg.entity.enemy.EnemySpellcard;
 
 /**
  * 测试符卡5（无名）

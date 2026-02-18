@@ -2,11 +2,11 @@ package Main;
 
 import java.awt.EventQueue;
 import stg.base.Window;
-import stg.game.player.Player;
-import stg.game.stage.StageGroup;
-import stg.game.stage.StageGroupManager;
-import stg.game.ui.GameCanvas;
-import stg.game.ui.TitleScreen;
+import stg.entity.player.Player;
+import stg.stage.StageGroup;
+import stg.stage.StageGroupManager;
+import stg.ui.GameCanvas;
+import stg.ui.TitleScreen;
 import stg.util.LogUtil;
 
 public class Main {
@@ -55,10 +55,10 @@ public class Main {
 	}
 
 	private static void showStageGroupSelect() {
-		stg.game.ui.StageGroupSelectPanel selectPanel = new stg.game.ui.StageGroupSelectPanel(
+		stg.ui.StageGroupSelectPanel selectPanel = new stg.ui.StageGroupSelectPanel(
 
 
-			new stg.game.ui.StageGroupSelectPanel.StageGroupSelectCallback() {
+			new stg.ui.StageGroupSelectPanel.StageGroupSelectCallback() {
 				@Override
 				public void onStageGroupSelected(StageGroup stageGroup) {
 					System.out.println("选择关卡组 " + stageGroup.getGroupName());
@@ -84,7 +84,7 @@ public class Main {
 		new Thread(() -> {
 			try {
 				// 使用StageGroupManager获取关卡组列表
-				stg.game.ui.GameCanvas gameCanvas = window.getGameCanvas();
+						stg.ui.GameCanvas gameCanvas = window.getGameCanvas();
 				StageGroupManager stageGroupManager = StageGroupManager.getInstance();
 				stageGroupManager.init(gameCanvas);
 
@@ -142,7 +142,7 @@ public class Main {
 		stageGroup.start();
 
 		gameCanvas.requestFocusInWindow();
-		new stg.game.GameLoop(gameCanvas).start();
+		new stg.core.GameLoop(gameCanvas).start();
 		System.out.println("游戏开始, 关卡组 " + stageGroup.getGroupName());
 	}
 
@@ -155,7 +155,7 @@ public class Main {
 
 	public static void returnToTitle() {
 		// 停止游戏循环
-		stg.game.GameLoop.stopAll();
+		stg.core.GameLoop.stopAll();
 
 		// 返回标题界面
 		showTitleScreen();

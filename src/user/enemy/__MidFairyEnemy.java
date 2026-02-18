@@ -1,7 +1,7 @@
 package user.enemy;
 
 import java.awt.Color;
-import stg.game.enemy.Enemy;
+import stg.entity.enemy.Enemy;
 import user.bullet.SimpleBullet;
 
 public class __MidFairyEnemy extends Enemy {
