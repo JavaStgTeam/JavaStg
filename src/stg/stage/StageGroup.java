@@ -218,6 +218,9 @@ public class StageGroup {
         cleanup();
         completed = false;
         currentStageIndex = -1;
+        // 重新初始化关卡列表
+        stages = new ArrayList<>();
+        initStages();
     }
 
     /**

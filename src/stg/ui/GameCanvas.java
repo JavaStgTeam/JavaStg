@@ -123,6 +123,12 @@ public class GameCanvas extends Component implements KeyStateProvider {
     // 关卡组
     private stg.stage.StageGroup stageGroup;
     
+    // 游戏状态管理器
+    private stg.core.GameStateManager gameStateManager;
+    
+    // 暂停菜单
+    private PauseMenu pauseMenu;
+    
     /**
      * 构造函数
      */
@@ -140,6 +146,12 @@ public class GameCanvas extends Component implements KeyStateProvider {
         
         // 初始化游戏渲染器
         this.gameRenderer = new stg.renderer.GameRenderer(gameWorld, null);
+        
+        // 初始化游戏状态管理器
+        this.gameStateManager = new stg.core.GameStateManager();
+        
+        // 初始化暂停菜单
+        this.pauseMenu = new PauseMenu(gameStateManager, this);
         
         // 设置为可聚焦
         setFocusable(true);
@@ -162,26 +174,44 @@ public class GameCanvas extends Component implements KeyStateProvider {
      * 处理按键按下事件
      */
     private void handleKeyPress(java.awt.event.KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case java.awt.event.KeyEvent.VK_UP -> setUpPressed(true);
-            case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(true);
-            case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(true);
-            case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(true);
-            case java.awt.event.KeyEvent.VK_Z -> setZPressed(true);
-            case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(true);
-            case java.awt.event.KeyEvent.VK_X -> setXPressed(true);
+        // 检查是否处于暂停状态
+        if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
+            // 处理暂停菜单的按键输入
+            switch (e.getKeyCode()) {
+                case java.awt.event.KeyEvent.VK_UP -> pauseMenu.moveUp();
+                case java.awt.event.KeyEvent.VK_DOWN -> pauseMenu.moveDown();
+                case java.awt.event.KeyEvent.VK_Z, java.awt.event.KeyEvent.VK_ENTER -> pauseMenu.executeSelectedAction();
+                case java.awt.event.KeyEvent.VK_ESCAPE -> gameStateManager.togglePause();
+            }
+            // 重绘以更新暂停菜单
+            repaint();
+        } else {
+            // 正常游戏状态的按键处理
+            switch (e.getKeyCode()) {
+                case java.awt.event.KeyEvent.VK_UP -> setUpPressed(true);
+                case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(true);
+                case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(true);
+                case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(true);
+                case java.awt.event.KeyEvent.VK_Z -> setZPressed(true);
+                case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(true);
+                case java.awt.event.KeyEvent.VK_X -> setXPressed(true);
+                case java.awt.event.KeyEvent.VK_ESCAPE -> gameStateManager.togglePause();
+            }
         }
     }
     
     private void handleKeyRelease(java.awt.event.KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case java.awt.event.KeyEvent.VK_UP -> setUpPressed(false);
-            case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(false);
-            case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(false);
-            case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(false);
-            case java.awt.event.KeyEvent.VK_Z -> setZPressed(false);
-            case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(false);
-            case java.awt.event.KeyEvent.VK_X -> setXPressed(false);
+        // 检查是否处于暂停状态，如果是则不处理释放事件
+        if (gameStateManager == null || gameStateManager.getState() != stg.core.GameStateManager.State.PAUSED) {
+            switch (e.getKeyCode()) {
+                case java.awt.event.KeyEvent.VK_UP -> setUpPressed(false);
+                case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(false);
+                case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(false);
+                case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(false);
+                case java.awt.event.KeyEvent.VK_Z -> setZPressed(false);
+                case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(false);
+                case java.awt.event.KeyEvent.VK_X -> setXPressed(false);
+            }
         }
     }
     
@@ -224,7 +254,25 @@ public class GameCanvas extends Component implements KeyStateProvider {
      * 重置游戏
      */
     public void resetGame() {
-        // 这里只是一个占位实现，实际应该重置游戏状态
+        // 清理GameWorld中的所有对象
+        if (gameWorld != null) {
+            gameWorld.clear();
+        }
+        
+        // 重置游戏状态管理器
+        if (gameStateManager != null) {
+            gameStateManager.reset();
+        }
+        
+        // 重置暂停菜单
+        if (pauseMenu != null) {
+            pauseMenu.setSelectedIndex(0);
+        }
+        
+        // 重置玩家状态
+        if (player != null) {
+            player.reset();
+        }
     }
     
     /**
@@ -232,6 +280,13 @@ public class GameCanvas extends Component implements KeyStateProvider {
      */
     public void setStageGroup(stg.stage.StageGroup stageGroup) {
         this.stageGroup = stageGroup;
+    }
+    
+    /**
+     * 获取关卡组
+     */
+    public stg.stage.StageGroup getStageGroup() {
+        return stageGroup;
     }
     
     /**
@@ -250,53 +305,56 @@ public class GameCanvas extends Component implements KeyStateProvider {
         int actualWidth = getWidth();
         int actualHeight = getHeight();
         
-        // 根据按键状态更新玩家移动
-        if (player != null) {
-            // 水平方向:同时按下左右键时保持静止
-            if (isLeftPressed() && isRightPressed()) {
-                player.stopHorizontal();
-            } else if (isLeftPressed()) {
-                player.moveLeft();
-            } else if (isRightPressed()) {
-                player.moveRight();
-            } else {
-                player.stopHorizontal();
+        // 检查游戏状态
+        if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PLAYING) {
+            // 根据按键状态更新玩家移动
+            if (player != null) {
+                // 水平方向:同时按下左右键时保持静止
+                if (isLeftPressed() && isRightPressed()) {
+                    player.stopHorizontal();
+                } else if (isLeftPressed()) {
+                    player.moveLeft();
+                } else if (isRightPressed()) {
+                    player.moveRight();
+                } else {
+                    player.stopHorizontal();
+                }
+                
+                // 垂直方向:同时按下上下键时保持静止
+                if (isUpPressed() && isDownPressed()) {
+                    player.stopVertical();
+                } else if (isUpPressed()) {
+                    player.moveUp();
+                } else if (isDownPressed()) {
+                    player.moveDown();
+                } else {
+                    player.stopVertical();
+                }
+                
+                // 更新射击状态
+                player.setShooting(isZPressed());
+                
+                // 更新低速模式
+                player.setSlowMode(isShiftPressed());
+                
+                // 更新玩家状态
+                player.update();
             }
             
-            // 垂直方向:同时按下上下键时保持静止
-            if (isUpPressed() && isDownPressed()) {
-                player.stopVertical();
-            } else if (isUpPressed()) {
-                player.moveUp();
-            } else if (isDownPressed()) {
-                player.moveDown();
-            } else {
-                player.stopVertical();
+            // 更新游戏世界
+            if (gameWorld != null) {
+                gameWorld.update(actualWidth, actualHeight);
             }
             
-            // 更新射击状态
-            player.setShooting(isZPressed());
+            // 执行碰撞检测
+            if (collisionSystem != null) {
+                collisionSystem.checkCollisions();
+            }
             
-            // 更新低速模式
-            player.setSlowMode(isShiftPressed());
-            
-            // 更新玩家状态
-            player.update();
-        }
-        
-        // 更新游戏世界
-        if (gameWorld != null) {
-            gameWorld.update(actualWidth, actualHeight);
-        }
-        
-        // 执行碰撞检测
-        if (collisionSystem != null) {
-            collisionSystem.checkCollisions();
-        }
-        
-        // 更新关卡组状态
-        if (stageGroup != null) {
-            stageGroup.update();
+            // 更新关卡组状态
+            if (stageGroup != null) {
+                stageGroup.update();
+            }
         }
     }
     
@@ -345,6 +403,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
             g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
             g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
             g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
+        }
+        
+        // 检查游戏状态，如果是暂停状态则绘制暂停菜单
+        if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
+            pauseMenu.render(g2d, actualWidth, actualHeight);
         }
     }
 }

@@ -139,6 +139,7 @@ public class Main {
 
 		// 启动关卡组
 		gameCanvas.setStageGroup(stageGroup);
+		stageGroup.reset(); // 重置关卡组状态，确保从第一关开始
 		stageGroup.start();
 
 		gameCanvas.requestFocusInWindow();

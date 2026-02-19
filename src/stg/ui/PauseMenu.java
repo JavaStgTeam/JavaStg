@@ -20,6 +20,7 @@ public class PauseMenu {
     
     private int selectedIndex = 0;
     private GameStateManager gameStateManager;
+    private stg.ui.GameCanvas gameCanvas;
     
     /**
      * 构造函数
@@ -27,6 +28,16 @@ public class PauseMenu {
      */
     public PauseMenu(GameStateManager gameStateManager) {
         this.gameStateManager = gameStateManager;
+    }
+    
+    /**
+     * 构造函数
+     * @param gameStateManager 游戏状态管理器
+     * @param gameCanvas 游戏画布
+     */
+    public PauseMenu(GameStateManager gameStateManager, stg.ui.GameCanvas gameCanvas) {
+        this.gameStateManager = gameStateManager;
+        this.gameCanvas = gameCanvas;
     }
     
     /**
@@ -106,7 +117,16 @@ public class PauseMenu {
                 break;
             case 1: // 重新开始
                 gameStateManager.reset();
-                // TODO: 需要重置游戏世界
+                // 重置游戏世界
+                if (gameCanvas != null) {
+                    gameCanvas.resetGame();
+                    // 重置关卡组
+                    stg.stage.StageGroup stageGroup = gameCanvas.getStageGroup();
+                    if (stageGroup != null) {
+                        stageGroup.reset();
+                        stageGroup.start();
+                    }
+                }
                 break;
             case 2: // 返回主菜单
                 Main.Main.returnToTitle();
