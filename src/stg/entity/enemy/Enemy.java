@@ -4,13 +4,15 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
+import stg.util.objectpool.Resettable;
 
 /**
  * 敌方单位
  * 所有敌人的基类
- * @since 2026-01-19
+ * @date 2026-01-19
+ * @date 2026-02-20 支持对象池管理
  */
-public abstract class Enemy extends Obj {
+public abstract class Enemy extends Obj implements Resettable {
 	protected int hp; // 生命值
 	protected int maxHp; // 最大生命值
 	protected GameWorld gameWorld; // 游戏世界引用
@@ -208,7 +210,21 @@ public abstract class Enemy extends Obj {
 	protected abstract void onTaskStart();
 
 	/**
-	 * 任务结束时触发的方法 - 用于处理boss击破对话和道具掉落
-	 */
-	protected abstract void onTaskEnd();
+     * 任务结束时触发的方法 - 用于处理boss击破对话和道具掉落
+     */
+    protected abstract void onTaskEnd();
+    
+    /**
+     * 重置敌人状态
+     * 当敌人被回收到对象池时调用
+     */
+    @Override
+    public void resetState() {
+        // 重置敌人的基本属性
+        setActive(true);
+        setVx(0);
+        setVy(0);
+        hp = maxHp; // 重置生命值到最大值
+        // 保留gameWorld引用，因为它在游戏过程中是不变的
+    }
 }

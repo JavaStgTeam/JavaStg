@@ -1,5 +1,35 @@
 # 更新日志
 
+## 2026-02-20
+
+### 新增
+- 创建了完整的对象池管理系统，包含：
+  - `ObjectPool` 通用对象池接口
+  - `ObjectFactory` 对象工厂接口
+  - `Resettable` 可重置接口
+  - `ConcurrentLinkedObjectPool` 线程安全对象池实现
+  - `ObjectPoolManager` 对象池管理器
+- 在 `user.test` 包中创建了 `ObjectPoolTest` 测试类，验证对象池系统功能
+
+### 修改
+- 修改了 `Bullet`、`Enemy`、`Item` 类，实现 `Resettable` 接口，支持对象池管理
+- 修改了 `GameWorld` 类，在移除游戏对象时使用对象池进行回收
+- 修改了 `Window` 类，添加窗口标题更新方法，显示对象数量和FPS
+- 修改了 `GameCanvas` 类，添加对象数量计算方法
+- 修改了 `GameLoop` 类，添加FPS计算和窗口标题更新逻辑
+- 将窗口标题格式修改为 `JavaStg Engine  obj=x  fps=y`，确保任何时候都显示
+
+### 删除
+- 删除了 `demo` 包及其所有内容，清理项目结构
+
+### 优化
+- 实现了对象池系统，减少对象创建和销毁的开销，降低GC压力
+- 优化了窗口标题更新逻辑，确保实时显示对象数量和FPS信息
+
+### 测试
+- 编译并运行了 `ObjectPoolTest` 测试类，验证对象池系统功能正常
+- 测试了窗口标题显示，确认格式正确且实时更新
+
 ## 2026-02-19
 
 ### 修复

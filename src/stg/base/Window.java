@@ -49,7 +49,7 @@ public class Window extends JFrame {
      * @param initPlayer 是否立即初始化玩家
      */
     private void initialize(boolean initPlayer) {
-        setTitle("STG Game Engine"); // 设置标题
+        setTitle("JavaStg Engine  obj=0  fps=0"); // 设置初始标题
         setSize(totalWidth, totalHeight); // 设置大小
         setLocationRelativeTo(null); // 居中显示
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE); // 关闭操作
@@ -213,6 +213,15 @@ public class Window extends JFrame {
      */
     public GameStatusPanel getGameStatusPanel() {
         return gameStatusPanel;
+    }
+    
+    /**
+     * 更新窗口标题，显示对象数量和FPS
+     * @param objCount 对象数量
+     * @param fps 当前FPS
+     */
+    public void updateTitle(int objCount, int fps) {
+        setTitle("JavaStg Engine  obj=" + objCount + "  fps=" + fps);
     }
 
     /**

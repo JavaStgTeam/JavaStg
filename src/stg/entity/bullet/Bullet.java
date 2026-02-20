@@ -2,12 +2,14 @@ package stg.entity.bullet;
 
 import java.awt.*;
 import stg.entity.base.Obj;
+import stg.util.objectpool.Resettable;
 
 /**
  * 子弹类
- * @since 2026-01-19 使用中心原点坐标
+ * @date 2026-01-19 使用中心原点坐标
+ * @date 2026-02-20 支持对象池管理
  */
-public abstract class Bullet extends Obj {
+public abstract class Bullet extends Obj implements Resettable {
     protected int damage = 0; // @since 2026-01-23 子弹伤害，默认0（由玩家统一控制）
     
     /**
@@ -56,5 +58,19 @@ public abstract class Bullet extends Obj {
      * 用于处理boss击破对话和道具掉落
      */
     protected abstract void onTaskEnd();
+    
+    /**
+     * 重置子弹状态
+     * 当子弹被回收到对象池时调用
+     */
+    @Override
+    public void resetState() {
+        // 重置子弹的基本属性
+        setActive(true);
+        setVx(0);
+        setVy(0);
+        setHitboxRadius(getSize() * 5.0f);
+        damage = 0;
+    }
 }
 

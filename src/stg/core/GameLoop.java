@@ -1,6 +1,7 @@
 package stg.core;
 
 import stg.ui.GameCanvas;
+import stg.base.Window;
 
 /**
  * 游戏循环 - 控制游戏主循环
@@ -8,10 +9,15 @@ import stg.ui.GameCanvas;
  */
 public class GameLoop implements Runnable {
 	private final GameCanvas canvas; // 游戏画布
+	private Window window; // 窗口引用
 	private boolean running; // 运行标志
 	private final int targetFPS = 60; // 目标帧率
 	private static GameLoop activeLoop; // 当前活跃的游戏循环实例
 	private Thread gameThread; // 游戏线程引用
+	// FPS计算相关变量
+	private int frameCount = 0;
+	private long lastFpsUpdate = 0;
+	private int currentFps = 0;
 	/**
 	 * 构造函数 - 创建游戏循环实例
 	 * @param canvas 游戏画布（需为 public 或位于 stg.ui 包内）
@@ -19,6 +25,17 @@ public class GameLoop implements Runnable {
 	public GameLoop(GameCanvas canvas) {
 		this.canvas = canvas;
 		this.running = false;
+		// 尝试获取窗口引用
+		java.awt.Component comp = canvas;
+		while (comp != null && !(comp instanceof Window)) {
+			comp = comp.getParent();
+		}
+		if (comp instanceof Window) {
+			this.window = (Window) comp;
+			// 设置初始窗口标题
+			int objCount = canvas.getObjectCount();
+			window.updateTitle(objCount, 0);
+		}
 	}
 
 	/**
@@ -42,11 +59,28 @@ public class GameLoop implements Runnable {
 	 */
 	@Override
 	public void run() {
+		lastFpsUpdate = System.currentTimeMillis();
 		while (running && !Thread.interrupted()) {
 			long startTime = System.nanoTime();
 
 			canvas.update(); // 更新游戏状态
 			canvas.repaint(); // 触发重绘
+			
+			// 计算FPS
+			frameCount++;
+			long currentTime = System.currentTimeMillis();
+			if (currentTime - lastFpsUpdate >= 1000) { // 每1秒更新一次FPS
+				currentFps = frameCount;
+				frameCount = 0;
+				lastFpsUpdate = currentTime;
+			}
+			
+			// 每次循环都更新窗口标题，确保任何时候都显示
+			if (window != null) {
+				int objCount = canvas.getObjectCount();
+				window.updateTitle(objCount, currentFps);
+			}
+			
 			// 计算休眠时间以维持目标帧率（使用纳秒精度）
 			long elapsedTime = System.nanoTime() - startTime;
 			long targetFrameTime = 1000000000L / targetFPS; // 纳秒

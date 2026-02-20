@@ -373,6 +373,29 @@ public class GameCanvas extends Component implements KeyStateProvider {
     }
     
     /**
+     * 获取当前游戏对象的数量
+     * @return 游戏对象数量
+     */
+    public int getObjectCount() {
+        int count = 0;
+        if (gameWorld != null) {
+            // 计算敌人数量
+            count += gameWorld.getEnemies().size();
+            // 计算玩家子弹数量
+            count += gameWorld.getPlayerBullets().size();
+            // 计算敌人子弹数量
+            count += gameWorld.getEnemyBullets().size();
+            // 计算物品数量
+            count += gameWorld.getItems().size();
+        }
+        // 加上玩家本身
+        if (player != null) {
+            count += 1;
+        }
+        return count;
+    }
+    
+    /**
      * 绘制游戏
      */
     @Override

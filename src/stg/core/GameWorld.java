@@ -5,6 +5,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import stg.entity.bullet.Bullet;
 import stg.entity.enemy.Enemy;
 import stg.entity.item.Item;
+import stg.util.objectpool.ObjectPoolManager;
+import stg.util.objectpool.ConcurrentLinkedObjectPool;
+import stg.util.objectpool.ObjectFactory;
 
 /**
  * 游戏世界 - 管理游戏中的所有实体
@@ -75,6 +78,11 @@ public class GameWorld {
             
             if (!enemy.isAlive() || enemy.isOutOfBounds(canvasWidth, canvasHeight)) {
                 enemies.remove(i);
+                try {
+                    ObjectPoolManager.getInstance().release(enemy);
+                } catch (Exception e) {
+                    // 如果没有注册对象池，忽略异常
+                }
             }
         }
     }
@@ -87,8 +95,13 @@ public class GameWorld {
         for (int i = playerBullets.size() - 1; i >= 0; i--) {
             Bullet bullet = playerBullets.get(i);
             bullet.update();
-            if (bullet.isOutOfBounds()) {
+            if (bullet.isOutOfBounds() || !bullet.isActive()) {
                 playerBullets.remove(i);
+                try {
+                    ObjectPoolManager.getInstance().release(bullet);
+                } catch (Exception e) {
+                    // 如果没有注册对象池，忽略异常
+                }
             }
         }
         
@@ -96,8 +109,13 @@ public class GameWorld {
         for (int i = enemyBullets.size() - 1; i >= 0; i--) {
             Bullet bullet = enemyBullets.get(i);
             bullet.update();
-            if (bullet.isOutOfBounds()) {
+            if (bullet.isOutOfBounds() || !bullet.isActive()) {
                 enemyBullets.remove(i);
+                try {
+                    ObjectPoolManager.getInstance().release(bullet);
+                } catch (Exception e) {
+                    // 如果没有注册对象池，忽略异常
+                }
             }
         }
     }
@@ -111,6 +129,11 @@ public class GameWorld {
             item.update();
             if (!item.isActive() || item.isOutOfBounds()) {
                 items.remove(i);
+                try {
+                    ObjectPoolManager.getInstance().release(item);
+                } catch (Exception e) {
+                    // 如果没有注册对象池，忽略异常
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package stg.entity.item;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import stg.entity.base.Obj;
+import stg.util.objectpool.Resettable;
 
 /**
  * 物品类
@@ -10,9 +11,10 @@ import stg.entity.base.Obj;
  * 包括道具、掉落物、特殊物品等
  * 
  * @author JavaSTG Team
- * @since 2026-02-17
+ * @date 2026-02-17
+ * @date 2026-02-20 支持对象池管理
  */
-public abstract class Item extends Obj {
+public abstract class Item extends Obj implements Resettable {
 	// 道具吸引参数
 	protected float attractionDistance = 150.0f;
 	protected float attractionSpeed = 3.0f;
@@ -108,13 +110,28 @@ public abstract class Item extends Obj {
 	}
 	
 	/**
-	 * 设置吸引参数
-	 * @param distance 吸引距离
-	 * @param speed 吸引速度
-	 */
-	protected void setAttractionParams(float distance, float speed) {
-		this.attractionDistance = distance;
-		this.attractionSpeed = speed;
-	}
+     * 设置吸引参数
+     * @param distance 吸引距离
+     * @param speed 吸引速度
+     */
+    protected void setAttractionParams(float distance, float speed) {
+        this.attractionDistance = distance;
+        this.attractionSpeed = speed;
+    }
+    
+    /**
+     * 重置道具状态
+     * 当道具被回收到对象池时调用
+     */
+    @Override
+    public void resetState() {
+        // 重置道具的基本属性
+        setActive(true);
+        setVx(0);
+        setVy(0);
+        // 重置吸引参数到默认值
+        attractionDistance = 150.0f;
+        attractionSpeed = 3.0f;
+    }
 }
 
