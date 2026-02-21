@@ -2,6 +2,7 @@ package user.stage;
 
 import stg.stage.Stage;
 import stg.ui.GameCanvas;
+import stg.entity.base.Obj;
 import user.boss.__MinorikoBoss;
 import user.enemy.__FairyEnemy;
 import user.enemy.__MidFairyEnemy;
@@ -42,20 +43,20 @@ public class __MountainPathStage extends Stage {
         
         if (frame >= 60 && frame % 90 == 0 && fairyCount < MAX_FAIRIES) {
             float x = (float) (Math.random() * 600 - 300);
-            __FairyEnemy fairy = new __FairyEnemy(x, -400);
+            __FairyEnemy fairy = Obj.create(__FairyEnemy.class, x, -400);
             addEnemy(fairy);
             fairyCount++;
         }
         
         if (frame >= 300 && frame % 180 == 0 && midFairyCount < MAX_MID_FAIRIES) {
             float x = (float) (Math.random() * 400 - 200);
-            __MidFairyEnemy midFairy = new __MidFairyEnemy(x, -400);
+            __MidFairyEnemy midFairy = Obj.create(__MidFairyEnemy.class, x, -400);
             addEnemy(midFairy);
             midFairyCount++;
         }
         
         if (frame >= 900 && !hasSpawnedBoss) {
-            __MinorikoBoss boss = new __MinorikoBoss(0, -300);
+            __MinorikoBoss boss = Obj.create(__MinorikoBoss.class, 0, -300);
             addEnemy(boss);
             hasSpawnedBoss = true;
         }

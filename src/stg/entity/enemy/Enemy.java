@@ -222,6 +222,8 @@ public abstract class Enemy extends Obj implements Resettable {
     public void resetState() {
         // 重置敌人的基本属性
         setActive(true);
+        setX(0);
+        setY(0);
         setVx(0);
         setVy(0);
         hp = maxHp; // 重置生命值到最大值

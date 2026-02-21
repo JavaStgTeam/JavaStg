@@ -1,6 +1,5 @@
 package stg.util.objectpool;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,14 +15,14 @@ public class ObjectPoolManager {
     // 单例实例
     private static final ObjectPoolManager INSTANCE = new ObjectPoolManager();
     
-    // 存储不同类型的对象池
+    // 存储不同类型的对象池（线程安全）
     private final Map<Class<?>, ObjectPool<?>> poolMap;
     
     /**
      * 私有构造函数
      */
     private ObjectPoolManager() {
-        poolMap = new HashMap<>();
+        poolMap = new java.util.concurrent.ConcurrentHashMap<>();
     }
     
     /**
@@ -77,10 +76,54 @@ public class ObjectPoolManager {
      */
     public <T> T acquire(Class<T> type) {
         ObjectPool<T> pool = getPool(type);
+        
         if (pool == null) {
             throw new IllegalArgumentException("No object pool registered for type: " + type.getName());
         }
         return pool.acquire();
+    }
+    
+    /**
+     * 获取或创建对象池
+     * 
+     * @param <T> 对象类型
+     * @param type 对象类型的Class
+     * @return 对象池实例
+     */
+    public <T> ObjectPool<T> getOrCreatePool(Class<T> type) {
+        ObjectPool<T> pool = getPool(type);
+        if (pool == null) {
+            // 创建新的对象池
+            pool = new ConcurrentLinkedObjectPool<>(
+                new ObjectFactory<T>() {
+                    @Override
+                    public T create() {
+                        try {
+                            // 使用默认参数创建对象
+                            return type.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
+                        } catch (Exception e) {
+                            // 如果创建失败，返回 null
+                            System.err.println("Failed to create object for " + type.getName() + ": " + e.getMessage());
+                            return null;
+                        }
+                    }
+                },
+                0, // 初始容量为 0，避免初始化时创建对象
+                100 // 最大容量
+            );
+            // 注册对象池
+            registerPool(type, pool);
+        }
+        return pool;
+    }
+    
+    /**
+     * 获取所有已注册的对象池类型
+     * 
+     * @return 已注册的对象池类型集合
+     */
+    public java.util.Set<Class<?>> getRegisteredTypes() {
+        return poolMap.keySet();
     }
     
     /**
@@ -94,9 +137,11 @@ public class ObjectPoolManager {
             return;
         }
         
-        ObjectPool<T> pool = getPool((Class<T>) object.getClass());
+        Class<?> clazz = object.getClass();
+        ObjectPool<T> pool = getPool((Class<T>) clazz);
+        
         if (pool == null) {
-            throw new IllegalArgumentException("No object pool registered for type: " + object.getClass().getName());
+            throw new IllegalArgumentException("No object pool registered for type: " + clazz.getName());
         }
         pool.release(object);
     }
@@ -105,10 +150,8 @@ public class ObjectPoolManager {
      * 初始化所有对象池
      */
     public void initializeAllPools() {
-        for (ObjectPool<?> pool : poolMap.values()) {
-            // 每个对象池默认初始化10个对象
-            pool.initialize(10);
-        }
+        // 不再在初始化时创建对象，避免默认构造函数问题
+        // 实际对象创建会在第一次使用时通过 Obj.create() 完成
     }
     
     /**
@@ -143,5 +186,21 @@ public class ObjectPoolManager {
      */
     public void removeAllPools() {
         poolMap.clear();
+    }
+    
+    /**
+     * 获取所有对象池中的对象总数
+     * @return 对象总数
+     */
+    public int getTotalObjectCount() {
+        int total = 0;
+        System.out.println("getTotalObjectCount() called, poolMap size: " + poolMap.size());
+        for (ObjectPool<?> pool : poolMap.values()) {
+            int poolSize = pool.size();
+            System.out.println("Pool size: " + poolSize);
+            total += poolSize;
+        }
+        System.out.println("Total object count: " + total);
+        return total;
     }
 }

@@ -1,6 +1,7 @@
 package user.player;
 
 import java.awt.Color;
+import stg.entity.base.Obj;
 import stg.entity.player.Player;
 import user.bullet.DefaultPlayerMainBullet;
 
@@ -41,12 +42,12 @@ public class DefaultPlayer extends Player {
         stg.core.GameWorld gameWorld = getGameWorld();
         if (gameWorld != null) {
             // 创建左侧子弹
-            DefaultPlayerMainBullet leftBullet = new DefaultPlayerMainBullet(leftBulletX, leftBulletY);
+            DefaultPlayerMainBullet leftBullet = Obj.create(DefaultPlayerMainBullet.class, leftBulletX, leftBulletY);
             leftBullet.setDamage(getBulletDamage());
             gameWorld.addPlayerBullet(leftBullet);
             
             // 创建右侧子弹
-            DefaultPlayerMainBullet rightBullet = new DefaultPlayerMainBullet(rightBulletX, rightBulletY);
+            DefaultPlayerMainBullet rightBullet = Obj.create(DefaultPlayerMainBullet.class, rightBulletX, rightBulletY);
             rightBullet.setDamage(getBulletDamage());
             gameWorld.addPlayerBullet(rightBullet);
         }

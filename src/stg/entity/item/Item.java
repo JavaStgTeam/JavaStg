@@ -127,6 +127,8 @@ public abstract class Item extends Obj implements Resettable {
     public void resetState() {
         // 重置道具的基本属性
         setActive(true);
+        setX(0);
+        setY(0);
         setVx(0);
         setVy(0);
         // 重置吸引参数到默认值

@@ -2,6 +2,7 @@ package user.stage;
 
 import stg.stage.Stage;
 import stg.ui.GameCanvas;
+import stg.entity.base.Obj;
 import user.boss.TestBoss;
 import user.enemy.DefaultEnemy;
 
@@ -39,7 +40,7 @@ public class TestStage extends Stage {
         // 每60帧生成一个敌人，最多生成10个
         if (getCurrentFrame() % 60 == 0 && enemyCount < MAX_ENEMIES) {
             // 生成一个敌人，位置在(0, 100)
-            DefaultEnemy enemy = new DefaultEnemy(0, 100);
+            DefaultEnemy enemy = Obj.create(DefaultEnemy.class, 0, 100);
             addEnemy(enemy);
             System.out.println("生成敌人，位置: (0, 100)，总数: " + (enemyCount + 1));
             enemyCount++;
@@ -48,7 +49,7 @@ public class TestStage extends Stage {
         // 关卡开始12秒时生成Boss（假设60帧/秒）
         if (getCurrentFrame() == 720 && !hasSpawnedBoss) {
             // 生成TestBoss，位置在(0, 150)，屏幕上半部分
-            TestBoss boss = new TestBoss(0, 150);
+            TestBoss boss = Obj.create(TestBoss.class, 0, 150);
             addEnemy(boss);
             System.out.println("生成Boss，位置: (0, 150)");
             hasSpawnedBoss = true;

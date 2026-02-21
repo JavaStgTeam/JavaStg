@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import stg.base.KeyStateProvider;
 import stg.entity.player.Player;
 import stg.util.CoordinateSystem;
+import stg.util.objectpool.ObjectPoolManager;
 
 /**
  * 游戏画布类 - 负责游戏的渲染和输入处理
@@ -152,6 +153,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
         
         // 初始化暂停菜单
         this.pauseMenu = new PauseMenu(gameStateManager, this);
+        
+        // 初始化对象池
+        stg.entity.base.Obj.initializeObjectPools();
         
         // 设置为可聚焦
         setFocusable(true);
@@ -377,22 +381,16 @@ public class GameCanvas extends Component implements KeyStateProvider {
      * @return 游戏对象数量
      */
     public int getObjectCount() {
-        int count = 0;
-        if (gameWorld != null) {
-            // 计算敌人数量
-            count += gameWorld.getEnemies().size();
-            // 计算玩家子弹数量
-            count += gameWorld.getPlayerBullets().size();
-            // 计算敌人子弹数量
-            count += gameWorld.getEnemyBullets().size();
-            // 计算物品数量
-            count += gameWorld.getItems().size();
-        }
+        // 从对象池管理器获取所有对象池中的对象总数
+        int poolCount = ObjectPoolManager.getInstance().getTotalObjectCount();
+        
         // 加上玩家本身
+        int total = poolCount;
         if (player != null) {
-            count += 1;
+            total += 1;
         }
-        return count;
+        
+        return total;
     }
     
     /**

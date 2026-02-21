@@ -1,7 +1,7 @@
 package user.enemy;
 
 import java.awt.Color;
-import stg.entity.bullet.Bullet;
+import stg.entity.base.Obj;
 import stg.entity.enemy.Enemy;
 import user.bullet.SimpleBullet;
 
@@ -34,7 +34,7 @@ public class __FairyEnemy extends Enemy {
         float bulletSpeed = 4.0f;
         float angle = (float) Math.PI / 2;
         
-        SimpleBullet bullet = new SimpleBullet(
+        SimpleBullet bullet = Obj.create(SimpleBullet.class,
             getX(),
             getY(),
             (float) (bulletSpeed * Math.cos(angle)),
@@ -54,5 +54,11 @@ public class __FairyEnemy extends Enemy {
 
     @Override
     protected void onTaskEnd() {
+    }
+    
+    @Override
+    public void resetState() {
+        super.resetState();
+        this.shootTimer = 0;
     }
 }

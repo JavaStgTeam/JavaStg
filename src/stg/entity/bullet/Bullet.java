@@ -67,6 +67,8 @@ public abstract class Bullet extends Obj implements Resettable {
     public void resetState() {
         // 重置子弹的基本属性
         setActive(true);
+        setX(0);
+        setY(0);
         setVx(0);
         setVy(0);
         setHitboxRadius(getSize() * 5.0f);

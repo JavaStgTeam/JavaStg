@@ -5,9 +5,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import stg.entity.bullet.Bullet;
 import stg.entity.enemy.Enemy;
 import stg.entity.item.Item;
-import stg.util.objectpool.ObjectPoolManager;
-import stg.util.objectpool.ConcurrentLinkedObjectPool;
-import stg.util.objectpool.ObjectFactory;
+import stg.entity.base.Obj;
+
 
 /**
  * 游戏世界 - 管理游戏中的所有实体
@@ -79,7 +78,7 @@ public class GameWorld {
             if (!enemy.isAlive() || enemy.isOutOfBounds(canvasWidth, canvasHeight)) {
                 enemies.remove(i);
                 try {
-                    ObjectPoolManager.getInstance().release(enemy);
+                    Obj.release(enemy);
                 } catch (Exception e) {
                     // 如果没有注册对象池，忽略异常
                 }
@@ -98,7 +97,7 @@ public class GameWorld {
             if (bullet.isOutOfBounds() || !bullet.isActive()) {
                 playerBullets.remove(i);
                 try {
-                    ObjectPoolManager.getInstance().release(bullet);
+                    Obj.release(bullet);
                 } catch (Exception e) {
                     // 如果没有注册对象池，忽略异常
                 }
@@ -112,7 +111,7 @@ public class GameWorld {
             if (bullet.isOutOfBounds() || !bullet.isActive()) {
                 enemyBullets.remove(i);
                 try {
-                    ObjectPoolManager.getInstance().release(bullet);
+                    Obj.release(bullet);
                 } catch (Exception e) {
                     // 如果没有注册对象池，忽略异常
                 }
@@ -130,7 +129,7 @@ public class GameWorld {
             if (!item.isActive() || item.isOutOfBounds()) {
                 items.remove(i);
                 try {
-                    ObjectPoolManager.getInstance().release(item);
+                    Obj.release(item);
                 } catch (Exception e) {
                     // 如果没有注册对象池，忽略异常
                 }

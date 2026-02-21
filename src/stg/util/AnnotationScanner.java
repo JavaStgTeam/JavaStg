@@ -1,7 +1,6 @@
 package stg.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -9,7 +8,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import stg.util.LogUtil;
 
 /**
  * 注解扫描工具类
