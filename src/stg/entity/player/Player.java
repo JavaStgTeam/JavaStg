@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
+import stg.renderer.IRenderer;
 
 /**
  * 玩家类- 自机角色
@@ -260,6 +261,38 @@ public class Player extends Obj {
 			g.fillOval((int)(screenX - getHitboxRadius()), (int)(screenY - getHitboxRadius()),
 					(int)(getHitboxRadius() * 2), (int)(getHitboxRadius() * 2));
 		}
+	}
+
+	/**
+	 * 渲染玩家（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 */
+	@Override
+	public void render(IRenderer renderer) {
+		// 开启抗锯齿
+		renderer.enableAntiAliasing();
+
+		// @since 2026-01-23 无敌闪烁效果：每5帧闪烁一次
+		boolean shouldRender = true;
+		if (invincibleTimer > 0) {
+			int flashPhase = invincibleTimer % 10; // 10帧为一个闪烁周期
+			if (flashPhase < 5) {
+				shouldRender = false;
+			}
+		}
+
+		// 绘制角色主体（仅为一个简单的红色球体）
+		if (shouldRender) {
+			renderer.drawCircle(getX(), getY(), getSize(), getColor());
+		}
+
+		// 低速模式时显示受击判定点（在球体上方）
+		if (slowMode && shouldRender) {
+			renderer.drawCircle(getX(), getY(), getHitboxRadius(), Color.WHITE);
+		}
+
+		// 禁用抗锯齿
+		renderer.disableAntiAliasing();
 	}
 	/**
 	 * 向上移动 - @since 2026-01-19 Y轴正方向 */

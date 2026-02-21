@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
+import stg.renderer.IRenderer;
 import stg.util.objectpool.Resettable;
 
 /**
@@ -72,6 +73,39 @@ public abstract class Enemy extends Obj implements Resettable {
 		g.fillOval((int)(screenX - getSize()), (int)(screenY - getSize()), (int)(getSize() * 2), (int)(getSize() * 2));
 
 		renderHealthBar(g, screenX, screenY);
+	}
+
+	/**
+	 * 渲染敌人（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 */
+	@Override
+	public void render(IRenderer renderer) {
+		if (!isActive()) return;
+
+		// 绘制敌人主体
+		renderer.drawCircle(getX(), getY(), getSize(), getColor());
+
+		// 渲染生命值条
+		renderHealthBar(renderer);
+	}
+
+	/**
+	 * 渲染生命值条 - 使用游戏逻辑坐标
+	 * @param renderer 渲染器
+	 */
+	protected void renderHealthBar(IRenderer renderer) {
+		float barWidth = getSize() * 2;
+		float barHeight = 4;
+		float barX = getX() - getSize();
+		float barY = getY() - getSize() - 8;
+
+		// 背景
+		renderer.drawRect(barX, barY, barWidth, barHeight, Color.GRAY);
+
+		// 生命值
+		float hpPercent = (float)hp / maxHp;
+		renderer.drawRect(barX, barY, barWidth * hpPercent, barHeight, Color.RED);
 	}
 
 	/**

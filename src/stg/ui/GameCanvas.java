@@ -4,6 +4,8 @@ import java.awt.Component;
 import java.util.concurrent.atomic.AtomicBoolean;
 import stg.base.KeyStateProvider;
 import stg.entity.player.Player;
+import stg.service.render.IRenderer;
+import stg.service.render.Java2DRenderer;
 import stg.util.CoordinateSystem;
 import stg.util.objectpool.ObjectPoolManager;
 
@@ -130,6 +132,11 @@ public class GameCanvas extends Component implements KeyStateProvider {
     // 暂停菜单
     private PauseMenu pauseMenu;
     
+    // 渲染器
+    private IRenderer renderer;
+    private Java2DRenderer java2DRenderer;
+    private Object glRenderer; // 使用Object类型避免直接依赖
+    
     /**
      * 构造函数
      */
@@ -147,6 +154,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
         
         // 初始化游戏渲染器
         this.gameRenderer = new stg.renderer.GameRenderer(gameWorld, null);
+        
+        // 初始化渲染器（自动切换）
+        initRenderer();
         
         // 初始化游戏状态管理器
         this.gameStateManager = new stg.core.GameStateManager();
@@ -172,6 +182,62 @@ public class GameCanvas extends Component implements KeyStateProvider {
                 handleKeyRelease(e);
             }
         });
+    }
+    
+    /**
+     * 初始化渲染器
+     */
+    public void initRenderer() {
+        // 尝试初始化OpenGL渲染器
+        try {
+            // 检查LWJGL是否可用
+            Class.forName("org.lwjgl.glfw.GLFW");
+            Class.forName("org.lwjgl.opengl.GL");
+            
+            // 检查GLRenderer是否存在
+            Class<?> glRendererClass = Class.forName("stg.service.render.GLRenderer");
+            
+            // 注意：GLRenderer需要窗口句柄作为参数，这里暂时跳过
+            // 实际使用时需要从窗口系统获取句柄
+            // Constructor<?> constructor = glRendererClass.getConstructor(long.class);
+            // glRenderer = constructor.newInstance(windowHandle);
+            // Method initMethod = glRendererClass.getMethod("init");
+            // initMethod.invoke(glRenderer);
+            // Method isInitializedMethod = glRendererClass.getMethod("isInitialized");
+            // boolean isInitialized = (boolean) isInitializedMethod.invoke(glRenderer);
+            // if (isInitialized) {
+            //     renderer = (IRenderer) glRenderer;
+            //     System.out.println("使用OpenGL渲染器");
+            //     return;
+            // }
+            
+            // 暂时直接使用Java2D渲染器
+            System.out.println("OpenGL渲染器暂未配置，使用Java2D渲染器");
+        } catch (ClassNotFoundException e) {
+            System.out.println("LWJGL依赖缺失或GLRenderer不存在，使用Java2D渲染器");
+        } catch (Exception e) {
+            System.out.println("OpenGL初始化失败，切换到Java2D渲染器: " + e.getMessage());
+        }
+        
+        // 使用Java2D渲染器作为回退
+        java2DRenderer = new Java2DRenderer();
+        java2DRenderer.init();
+        renderer = java2DRenderer;
+        System.out.println("使用Java2D渲染器");
+    }
+    
+    /**
+     * 获取当前渲染器
+     */
+    public IRenderer getRenderer() {
+        return renderer;
+    }
+    
+    /**
+     * 检查是否使用OpenGL渲染器
+     */
+    public boolean isUsingOpenGL() {
+        return glRenderer != null && renderer != null && renderer.getClass().getName().equals("stg.service.render.GLRenderer");
     }
     
     /**
@@ -413,22 +479,52 @@ public class GameCanvas extends Component implements KeyStateProvider {
         g2d.setColor(java.awt.Color.BLACK);
         g2d.fillRect(0, 0, actualWidth, actualHeight);
         
-        // 使用游戏渲染器渲染所有游戏对象
-        if (gameRenderer != null) {
-            gameRenderer.render(g2d, actualWidth, actualHeight);
-        }
-        
-        // 绘制关卡组信息
-        if (stageGroup != null) {
-            g2d.setColor(java.awt.Color.WHITE);
-            g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
-            g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
-            g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
-        }
-        
-        // 检查游戏状态，如果是暂停状态则绘制暂停菜单
-        if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
-            pauseMenu.render(g2d, actualWidth, actualHeight);
+        // 处理渲染器
+        if (renderer != null) {
+            String rendererClassName = renderer.getClass().getName();
+            
+            if (rendererClassName.equals("stg.service.render.Java2DRenderer")) {
+                // 使用Java2D渲染器
+                Java2DRenderer javaRenderer = (Java2DRenderer) renderer;
+                javaRenderer.setGraphics(g2d);
+                
+                // 使用游戏渲染器渲染所有游戏对象
+                if (gameRenderer != null) {
+                    gameRenderer.render(g2d, actualWidth, actualHeight);
+                }
+                
+                // 绘制关卡组信息
+                if (stageGroup != null) {
+                    g2d.setColor(java.awt.Color.WHITE);
+                    g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
+                    g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
+                    g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
+                }
+                
+                // 检查游戏状态，如果是暂停状态则绘制暂停菜单
+                if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
+                    pauseMenu.render(g2d, actualWidth, actualHeight);
+                }
+            } else if (rendererClassName.equals("stg.service.render.GLRenderer")) {
+                // 使用OpenGL渲染器（这里需要实现OpenGL的渲染逻辑）
+                // 暂时保留原有的Java2D渲染作为回退
+                if (gameRenderer != null) {
+                    gameRenderer.render(g2d, actualWidth, actualHeight);
+                }
+                
+                // 绘制关卡组信息
+                if (stageGroup != null) {
+                    g2d.setColor(java.awt.Color.WHITE);
+                    g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
+                    g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
+                    g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
+                }
+                
+                // 检查游戏状态，如果是暂停状态则绘制暂停菜单
+                if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
+                    pauseMenu.render(g2d, actualWidth, actualHeight);
+                }
+            }
         }
     }
 }

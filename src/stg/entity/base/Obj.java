@@ -1,6 +1,7 @@
 package stg.entity.base;
 
 import java.awt.*;
+import stg.renderer.IRenderer;
 import stg.util.CoordinateSystem;
 import stg.util.objectpool.ConcurrentLinkedObjectPool;
 import stg.util.objectpool.ObjectFactory;
@@ -147,7 +148,7 @@ public abstract class Obj {
     }
 
     /**
-     * 渲染物体
+     * 渲染物体（Java2D版本）
      * @param g 图形上下文
      * @throws IllegalStateException 如果坐标系统未初始化
      */
@@ -161,6 +162,19 @@ public abstract class Obj {
 
         g.setColor(color);
         g.fillOval((int)(screenX - size/2), (int)(screenY - size/2), (int)size, (int)size);
+    }
+
+    /**
+     * 渲染物体（IRenderer版本，支持OpenGL）
+     * @param renderer 渲染器
+     * @throws IllegalStateException 如果坐标系统未初始化
+     */
+    public void render(IRenderer renderer) {
+        if (!active) return;
+
+        requireCoordinateSystem();
+        // 使用渲染器绘制圆形，保持与Java2D一致的效果
+        renderer.drawCircle(x, y, size/2, color);
     }
 
     /**

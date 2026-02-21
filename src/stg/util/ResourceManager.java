@@ -3,6 +3,9 @@ package stg.util;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
@@ -111,6 +114,33 @@ public class ResourceManager {
 	
 	public boolean hasImage(String filename) {
 		return images.containsKey(filename);
+	}
+	
+	public ByteBuffer loadResourceAsBuffer(String path) throws IOException {
+		// 尝试从文件系统加载
+		File file = new File(resourcePath + path);
+		if (file.exists()) {
+			byte[] data = Files.readAllBytes(file.toPath());
+			ByteBuffer buffer = ByteBuffer.allocateDirect(data.length);
+			buffer.put(data);
+			buffer.flip();
+			System.out.println("【资源】从文件系统加载资源: " + path);
+			return buffer;
+		}
+		
+		// 尝试从类路径加载
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath + path)) {
+			if (is == null) {
+				throw new IOException("Resource not found: " + path);
+			}
+			
+			byte[] data = is.readAllBytes();
+			ByteBuffer buffer = ByteBuffer.allocateDirect(data.length);
+			buffer.put(data);
+			buffer.flip();
+			System.out.println("【资源】从类路径加载资源: " + path);
+			return buffer;
+		}
 	}
 }
 

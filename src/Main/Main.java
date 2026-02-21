@@ -3,6 +3,7 @@ package Main;
 import java.awt.EventQueue;
 import stg.base.Window;
 import stg.entity.player.Player;
+import stg.service.core.ServiceManager;
 import stg.stage.StageGroup;
 import stg.stage.StageGroupManager;
 import stg.ui.GameCanvas;
@@ -15,6 +16,10 @@ public class Main {
 
 	public static void main(String[] args) {
 		System.out.println("启动 STG 游戏引擎");
+
+		// 初始化服务管理器
+		ServiceManager.getInstance().initializeAllServices();
+		System.out.println("服务管理器初始化完成");
 
 		EventQueue.invokeLater(() -> {
 			window = new Window(false);

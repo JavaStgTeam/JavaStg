@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import stg.renderer.IRenderer;
 import stg.ui.GameCanvas;
 import stg.util.RenderUtils;
 
@@ -124,6 +125,28 @@ public abstract class Laser {
 	}
 
 	/**
+	 * 渲染激光（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 */
+	public void render(IRenderer renderer) {
+		if (!visible) return;
+
+		// 开启抗锯齿
+		renderer.enableAntiAliasing();
+
+		if (!active) {
+			// 渲染预警线
+			renderWarningLineGL(renderer);
+		} else {
+			// 渲染实际激光
+			renderLaserGL(renderer);
+		}
+
+		// 禁用抗锯齿
+		renderer.disableAntiAliasing();
+	}
+
+	/**
 	 * 渲染预警线
 	 * @param g2d 图形上下文
 	 */
@@ -181,6 +204,33 @@ public abstract class Laser {
 		g2d.setColor(new Color(255, 255, 255, 150));
 		g2d.setStroke(new BasicStroke(width * 0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2d.drawLine(screenStartX, screenStartY, screenEndX, screenEndY);
+	}
+
+	/**
+	 * 渲染预警线（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 */
+	protected void renderWarningLineGL(IRenderer renderer) {
+		float endX = x + (float)(Math.cos(angle) * length);
+		float endY = y + (float)(Math.sin(angle) * length);
+
+		// 绘制虚线预警（使用半透明颜色模拟）
+		renderer.drawLine(x, y, endX, endY, width * 0.5f, new Color(color.getRed(), color.getGreen(), color.getBlue(), 100));
+	}
+
+	/**
+	 * 渲染实际激光（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 */
+	protected void renderLaserGL(IRenderer renderer) {
+		float endX = x + (float)(Math.cos(angle) * length);
+		float endY = y + (float)(Math.sin(angle) * length);
+
+		// 绘制激光核心
+		renderer.drawLine(x, y, endX, endY, width, color);
+
+		// 绘制高光
+		renderer.drawLine(x, y, endX, endY, width * 0.3f, new Color(255, 255, 255, 150));
 	}
 
 	/**

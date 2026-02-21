@@ -3,6 +3,7 @@ package stg.entity.item;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import stg.entity.base.Obj;
+import stg.renderer.IRenderer;
 import stg.util.objectpool.Resettable;
 
 /**
@@ -78,6 +79,27 @@ public abstract class Item extends Obj implements Resettable {
 		// 绘制高光效果
 		g.setColor(new Color(255, 255, 255, 150));
 		g.fillOval((int)(screenX - getSize() * 0.4f), (int)(screenY - getSize() * 0.4f), (int)(getSize() * 0.8f), (int)(getSize() * 0.8f));
+	}
+
+	/**
+	 * 渲染物品（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 */
+	@Override
+	public void render(IRenderer renderer) {
+		if (!isActive()) return;
+
+		// 开启抗锯齿
+		renderer.enableAntiAliasing();
+
+		// 绘制物品主体
+		renderer.drawCircle(getX(), getY(), getSize(), getColor());
+
+		// 绘制高光效果
+		renderer.drawCircle(getX(), getY(), getSize() * 0.4f, new Color(255, 255, 255, 150));
+
+		// 禁用抗锯齿
+		renderer.disableAntiAliasing();
 	}
 
 	/**
