@@ -441,7 +441,6 @@ public abstract class Obj {
                 registerPool(manager, "user.enemy.DefaultEnemy", 10, 50);
                 registerPool(manager, "user.enemy.__FairyEnemy", 15, 75);
                 registerPool(manager, "user.enemy.__MidFairyEnemy", 5, 25);
-                registerPool(manager, "user.boss.TestBoss", 1, 5);
                 registerPool(manager, "user.boss.__MinorikoBoss", 1, 5);
                 
                 // 初始化所有对象池

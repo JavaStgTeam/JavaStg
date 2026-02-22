@@ -5,5 +5,8 @@
 bin/
 .*/
 
+# 无效的配置文件
+*.invalid
+
 # ai调试报告
 ai_debug/
