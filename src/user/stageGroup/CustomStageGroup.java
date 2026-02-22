@@ -3,7 +3,6 @@ package user.stageGroup;
 import stg.stage.StageGroup;
 import stg.stage.StageGroupInfo;
 import stg.ui.GameCanvas;
-import user.stage.TestStage;
 
 /**
  * 自定义关卡组示例
@@ -20,7 +19,6 @@ public class CustomStageGroup extends StageGroup {
 
     @Override
     protected void initStages() {
-        // 添加测试关卡
-        addStage(new TestStage(1, "测试关卡", getGameCanvas()));
+        // 自定义关卡组 - 暂无关卡
     }
 }

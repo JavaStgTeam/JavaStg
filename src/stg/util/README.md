@@ -10,7 +10,7 @@
 util/
 ├── math/          # 数学工具包
 ├── AnnotationScanner.java  # 注解扫描器
-├── AudioManager.java       # 音频管理器
+├── ALAudioManager.java     # OpenAL音频管理器
 ├── CoordinateSystem.java   # 坐标系统
 ├── EventBus.java           # 事件总线
 ├── GameConstants.java      # 游戏常量
@@ -25,7 +25,7 @@ util/
 | 类名 | 功能描述 |
 |------|----------|
 | AnnotationScanner | 注解扫描器，用于扫描和处理注解 |
-| AudioManager | 音频管理器，用于加载和播放音频 |
+| ALAudioManager | OpenAL音频管理器，用于加载和播放音频 |
 | CoordinateSystem | 坐标系统，处理游戏中的坐标转换 |
 | EventBus | 事件总线，用于事件的分发和处理 |
 | GameConstants | 游戏常量，定义游戏中的常量值 |
@@ -41,11 +41,13 @@ util/
 - **类加载**：动态加载带有特定注解的类
 - **扩展性**：支持自定义注解的处理
 
-### AudioManager 类
-- **音频加载**：加载游戏中的音频文件
+### ALAudioManager 类
+- **OpenAL集成**：使用OpenAL提供高效的音频处理
+- **音频加载**：加载游戏中的音频文件（支持WAV和OGG格式）
 - **音频播放**：播放背景音乐和音效
 - **音量控制**：调节音频的音量
-- **音频管理**：管理音频的播放状态
+- **音频管理**：管理音频的播放状态和资源生命周期
+- **多源支持**：为音效创建多个源，支持同时播放多个相同音效
 
 ### CoordinateSystem 类
 - **坐标转换**：处理游戏世界坐标和屏幕坐标的转换
@@ -121,15 +123,29 @@ util/
 ```java
 // 加载图片资源
 BufferedImage playerImage = ResourceManager.getInstance().loadImage("player.png");
+```
+
+### 使用音频管理器
+
+```java
+// 获取音频管理器实例
+ALAudioManager audioManager = ALAudioManager.getInstance();
 
 // 加载音频资源
-Clip soundEffect = ResourceManager.getInstance().loadSound("shoot.wav");
+audioManager.loadMusic("bgm", "resources/audio/music/bgm.wav");
+audioManager.loadSound("shoot", "resources/audio/sfx/shoot.wav");
 
 // 播放音频
-AudioManager.getInstance().playSound(soundEffect);
+audioManager.playMusic("bgm", true); // 循环播放
+audioManager.playSound("shoot");
 
-// 加载背景音乐
-AudioManager.getInstance().playMusic("bgm.wav");
+// 控制音量
+audioManager.setMusicVolume(0.7f);
+audioManager.setSoundVolume(1.0f);
+
+// 清理资源
+audioManager.unloadAll();
+audioManager.cleanup();
 ```
 
 ### 使用事件总线

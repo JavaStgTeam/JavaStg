@@ -1,11 +1,12 @@
 package stg.renderer;
 
 import java.awt.Color;
+import java.awt.Font;
 
 /**
  * 渲染器接口 - 统一的渲染抽象层
- * 支持不同的渲染后端（Java2D、OpenGL等）
- * @since 2026-02-21
+ * 支持绘制几何图形、文本和图像，包含批量渲染优化
+ * @since 2026-02-22
  */
 public interface IRenderer {
     /**
@@ -22,6 +23,18 @@ public interface IRenderer {
      * 结束渲染帧
      */
     void endFrame();
+    
+    /**
+     * 开始批量渲染
+     * 用于优化多个渲染操作的性能
+     */
+    void beginBatch();
+    
+    /**
+     * 结束批量渲染并执行实际渲染
+     * 批量渲染结束后会清空批处理队列
+     */
+    void endBatch();
     
     /**
      * 绘制圆形
@@ -64,9 +77,47 @@ public interface IRenderer {
     void drawText(String text, float x, float y, float fontSize, Color color);
     
     /**
-     * 清理渲染器资源
+     * 绘制文字（使用指定字体）
+     * @param text 文字内容
+     * @param x X坐标（游戏逻辑坐标）
+     * @param y Y坐标（游戏逻辑坐标）
+     * @param font 字体
+     * @param color 颜色
      */
-    void cleanup();
+    void drawText(String text, float x, float y, Font font, Color color);
+    
+    /**
+     * 绘制图像
+     * @param image 图像对象
+     * @param x X坐标（游戏逻辑坐标）
+     * @param y Y坐标（游戏逻辑坐标）
+     * @param width 宽度
+     * @param height 高度
+     */
+    void drawImage(Object image, float x, float y, float width, float height);
+    
+    /**
+     * 绘制图像（带透明度）
+     * @param image 图像对象
+     * @param x X坐标（游戏逻辑坐标）
+     * @param y Y坐标（游戏逻辑坐标）
+     * @param width 宽度
+     * @param height 高度
+     * @param alpha 透明度（0.0-1.0）
+     */
+    void drawImage(Object image, float x, float y, float width, float height, float alpha);
+    
+    /**
+     * 设置当前颜色
+     * @param color 颜色
+     */
+    void setColor(Color color);
+    
+    /**
+     * 设置当前字体
+     * @param font 字体
+     */
+    void setFont(Font font);
     
     /**
      * 启用抗锯齿
@@ -77,4 +128,15 @@ public interface IRenderer {
      * 禁用抗锯齿
      */
     void disableAntiAliasing();
+    
+    /**
+     * 清理渲染器资源
+     */
+    void cleanup();
+    
+    /**
+     * 检查渲染器是否已初始化
+     * @return 是否已初始化
+     */
+    boolean isInitialized();
 }

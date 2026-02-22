@@ -1,19 +1,15 @@
 package stg.service.render;
 
-import org.lwjgl.BufferUtils;
-import org.lwjgl.stb.STBTTAlignedQuad;
-import org.lwjgl.stb.STBTTBakedChar;
-import org.lwjgl.stb.STBTruetype;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.stb.STBTTBakedChar;
+import org.lwjgl.stb.STBTruetype;
+
 import stg.util.ResourceManager;
 
 public class FontManager {
@@ -32,8 +28,10 @@ public class FontManager {
     }
     
     public FontData loadFont(String name, String path, int fontSize) throws IOException {
-        if (fonts.containsKey(name)) {
-            return fonts.get(name);
+        // 使用字体名称和大小作为唯一键
+        String key = name + "_" + fontSize;
+        if (fonts.containsKey(key)) {
+            return fonts.get(key);
         }
         
         try {
@@ -43,9 +41,13 @@ public class FontManager {
                 throw new IOException("Failed to load font: " + path);
             }
             
-            // 计算字体纹理大小
+            // 根据字体大小动态计算纹理大小
             int bitmapWidth = 512;
             int bitmapHeight = 512;
+            if (fontSize > 24) {
+                bitmapWidth = 1024;
+                bitmapHeight = 1024;
+            }
             
             // 创建字形表
             STBTTBakedChar.Buffer charData = STBTTBakedChar.malloc(96);
@@ -64,12 +66,31 @@ public class FontManager {
             
             // 创建字体数据
             FontData fontData = new FontData(name, path, fontSize, textureId, charData, bitmapWidth, bitmapHeight);
-            fonts.put(name, fontData);
+            fonts.put(key, fontData);
             
             return fontData;
         } catch (Exception e) {
             System.err.println("Failed to load font, creating fallback font: " + e.getMessage());
             // 创建一个简单的回退字体
+            return createFallbackFont(name, fontSize);
+        }
+    }
+    
+    public FontData getFont(String name, int fontSize) {
+        String key = name + "_" + fontSize;
+        return fonts.get(key);
+    }
+    
+    public FontData getOrLoadFont(String name, String path, int fontSize) {
+        String key = name + "_" + fontSize;
+        if (fonts.containsKey(key)) {
+            return fonts.get(key);
+        }
+        
+        try {
+            return loadFont(name, path, fontSize);
+        } catch (IOException e) {
+            System.err.println("Failed to load font: " + e.getMessage());
             return createFallbackFont(name, fontSize);
         }
     }
@@ -99,7 +120,8 @@ public class FontManager {
         
         // 创建字体数据
         FontData fontData = new FontData(name, "fallback", fontSize, textureId, charData, bitmapWidth, bitmapHeight);
-        fonts.put(name, fontData);
+        String key = name + "_" + fontSize;
+        fonts.put(key, fontData);
         
         return fontData;
     }

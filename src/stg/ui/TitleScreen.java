@@ -2,15 +2,10 @@ package stg.ui;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
-import javax.swing.JPanel;
-import javax.swing.Timer;
+
 import stg.base.KeyStateProvider;
-import stg.util.AudioManager;
+import stg.service.render.IRenderer;
+import stg.util.ALAudioManager;
 import stg.util.ResourceManager;
 
 /**
@@ -21,8 +16,7 @@ import stg.util.ResourceManager;
  * @date 2026-01-24 添加背景图片支持
  * @date 2026-01-27 添加标题音乐播放功能
  */
-public class TitleScreen extends JPanel implements KeyStateProvider {
-	private static final long serialVersionUID = 1L;
+public class TitleScreen implements KeyStateProvider {
 	private static final Color BG_COLOR = new Color(10, 10, 20);
 	private static final Color SELECTED_COLOR = new Color(255, 200, 100);
 	private static final Color UNSELECTED_COLOR = new Color(200, 200, 200);
@@ -39,11 +33,9 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 
 	private int selectedIndex = 0;
 	private MenuState currentState = MenuState.MAIN_MENU;
-	private Timer animationTimer;
 	private int animationFrame = 0;
-	private BufferedImage backgroundImage;
 	private ResourceManager resourceManager;
-	private AudioManager audioManager;
+	private ALAudioManager audioManager;
 
 	// 按键状态跟踪 - 供虚拟键盘使用
 	private boolean upPressed = false;
@@ -56,7 +48,7 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 
 	public interface TitleCallback {
 		void onStageGroupSelect();
-	void onGameStart(stg.stage.StageGroup stageGroup);
+		void onGameStart(stg.stage.StageGroup stageGroup);
 		void onExit();
 	}
 
@@ -65,72 +57,50 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 	public TitleScreen(TitleCallback callback) {
 		this.callback = callback;
 		this.resourceManager = ResourceManager.getInstance();
-		this.audioManager = AudioManager.getInstance();
-		loadBackgroundImage();
+		this.audioManager = ALAudioManager.getInstance();
 		playTitleMusic();
-		
-		setFocusable(true);
-		addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				handleKeyPress(e);
-			}
-		});
-
-		animationTimer = new Timer(16, e -> {
-			animationFrame++;
-			repaint();
-		});
-		animationTimer.start();
-	}
-	
-	private void loadBackgroundImage() {
-		backgroundImage = resourceManager.loadImage("ui_bg.png", "images");
-		if (backgroundImage == null) {
-			System.out.println("【警告】UI背景图片加载失败，使用默认背景色");
-		} else {
-			System.out.println("【资源】UI背景图片加载成功: " + 
-				backgroundImage.getWidth() + "x" + backgroundImage.getHeight());
-		}
 	}
 	
 	private void playTitleMusic() {
 		try {
-			audioManager.playMusic("luastg.wav", true);
-			System.out.println("【音频】标题音乐播放中（WAV 格式）");	
+			audioManager.loadMusic("title", "resources/audio/music/luastg.wav");
+			audioManager.playMusic("title", true);
+			System.out.println("【音频】标题音乐播放中（WAV 格式）");
 		} catch (Exception wavError) {
 			System.out.println("【警告】WAV 音乐播放失败，跳过背景音乐 " + wavError.getMessage());
 		}
 	}
 	
 	public void stopTitleMusic() {
-		audioManager.stopMusic();
+		audioManager.stopMusic("title");
 		System.out.println("【音频】标题音乐已停止");
 	}
 
-	private void handleKeyPress(KeyEvent e) {
+	/**
+	 * 处理键盘输入
+	 * @param key 按键代码
+	 */
+	public void handleKeyPress(int key) {
 		switch (currentState) {
 			case MAIN_MENU:
-				handleMainMenuKey(e);
+				handleMainMenuKey(key);
 				break;
 		}
 	}
 
-	private void handleMainMenuKey(KeyEvent e) {
-		switch (e.getKeyCode()) {
-			case KeyEvent.VK_UP:
+	private void handleMainMenuKey(int key) {
+		switch (key) {
+			case org.lwjgl.glfw.GLFW.GLFW_KEY_UP:
 				selectedIndex = (selectedIndex - 1 + MAIN_MENU_ITEMS.length) % MAIN_MENU_ITEMS.length;
-				repaint();
 				break;
-			case KeyEvent.VK_DOWN:
+			case org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN:
 				selectedIndex = (selectedIndex + 1) % MAIN_MENU_ITEMS.length;
-				repaint();
 				break;
-			case KeyEvent.VK_Z:
-			case KeyEvent.VK_ENTER:
+			case org.lwjgl.glfw.GLFW.GLFW_KEY_Z:
+			case org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER:
 				handleMainMenuSelection();
 				break;
-			case KeyEvent.VK_ESCAPE:
+			case org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE:
 				callback.onExit();
 				break;
 		}
@@ -146,70 +116,79 @@ public class TitleScreen extends JPanel implements KeyStateProvider {
 				callback.onExit();
 				break;
 		}
-		repaint();
 	}
 
-	@Override
-	protected void paintComponent(Graphics g) {
-		Graphics2D g2d = (Graphics2D) g;
-		int width = getWidth();
-		int height = getHeight();
+	/**
+	 * 使用OpenGL渲染器绘制标题界面
+	 * @param renderer OpenGL渲染器
+	 * @param width 窗口宽度
+	 * @param height 窗口高度
+	 */
+	public void render(IRenderer renderer, int width, int height) {
+		// 开始批量渲染以优化性能
+		renderer.beginBatch();
+		
+		// 绘制背景 - 使用屏幕像素坐标
+		renderer.setColor(BG_COLOR);
+		renderer.drawRect(0, 0, width, height, BG_COLOR);
 
-		// 绘制背景图片
-		if (backgroundImage != null) {
-			// 缩放图片以适应窗口
-			g2d.drawImage(backgroundImage, 0, 0, width, height, null);
-		} else {
-			// 默认背景颜色
-			g2d.setColor(BG_COLOR);
-			g2d.fillRect(0, 0, width, height);
-		}
-
-		// 绘制标题
-		stg.util.RenderUtils.enableAntiAliasing(g2d);
-		g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 48));
-		g2d.setColor(Color.WHITE);
+		// 绘制标题 - 使用屏幕像素坐标
+		Font titleFont = new Font("Microsoft YaHei", Font.BOLD, 48);
+		renderer.setFont(titleFont);
+		renderer.setColor(Color.WHITE);
 		String title = "东方STG引擎";
-		int titleWidth = g2d.getFontMetrics().stringWidth(title);
-		g2d.drawString(title, width / 2 - titleWidth / 2, 100);
+		renderer.drawText(title, width / 2 - 150, height / 2 + 100, titleFont, Color.WHITE);
 
-		// 绘制版本信息
-		g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 14));
-		g2d.setColor(Color.GRAY);
-		g2d.drawString("Version 1.0", width - 80, height - 10);
+		// 绘制版本信息 - 使用屏幕像素坐标
+		Font versionFont = new Font("Microsoft YaHei", Font.PLAIN, 14);
+		renderer.setFont(versionFont);
+		renderer.setColor(Color.GRAY);
+		renderer.drawText("Version 1.0", width - 100, height - 30, versionFont, Color.GRAY);
 
 		// 绘制菜单
 		switch (currentState) {
-			case MAIN_MENU:
-				drawMainMenu(g2d, width, height);
-				break;
+		case MAIN_MENU:
+			drawMainMenu(renderer, width, height);
+			break;
 		}
+		
+		// 结束批量渲染
+		renderer.endBatch();
 	}
 
-	private void drawMainMenu(Graphics2D g2d, int width, int height) {
-		g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 24));
+	private void drawMainMenu(IRenderer renderer, int width, int height) {
+		Font menuFont = new Font("Microsoft YaHei", Font.BOLD, 24);
+		renderer.setFont(menuFont);
 
 		for (int i = 0; i < MAIN_MENU_ITEMS.length; i++) {
 			String item = MAIN_MENU_ITEMS[i];
-			int itemWidth = g2d.getFontMetrics().stringWidth(item);
-			int x = width / 2 - itemWidth / 2;
-			int y = height / 2 + i * 40;
+			// 使用屏幕像素坐标
+			float x = width / 2 - 80;
+			float y = height / 2 + 20 - i * 40;
 
 			if (i == selectedIndex) {
-				g2d.setColor(SELECTED_COLOR);
+				renderer.setColor(SELECTED_COLOR);
 				// 绘制选中效果
-				g2d.drawString(">", x - 30, y);
+				renderer.drawText(">", x - 30, y, menuFont, SELECTED_COLOR);
 			} else {
-				g2d.setColor(UNSELECTED_COLOR);
+				renderer.setColor(UNSELECTED_COLOR);
 			}
-			g2d.drawString(item, x, y);
+			renderer.drawText(item, x, y, menuFont, i == selectedIndex ? SELECTED_COLOR : UNSELECTED_COLOR);
 		}
 
 		// 绘制操作提示
-		g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 14));
-		g2d.setColor(Color.GRAY);
-		g2d.drawString("上下 选择菜单", width / 2 - 80, height - 40);
-		g2d.drawString("Z/Enter 确认", width / 2 - 80, height - 20);
+		Font hintFont = new Font("Microsoft YaHei", Font.PLAIN, 14);
+		renderer.setFont(hintFont);
+		renderer.setColor(Color.GRAY);
+		renderer.drawText("上下 选择菜单", width / 2 - 100, height / 2 - 100, hintFont, Color.GRAY);
+		renderer.drawText("Z/Enter 确认", width / 2 - 100, height / 2 - 120, hintFont, Color.GRAY);
+	}
+
+	/**
+	 * 更新动画帧
+	 */
+	public void update() {
+		animationFrame++;
 	}
 
 	// 虚拟键盘接口实现

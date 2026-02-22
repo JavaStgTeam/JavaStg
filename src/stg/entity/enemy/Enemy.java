@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
-import stg.renderer.IRenderer;
+import stg.service.render.IRenderer;
 import stg.util.objectpool.Resettable;
 
 /**

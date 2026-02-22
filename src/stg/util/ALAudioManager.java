@@ -1,5 +1,14 @@
 package stg.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.ALC;
@@ -8,15 +17,8 @@ import org.lwjgl.stb.STBVorbis;
 import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import stg.service.audio.IAudioManager;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import stg.service.audio.IAudioManager;
 
 public class ALAudioManager implements IAudioManager {
     private static ALAudioManager instance;
@@ -27,9 +29,12 @@ public class ALAudioManager implements IAudioManager {
     private final Map<String, Integer> musicBuffers = new HashMap<>();
     private final Map<String, Integer> soundBuffers = new HashMap<>();
     private final Map<String, Integer> musicSources = new HashMap<>();
-    private final Map<String, Integer> soundSources = new HashMap<>();
+    private final Map<String, ConcurrentLinkedQueue<Integer>> soundSources = new HashMap<>();
     private final Map<String, String> musicPaths = new HashMap<>();
     private final Map<String, String> soundPaths = new HashMap<>();
+    
+    // 每个音效的默认源数量
+    private static final int DEFAULT_SOUND_SOURCES_PER_SOUND = 5;
     
     private float musicVolume = 0.7f;
     private float soundVolume = 1.0f;
@@ -71,6 +76,9 @@ public class ALAudioManager implements IAudioManager {
             // 初始化AL
             AL.createCapabilities(ALC.createCapabilities(device));
             
+            // 检查OpenAL错误
+            ALErrorChecker.checkError("ALAudioManager.init() - After initialization");
+            
             initialized = true;
             LogUtil.info("ALAudioManager", "OpenAL环境初始化成功");
         } catch (Exception e) {
@@ -99,8 +107,11 @@ public class ALAudioManager implements IAudioManager {
             
             // 创建源
             int sourceId = AL10.alGenSources();
+            ALErrorChecker.checkError("ALAudioManager.loadMusic() - After generating source");
             AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
+            ALErrorChecker.checkError("ALAudioManager.loadMusic() - After setting buffer");
             AL10.alSourcef(sourceId, AL10.AL_GAIN, musicVolume);
+            ALErrorChecker.checkError("ALAudioManager.loadMusic() - After setting gain");
             
             // 存储
             musicBuffers.put(name, bufferId);
@@ -131,17 +142,26 @@ public class ALAudioManager implements IAudioManager {
                 return;
             }
             
-            // 创建源
-            int sourceId = AL10.alGenSources();
-            AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
-            AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
+            // 创建源池
+            ConcurrentLinkedQueue<Integer> sourcePool = new ConcurrentLinkedQueue<>();
+            
+            // 为每个音效创建多个源
+            for (int i = 0; i < DEFAULT_SOUND_SOURCES_PER_SOUND; i++) {
+                int sourceId = AL10.alGenSources();
+                ALErrorChecker.checkError("ALAudioManager.loadSound() - After generating source");
+                AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
+                ALErrorChecker.checkError("ALAudioManager.loadSound() - After setting buffer");
+                AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
+                ALErrorChecker.checkError("ALAudioManager.loadSound() - After setting gain");
+                sourcePool.offer(sourceId);
+            }
             
             // 存储
             soundBuffers.put(name, bufferId);
-            soundSources.put(name, sourceId);
+            soundSources.put(name, sourcePool);
             soundPaths.put(name, path);
             
-            LogUtil.info("ALAudioManager", "音效加载成功: " + name);
+            LogUtil.info("ALAudioManager", "音效加载成功: " + name + " (" + DEFAULT_SOUND_SOURCES_PER_SOUND + "个源)");
         } catch (Exception e) {
             LogUtil.error("ALAudioManager", "加载音效失败: " + name, e);
         }
@@ -158,13 +178,17 @@ public class ALAudioManager implements IAudioManager {
             
             // 停止当前播放
             AL10.alSourceStop(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.playMusic() - After stopping source");
             AL10.alSourceRewind(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.playMusic() - After rewinding source");
             
             // 设置循环
             AL10.alSourcei(sourceId, AL10.AL_LOOPING, loop ? 1 : 0);
+            ALErrorChecker.checkError("ALAudioManager.playMusic() - After setting looping");
             
             // 播放
             AL10.alSourcePlay(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.playMusic() - After playing source");
             
             LogUtil.info("ALAudioManager", "播放音乐: " + name + (loop ? " (循环)" : ""));
         } catch (Exception e) {
@@ -179,14 +203,39 @@ public class ALAudioManager implements IAudioManager {
         }
         
         try {
-            int sourceId = soundSources.get(name);
+            ConcurrentLinkedQueue<Integer> sourcePool = soundSources.get(name);
+            Integer sourceId = null;
             
-            // 停止当前播放
+            // 查找可用的源
+            for (Integer id : sourcePool) {
+                if (AL10.alGetSourcei(id, AL10.AL_SOURCE_STATE) != AL10.AL_PLAYING) {
+                    sourceId = id;
+                    break;
+                }
+            }
+            
+            // 如果没有可用源，创建新的源
+            if (sourceId == null) {
+                int bufferId = soundBuffers.get(name);
+                sourceId = AL10.alGenSources();
+                ALErrorChecker.checkError("ALAudioManager.playSound() - After generating source");
+                AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
+                ALErrorChecker.checkError("ALAudioManager.playSound() - After setting buffer");
+                AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
+                ALErrorChecker.checkError("ALAudioManager.playSound() - After setting gain");
+                sourcePool.offer(sourceId);
+                LogUtil.info("ALAudioManager", "为音效 " + name + " 创建新源: " + sourceId);
+            }
+            
+            // 重置并播放
             AL10.alSourceStop(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.playSound() - After stopping source");
             AL10.alSourceRewind(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.playSound() - After rewinding source");
             
             // 播放
             AL10.alSourcePlay(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.playSound() - After playing source");
             
             LogUtil.info("ALAudioManager", "播放音效: " + name);
         } catch (Exception e) {
@@ -203,7 +252,9 @@ public class ALAudioManager implements IAudioManager {
         try {
             int sourceId = musicSources.get(name);
             AL10.alSourceStop(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.stopMusic() - After stopping source");
             AL10.alSourceRewind(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.stopMusic() - After rewinding source");
             
             LogUtil.info("ALAudioManager", "停止音乐: " + name);
         } catch (Exception e) {
@@ -218,9 +269,13 @@ public class ALAudioManager implements IAudioManager {
         }
         
         try {
-            for (Integer sourceId : soundSources.values()) {
-                AL10.alSourceStop(sourceId);
-                AL10.alSourceRewind(sourceId);
+            for (ConcurrentLinkedQueue<Integer> sourcePool : soundSources.values()) {
+                for (Integer sourceId : sourcePool) {
+                    AL10.alSourceStop(sourceId);
+                    ALErrorChecker.checkError("ALAudioManager.stopAllSounds() - After stopping source");
+                    AL10.alSourceRewind(sourceId);
+                    ALErrorChecker.checkError("ALAudioManager.stopAllSounds() - After rewinding source");
+                }
             }
             
             LogUtil.info("ALAudioManager", "停止所有音效");
@@ -240,6 +295,7 @@ public class ALAudioManager implements IAudioManager {
         try {
             for (Integer sourceId : musicSources.values()) {
                 AL10.alSourcef(sourceId, AL10.AL_GAIN, musicVolume);
+                ALErrorChecker.checkError("ALAudioManager.setMusicVolume() - After setting gain");
             }
             
             LogUtil.info("ALAudioManager", "设置音乐音量: " + musicVolume);
@@ -257,8 +313,11 @@ public class ALAudioManager implements IAudioManager {
         }
         
         try {
-            for (Integer sourceId : soundSources.values()) {
-                AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
+            for (ConcurrentLinkedQueue<Integer> sourcePool : soundSources.values()) {
+                for (Integer sourceId : sourcePool) {
+                    AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
+                    ALErrorChecker.checkError("ALAudioManager.setSoundVolume() - After setting gain");
+                }
             }
             
             LogUtil.info("ALAudioManager", "设置音效音量: " + soundVolume);
@@ -276,6 +335,7 @@ public class ALAudioManager implements IAudioManager {
         try {
             int sourceId = musicSources.get(name);
             AL10.alSourcePause(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.pauseMusic() - After pausing source");
             
             LogUtil.info("ALAudioManager", "暂停音乐: " + name);
         } catch (Exception e) {
@@ -292,6 +352,7 @@ public class ALAudioManager implements IAudioManager {
         try {
             int sourceId = musicSources.get(name);
             AL10.alSourcePlay(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.resumeMusic() - After playing source");
             
             LogUtil.info("ALAudioManager", "恢复音乐: " + name);
         } catch (Exception e) {
@@ -312,10 +373,12 @@ public class ALAudioManager implements IAudioManager {
             // 删除源
             int sourceId = musicSources.get(name);
             AL10.alDeleteSources(sourceId);
+            ALErrorChecker.checkError("ALAudioManager.unloadMusic() - After deleting source");
             
             // 删除缓冲区
             int bufferId = musicBuffers.get(name);
             AL10.alDeleteBuffers(bufferId);
+            ALErrorChecker.checkError("ALAudioManager.unloadMusic() - After deleting buffer");
             
             // 清理映射
             musicSources.remove(name);
@@ -335,24 +398,28 @@ public class ALAudioManager implements IAudioManager {
         }
         
         try {
-            // 停止播放
-            int sourceId = soundSources.get(name);
-            AL10.alSourceStop(sourceId);
-            AL10.alSourceRewind(sourceId);
-            
-            // 删除源
-            AL10.alDeleteSources(sourceId);
+            // 停止并删除所有源
+            ConcurrentLinkedQueue<Integer> sourcePool = soundSources.get(name);
+            for (Integer sourceId : sourcePool) {
+                AL10.alSourceStop(sourceId);
+                ALErrorChecker.checkError("ALAudioManager.unloadSound() - After stopping source");
+                AL10.alSourceRewind(sourceId);
+                ALErrorChecker.checkError("ALAudioManager.unloadSound() - After rewinding source");
+                AL10.alDeleteSources(sourceId);
+                ALErrorChecker.checkError("ALAudioManager.unloadSound() - After deleting source");
+            }
             
             // 删除缓冲区
             int bufferId = soundBuffers.get(name);
             AL10.alDeleteBuffers(bufferId);
+            ALErrorChecker.checkError("ALAudioManager.unloadSound() - After deleting buffer");
             
             // 清理映射
             soundSources.remove(name);
             soundBuffers.remove(name);
             soundPaths.remove(name);
             
-            LogUtil.info("ALAudioManager", "卸载音效: " + name);
+            LogUtil.info("ALAudioManager", "卸载音效: " + name + " (" + sourcePool.size() + "个源)");
         } catch (Exception e) {
             LogUtil.error("ALAudioManager", "卸载音效失败: " + name, e);
         }
@@ -420,18 +487,23 @@ public class ALAudioManager implements IAudioManager {
      * 加载音频文件
      */
     private int loadAudioFile(String path) {
+        ByteBuffer data = null;
         try (MemoryStack stack = MemoryStack.stackPush()) {
             // 读取文件
-            ByteBuffer data = readFileToBuffer(path);
+            data = readFileToBuffer(path);
             if (data == null) {
                 return -1;
             }
             
             // 检查文件类型并加载
             if (path.toLowerCase().endsWith(".ogg")) {
-                return loadOggFile(data, stack);
+                int bufferId = loadOggFile(data, stack);
+                ALErrorChecker.checkError("ALAudioManager.loadAudioFile() - After loading OGG file");
+                return bufferId;
             } else if (path.toLowerCase().endsWith(".wav")) {
-                return loadWavFile(data, stack);
+                int bufferId = loadWavFile(data, stack);
+                ALErrorChecker.checkError("ALAudioManager.loadAudioFile() - After loading WAV file");
+                return bufferId;
             } else {
                 LogUtil.error("ALAudioManager", "不支持的音频格式: " + path);
                 return -1;
@@ -439,6 +511,10 @@ public class ALAudioManager implements IAudioManager {
         } catch (Exception e) {
             LogUtil.error("ALAudioManager", "加载音频文件失败: " + path, e);
             return -1;
+        } finally {
+            if (data != null) {
+                MemoryUtil.memFree(data);
+            }
         }
     }
     
@@ -446,6 +522,8 @@ public class ALAudioManager implements IAudioManager {
      * 读取文件到ByteBuffer
      */
     private ByteBuffer readFileToBuffer(String path) {
+        ByteBuffer buffer = null;
+        boolean success = false;
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
             if (inputStream == null) {
@@ -456,14 +534,19 @@ public class ALAudioManager implements IAudioManager {
             byte[] bytes = inputStream.readAllBytes();
             inputStream.close();
             
-            ByteBuffer buffer = MemoryUtil.memAlloc(bytes.length);
+            buffer = MemoryUtil.memAlloc(bytes.length);
             buffer.put(bytes);
             buffer.flip();
             
+            success = true;
             return buffer;
         } catch (IOException e) {
             LogUtil.error("ALAudioManager", "读取音频文件失败: " + path, e);
             return null;
+        } finally {
+            if (!success && buffer != null) {
+                MemoryUtil.memFree(buffer);
+            }
         }
     }
     
@@ -496,12 +579,14 @@ public class ALAudioManager implements IAudioManager {
             
             // 创建OpenAL缓冲区
             int bufferId = AL10.alGenBuffers();
+            ALErrorChecker.checkError("ALAudioManager.loadOggFile() - After generating buffer");
             
             // 设置格式
             int format = channels == 1 ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_STEREO16;
             
             // 上传数据
             AL10.alBufferData(bufferId, format, pcm, sampleRate);
+            ALErrorChecker.checkError("ALAudioManager.loadOggFile() - After uploading buffer data");
             
             return bufferId;
         } finally {
@@ -572,6 +657,7 @@ public class ALAudioManager implements IAudioManager {
             
             // 创建OpenAL缓冲区
             int bufferId = AL10.alGenBuffers();
+            ALErrorChecker.checkError("ALAudioManager.loadWavFile() - After generating buffer");
             
             // 设置格式
             int audioFormat;
@@ -583,6 +669,7 @@ public class ALAudioManager implements IAudioManager {
             
             // 上传数据
             AL10.alBufferData(bufferId, audioFormat, pcmData, sampleRate);
+            ALErrorChecker.checkError("ALAudioManager.loadWavFile() - After uploading buffer data");
             
             return bufferId;
         } catch (Exception e) {

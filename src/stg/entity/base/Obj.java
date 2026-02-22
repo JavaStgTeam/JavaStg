@@ -1,7 +1,9 @@
 package stg.entity.base;
 
 import java.awt.*;
-import stg.renderer.IRenderer;
+import stg.service.render.IRenderer;
+import stg.render.IRenderable;
+import stg.render.RenderLayer;
 import stg.util.CoordinateSystem;
 import stg.util.objectpool.ConcurrentLinkedObjectPool;
 import stg.util.objectpool.ObjectFactory;
@@ -18,7 +20,7 @@ import stg.util.objectpool.ObjectPoolManager;
  * @date 2026-02-18 迁移到stg.entity.base包
  * @date 2026-02-21 添加对象池支持
  */
-public abstract class Obj {
+public abstract class Obj implements IRenderable {
     protected float x; // X坐标
     protected float y; // Y坐标
     protected float vx; // X方向速度
@@ -320,6 +322,16 @@ public abstract class Obj {
      */
     public float getHitboxRadius() {
         return hitboxRadius;
+    }
+    
+    /**
+     * 获取渲染层级
+     * @return 渲染层级
+     */
+    @Override
+    public RenderLayer getRenderLayer() {
+        // 默认渲染层级为MIDDLE，子类可以重写此方法设置不同的层级
+        return RenderLayer.MIDDLE;
     }
     
     // ==================== 对象池操作方法 ====================

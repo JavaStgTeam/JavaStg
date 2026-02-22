@@ -42,14 +42,18 @@ public class DefaultPlayer extends Player {
         stg.core.GameWorld gameWorld = getGameWorld();
         if (gameWorld != null) {
             // 创建左侧子弹
-            DefaultPlayerMainBullet leftBullet = Obj.create(DefaultPlayerMainBullet.class, leftBulletX, leftBulletY);
-            leftBullet.setDamage(getBulletDamage());
-            gameWorld.addPlayerBullet(leftBullet);
-            
-            // 创建右侧子弹
-            DefaultPlayerMainBullet rightBullet = Obj.create(DefaultPlayerMainBullet.class, rightBulletX, rightBulletY);
-            rightBullet.setDamage(getBulletDamage());
-            gameWorld.addPlayerBullet(rightBullet);
+            try {
+                DefaultPlayerMainBullet leftBullet = new DefaultPlayerMainBullet(leftBulletX, leftBulletY);
+                leftBullet.setDamage(getBulletDamage());
+                gameWorld.addPlayerBullet(leftBullet);
+                
+                // 创建右侧子弹
+                DefaultPlayerMainBullet rightBullet = new DefaultPlayerMainBullet(rightBulletX, rightBulletY);
+                rightBullet.setDamage(getBulletDamage());
+                gameWorld.addPlayerBullet(rightBullet);
+            } catch (Exception e) {
+                System.err.println("创建子弹失败: " + e.getMessage());
+            }
         }
         
         // 打印发射信息

@@ -1,11 +1,13 @@
 package stg.ui;
 
-import java.awt.Component;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.lwjgl.glfw.GLFW;
+
 import stg.base.KeyStateProvider;
 import stg.entity.player.Player;
+import stg.service.render.GLRenderer;
 import stg.service.render.IRenderer;
-import stg.service.render.Java2DRenderer;
 import stg.util.CoordinateSystem;
 import stg.util.objectpool.ObjectPoolManager;
 
@@ -14,7 +16,7 @@ import stg.util.objectpool.ObjectPoolManager;
  * @since 2026-01-20
  */
 @SuppressWarnings("FieldMayBeFinal")
-public class GameCanvas extends Component implements KeyStateProvider {
+public class GameCanvas implements KeyStateProvider {
     // 按键状态
     private AtomicBoolean upPressed = new AtomicBoolean(false);
     private AtomicBoolean downPressed = new AtomicBoolean(false);
@@ -27,15 +29,14 @@ public class GameCanvas extends Component implements KeyStateProvider {
     // 画布尺寸
     private int width = 800;
     private int height = 600;
+    private long window;
     
     /**
      * 设置画布尺寸
      */
-    @Override
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
-        super.setSize(width, height);
     }
     
     /**
@@ -105,9 +106,6 @@ public class GameCanvas extends Component implements KeyStateProvider {
         return xPressed.get();
     }
     
-    @SuppressWarnings("unused")
-    private GameStatusPanel gameStatusPanel;
-    
     // 玩家
     private Player player;
     
@@ -134,13 +132,20 @@ public class GameCanvas extends Component implements KeyStateProvider {
     
     // 渲染器
     private IRenderer renderer;
-    private Java2DRenderer java2DRenderer;
-    private Object glRenderer; // 使用Object类型避免直接依赖
+    private GLRenderer glRenderer;
+    
+    // 渲染管理器
+    private stg.render.RenderManager renderManager;
+    
+    // 相机
+    private stg.render.Camera camera;
     
     /**
      * 构造函数
+     * @param window GLFW窗口句柄
      */
-    public GameCanvas() {
+    public GameCanvas(long window) {
+        this.window = window;
         this.coordinateSystem = new CoordinateSystem(width, height);
         
         // 设置共享坐标系统，确保所有游戏对象使用一致的坐标转换
@@ -164,66 +169,31 @@ public class GameCanvas extends Component implements KeyStateProvider {
         // 初始化暂停菜单
         this.pauseMenu = new PauseMenu(gameStateManager, this);
         
+        // 初始化渲染管理器
+        this.renderManager = new stg.render.RenderManager();
+        
+        // 初始化相机
+        this.camera = new stg.render.Camera(width, height);
+        
         // 初始化对象池
         stg.entity.base.Obj.initializeObjectPools();
-        
-        // 设置为可聚焦
-        setFocusable(true);
-        
-        // 添加键盘事件监听器
-        addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyPressed(java.awt.event.KeyEvent e) {
-                handleKeyPress(e);
-            }
-            
-            @Override
-            public void keyReleased(java.awt.event.KeyEvent e) {
-                handleKeyRelease(e);
-            }
-        });
     }
     
     /**
      * 初始化渲染器
      */
     public void initRenderer() {
-        // 尝试初始化OpenGL渲染器
+        // 初始化OpenGL渲染器
         try {
-            // 检查LWJGL是否可用
-            Class.forName("org.lwjgl.glfw.GLFW");
-            Class.forName("org.lwjgl.opengl.GL");
-            
-            // 检查GLRenderer是否存在
-            Class<?> glRendererClass = Class.forName("stg.service.render.GLRenderer");
-            
-            // 注意：GLRenderer需要窗口句柄作为参数，这里暂时跳过
-            // 实际使用时需要从窗口系统获取句柄
-            // Constructor<?> constructor = glRendererClass.getConstructor(long.class);
-            // glRenderer = constructor.newInstance(windowHandle);
-            // Method initMethod = glRendererClass.getMethod("init");
-            // initMethod.invoke(glRenderer);
-            // Method isInitializedMethod = glRendererClass.getMethod("isInitialized");
-            // boolean isInitialized = (boolean) isInitializedMethod.invoke(glRenderer);
-            // if (isInitialized) {
-            //     renderer = (IRenderer) glRenderer;
-            //     System.out.println("使用OpenGL渲染器");
-            //     return;
-            // }
-            
-            // 暂时直接使用Java2D渲染器
-            System.out.println("OpenGL渲染器暂未配置，使用Java2D渲染器");
-        } catch (ClassNotFoundException e) {
-            System.out.println("LWJGL依赖缺失或GLRenderer不存在，使用Java2D渲染器");
+            // 创建GLRenderer实例
+            glRenderer = new GLRenderer(window);
+            glRenderer.init();
+            renderer = glRenderer;
+            System.out.println("使用OpenGL渲染器");
         } catch (Exception e) {
-            System.out.println("OpenGL初始化失败，切换到Java2D渲染器: " + e.getMessage());
+            System.out.println("OpenGL初始化失败: " + e.getMessage());
+            throw e;
         }
-        
-        // 使用Java2D渲染器作为回退
-        java2DRenderer = new Java2DRenderer();
-        java2DRenderer.init();
-        renderer = java2DRenderer;
-        System.out.println("使用Java2D渲染器");
     }
     
     /**
@@ -241,55 +211,62 @@ public class GameCanvas extends Component implements KeyStateProvider {
     }
     
     /**
-     * 处理按键按下事件
+     * 处理GLFW键盘事件
      */
-    private void handleKeyPress(java.awt.event.KeyEvent e) {
-        // 检查是否处于暂停状态
-        if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
-            // 处理暂停菜单的按键输入
-            switch (e.getKeyCode()) {
-                case java.awt.event.KeyEvent.VK_UP -> pauseMenu.moveUp();
-                case java.awt.event.KeyEvent.VK_DOWN -> pauseMenu.moveDown();
-                case java.awt.event.KeyEvent.VK_Z, java.awt.event.KeyEvent.VK_ENTER -> pauseMenu.executeSelectedAction();
-                case java.awt.event.KeyEvent.VK_ESCAPE -> gameStateManager.togglePause();
+    public void handleKeyEvent(int key, int action) {
+        // 检查是否需要处理标题页面或关卡组选择页面的按键事件
+        if (Main.Main.showTitleScreen) {
+            // 处理标题页面的按键输入
+            if (action == GLFW.GLFW_PRESS) {
+                if (Main.Main.titleScreen != null) {
+                    Main.Main.titleScreen.handleKeyPress(key);
+                }
             }
-            // 重绘以更新暂停菜单
-            repaint();
+        } else if (Main.Main.showStageGroupSelect) {
+            // 处理关卡组选择页面的按键输入
+            if (action == GLFW.GLFW_PRESS) {
+                if (Main.Main.stageGroupSelectPanel != null) {
+                    Main.Main.stageGroupSelectPanel.handleKeyPress(key);
+                }
+            }
         } else {
-            // 正常游戏状态的按键处理
-            switch (e.getKeyCode()) {
-                case java.awt.event.KeyEvent.VK_UP -> setUpPressed(true);
-                case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(true);
-                case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(true);
-                case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(true);
-                case java.awt.event.KeyEvent.VK_Z -> setZPressed(true);
-                case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(true);
-                case java.awt.event.KeyEvent.VK_X -> setXPressed(true);
-                case java.awt.event.KeyEvent.VK_ESCAPE -> gameStateManager.togglePause();
+            // 检查是否处于暂停状态
+            if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
+                // 处理暂停菜单的按键输入
+                if (action == GLFW.GLFW_PRESS) {
+                    switch (key) {
+                        case GLFW.GLFW_KEY_UP -> pauseMenu.moveUp();
+                        case GLFW.GLFW_KEY_DOWN -> pauseMenu.moveDown();
+                        case GLFW.GLFW_KEY_Z, GLFW.GLFW_KEY_ENTER -> pauseMenu.executeSelectedAction();
+                        case GLFW.GLFW_KEY_ESCAPE -> gameStateManager.togglePause();
+                    }
+                }
+            } else {
+                // 正常游戏状态的按键处理
+                if (action == GLFW.GLFW_PRESS) {
+                    switch (key) {
+                        case GLFW.GLFW_KEY_UP -> setUpPressed(true);
+                        case GLFW.GLFW_KEY_DOWN -> setDownPressed(true);
+                        case GLFW.GLFW_KEY_LEFT -> setLeftPressed(true);
+                        case GLFW.GLFW_KEY_RIGHT -> setRightPressed(true);
+                        case GLFW.GLFW_KEY_Z -> setZPressed(true);
+                        case GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT -> setShiftPressed(true);
+                        case GLFW.GLFW_KEY_X -> setXPressed(true);
+                        case GLFW.GLFW_KEY_ESCAPE -> gameStateManager.togglePause();
+                    }
+                } else if (action == GLFW.GLFW_RELEASE) {
+                    switch (key) {
+                        case GLFW.GLFW_KEY_UP -> setUpPressed(false);
+                        case GLFW.GLFW_KEY_DOWN -> setDownPressed(false);
+                        case GLFW.GLFW_KEY_LEFT -> setLeftPressed(false);
+                        case GLFW.GLFW_KEY_RIGHT -> setRightPressed(false);
+                        case GLFW.GLFW_KEY_Z -> setZPressed(false);
+                        case GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT -> setShiftPressed(false);
+                        case GLFW.GLFW_KEY_X -> setXPressed(false);
+                    }
+                }
             }
         }
-    }
-    
-    private void handleKeyRelease(java.awt.event.KeyEvent e) {
-        // 检查是否处于暂停状态，如果是则不处理释放事件
-        if (gameStateManager == null || gameStateManager.getState() != stg.core.GameStateManager.State.PAUSED) {
-            switch (e.getKeyCode()) {
-                case java.awt.event.KeyEvent.VK_UP -> setUpPressed(false);
-                case java.awt.event.KeyEvent.VK_DOWN -> setDownPressed(false);
-                case java.awt.event.KeyEvent.VK_LEFT -> setLeftPressed(false);
-                case java.awt.event.KeyEvent.VK_RIGHT -> setRightPressed(false);
-                case java.awt.event.KeyEvent.VK_Z -> setZPressed(false);
-                case java.awt.event.KeyEvent.VK_SHIFT -> setShiftPressed(false);
-                case java.awt.event.KeyEvent.VK_X -> setXPressed(false);
-            }
-        }
-    }
-    
-    /**
-     * 设置游戏状态面板
-     */
-    public void setGameStatusPanel(GameStatusPanel gameStatusPanel) {
-        this.gameStatusPanel = gameStatusPanel;
     }
     
     /**
@@ -360,21 +337,9 @@ public class GameCanvas extends Component implements KeyStateProvider {
     }
     
     /**
-     * 请求焦点
-     */
-    @Override
-    public boolean requestFocusInWindow() {
-        return super.requestFocusInWindow();
-    }
-    
-    /**
      * 更新游戏
      */
     public void update() {
-        // 获取实际的画布尺寸
-        int actualWidth = getWidth();
-        int actualHeight = getHeight();
-        
         // 检查游戏状态
         if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PLAYING) {
             // 根据按键状态更新玩家移动
@@ -413,7 +378,7 @@ public class GameCanvas extends Component implements KeyStateProvider {
             
             // 更新游戏世界
             if (gameWorld != null) {
-                gameWorld.update(actualWidth, actualHeight);
+                gameWorld.update(width, height);
             }
             
             // 执行碰撞检测
@@ -425,6 +390,85 @@ public class GameCanvas extends Component implements KeyStateProvider {
             if (stageGroup != null) {
                 stageGroup.update();
             }
+        }
+    }
+    
+    /**
+     * 渲染游戏
+     */
+    public void render() {
+        // 更新坐标系统的屏幕尺寸
+        if (coordinateSystem != null) {
+            coordinateSystem.updateScreenSize(width, height);
+        }
+        
+        // 更新相机的屏幕尺寸
+        if (camera != null) {
+            camera.updateScreenSize(width, height);
+        }
+        
+        // 处理渲染器
+        if (renderer != null) {
+            // 使用OpenGL渲染器
+            renderer.beginFrame();
+            
+            // 清空渲染管理器并重新添加所有可渲染对象
+            if (renderManager != null) {
+                renderManager.clearAll();
+                
+                // 添加游戏世界中的所有实体
+                if (gameWorld != null) {
+                    // 添加敌人
+                    for (stg.entity.enemy.Enemy enemy : gameWorld.getEnemies()) {
+                        if (enemy != null && enemy.isActive()) {
+                            renderManager.addRenderable(enemy);
+                        }
+                    }
+                    
+                    // 添加物品
+                    for (stg.entity.item.Item item : gameWorld.getItems()) {
+                        if (item != null && item.isActive()) {
+                            renderManager.addRenderable(item);
+                        }
+                    }
+                    
+                    // 添加子弹
+                    for (stg.entity.bullet.Bullet bullet : gameWorld.getPlayerBullets()) {
+                        if (bullet != null && bullet.isActive()) {
+                            renderManager.addRenderable(bullet);
+                        }
+                    }
+                    for (stg.entity.bullet.Bullet bullet : gameWorld.getEnemyBullets()) {
+                        if (bullet != null && bullet.isActive()) {
+                            renderManager.addRenderable(bullet);
+                        }
+                    }
+                }
+                
+                // 添加玩家（确保玩家总是被渲染）
+                if (player != null && player.isActive()) {
+                    renderManager.addRenderable(player);
+                }
+                
+                // 渲染所有对象
+                renderManager.renderAll(renderer);
+            } else {
+                // 降级到旧的渲染方式
+                if (gameRenderer != null) {
+                    gameRenderer.render(renderer, width, height);
+                }
+                
+                if (player != null && player.isActive()) {
+                    player.render(renderer);
+                }
+            }
+            
+            // 渲染暂停菜单
+            if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
+                pauseMenu.render(renderer, width, height);
+            }
+            
+            renderer.endFrame();
         }
     }
     
@@ -460,71 +504,75 @@ public class GameCanvas extends Component implements KeyStateProvider {
     }
     
     /**
-     * 绘制游戏
+     * 获取宽度
      */
-    @Override
-    public void paint(java.awt.Graphics g) {
-        java.awt.Graphics2D g2d = (java.awt.Graphics2D) g;
-        
-        // 获取实际的画布尺寸
-        int actualWidth = getWidth();
-        int actualHeight = getHeight();
-        
-        // 更新坐标系统的屏幕尺寸
-        if (coordinateSystem != null) {
-            coordinateSystem.updateScreenSize(actualWidth, actualHeight);
-        }
-        
-        // 绘制背景
-        g2d.setColor(java.awt.Color.BLACK);
-        g2d.fillRect(0, 0, actualWidth, actualHeight);
-        
-        // 处理渲染器
+    public int getWidth() {
+        return width;
+    }
+    
+    /**
+     * 获取高度
+     */
+    public int getHeight() {
+        return height;
+    }
+    
+    /**
+     * 获取游戏渲染器
+     */
+    public stg.renderer.GameRenderer getGameRenderer() {
+        return gameRenderer;
+    }
+    
+    /**
+     * 获取游戏状态管理器
+     */
+    public stg.core.GameStateManager getGameStateManager() {
+        return gameStateManager;
+    }
+    
+    /**
+     * 获取暂停菜单
+     */
+    public PauseMenu getPauseMenu() {
+        return pauseMenu;
+    }
+    
+    /**
+     * 清理资源
+     */
+    public void cleanup() {
+        // 清理渲染器
         if (renderer != null) {
-            String rendererClassName = renderer.getClass().getName();
-            
-            if (rendererClassName.equals("stg.service.render.Java2DRenderer")) {
-                // 使用Java2D渲染器
-                Java2DRenderer javaRenderer = (Java2DRenderer) renderer;
-                javaRenderer.setGraphics(g2d);
-                
-                // 使用游戏渲染器渲染所有游戏对象
-                if (gameRenderer != null) {
-                    gameRenderer.render(g2d, actualWidth, actualHeight);
-                }
-                
-                // 绘制关卡组信息
-                if (stageGroup != null) {
-                    g2d.setColor(java.awt.Color.WHITE);
-                    g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
-                    g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
-                    g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
-                }
-                
-                // 检查游戏状态，如果是暂停状态则绘制暂停菜单
-                if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
-                    pauseMenu.render(g2d, actualWidth, actualHeight);
-                }
-            } else if (rendererClassName.equals("stg.service.render.GLRenderer")) {
-                // 使用OpenGL渲染器（这里需要实现OpenGL的渲染逻辑）
-                // 暂时保留原有的Java2D渲染作为回退
-                if (gameRenderer != null) {
-                    gameRenderer.render(g2d, actualWidth, actualHeight);
-                }
-                
-                // 绘制关卡组信息
-                if (stageGroup != null) {
-                    g2d.setColor(java.awt.Color.WHITE);
-                    g2d.setFont(new java.awt.Font("Monospace", java.awt.Font.PLAIN, 12));
-                    g2d.drawString("关卡组: " + stageGroup.getDisplayName(), 10, 20);
-                    g2d.drawString("当前关卡: " + (stageGroup.getCurrentStage() != null ? stageGroup.getCurrentStage().getStageName() : "无"), 10, 40);
-                }
-                
-                // 检查游戏状态，如果是暂停状态则绘制暂停菜单
-                if (gameStateManager != null && gameStateManager.getState() == stg.core.GameStateManager.State.PAUSED && pauseMenu != null) {
-                    pauseMenu.render(g2d, actualWidth, actualHeight);
-                }
-            }
+            renderer.cleanup();
+            renderer = null;
+            glRenderer = null;
         }
+        
+        // 清理游戏世界
+        if (gameWorld != null) {
+            gameWorld.clear();
+            gameWorld = null;
+        }
+        
+        // 清理碰撞检测系统
+        collisionSystem = null;
+        
+        // 清理游戏渲染器
+        gameRenderer = null;
+        
+        // 清理暂停菜单
+        pauseMenu = null;
+        
+        // 清理游戏状态管理器
+        gameStateManager = null;
+        
+        // 清理玩家
+        player = null;
+        
+        // 清理坐标系统
+        coordinateSystem = null;
+        
+        System.out.println("GameCanvas资源清理完成");
     }
 }

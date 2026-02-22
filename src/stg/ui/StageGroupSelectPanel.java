@@ -1,21 +1,18 @@
 package stg.ui;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.*;
 import stg.base.KeyStateProvider;
+import stg.service.render.IRenderer;
 import stg.stage.StageGroup;
 import stg.util.ResourceManager;
 
 /**
  * 关卡组选择界面 - 允许玩家选择要挑战的关卡组
- * 将类移动到stg.game.ui包内，保持与其他UI组件的一致性
- * @Time 2026-01-30 实现KeyStateProvider以支持虚拟键盘 * @Time 2026-02-01 添加背景图片支持\n\t * @since 2026-01-30
+ * @since 2026-01-30
  */
-public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
-    private static final long serialVersionUID = 1L;
+public class StageGroupSelectPanel implements KeyStateProvider {
     private static final Color BG_COLOR = new Color(10, 10, 20);
     private static final Color SELECTED_COLOR = new Color(255, 200, 100);
     private static final Color UNSELECTED_COLOR = new Color(200, 200, 200);
@@ -23,7 +20,6 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
 
     private int selectedIndex = 0;
     private List<StageGroup> stageGroups;
-    private Timer animationTimer;
     private int animationFrame = 0;
     private ResourceManager resourceManager;
 
@@ -47,103 +43,88 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
         this.callback = callback;
         this.resourceManager = ResourceManager.getInstance();
         this.stageGroups = new ArrayList<>();
-        
-        setFocusable(true);
-        setPreferredSize(new Dimension(800, 600));
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                handleKeyPress(e);
-            }
-        });
-
-        animationTimer = new Timer(16, e -> {
-            animationFrame++;
-            repaint();
-        });
-        animationTimer.start();
     }
 
     /**
      * 设置关卡组列表 - 用于更新可解锁的关卡组
-     * 将方法移动到stg.game.ui包内，保持与其他UI组件的一致性
-     * @Time 2026-02-01 实现KeyStateProvider以支持虚拟键盘 * @Time 2026-02-02 添加背景图片支持\n\t * @since 2026-02-01
-     * @param groups 关卡组列表     */
+     * @param groups 关卡组列表
+     */
     public void setStageGroups(List<StageGroup> groups) {
         this.stageGroups = groups != null ? groups : new ArrayList<>();
         this.selectedIndex = Math.max(0, Math.min(selectedIndex, stageGroups.size() - 1));
-        repaint();
     }
 
     /**
      * 添加关卡组 - 用于动态解锁新关卡组
-     * 将方法移动到stg.game.ui包内，保持与其他UI组件的一致性
-     * @Time 2026-02-02 实现KeyStateProvider以支持虚拟键盘 * @Time 2026-02-03 添加背景图片支持\n\t * @since 2026-02-02
-     * @param group 关卡组     */
+     * @param group 关卡组
+     */
     public void addStageGroup(StageGroup group) {
         if (group != null) {
             stageGroups.add(group);
-            repaint();
         }
     }
 
-    private void handleKeyPress(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_UP:
+    /**
+     * 处理键盘输入
+     * @param key 按键代码
+     */
+    public void handleKeyPress(int key) {
+        switch (key) {
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_UP:
                 selectedIndex = (selectedIndex - 1 + stageGroups.size()) % stageGroups.size();
-                repaint();
                 break;
-            case KeyEvent.VK_DOWN:
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN:
                 selectedIndex = (selectedIndex + 1) % stageGroups.size();
-                repaint();
                 break;
-            case KeyEvent.VK_Z:
-            case KeyEvent.VK_ENTER:
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_Z:
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER:
                 if (!stageGroups.isEmpty() && stageGroups.get(selectedIndex).isUnlockable()) {
                     callback.onStageGroupSelected(stageGroups.get(selectedIndex));
                 }
                 break;
-            case KeyEvent.VK_X:
-            case KeyEvent.VK_ESCAPE:
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_X:
+            case org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE:
                 callback.onBack();
                 break;
         }
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        int width = getWidth();
-        int height = getHeight();
-
+    /**
+     * 使用OpenGL渲染器绘制关卡组选择界面
+     * @param renderer OpenGL渲染器
+     * @param width 窗口宽度
+     * @param height 窗口高度
+     */
+    public void render(IRenderer renderer, int width, int height) {
         // 绘制背景
-        g2d.setColor(BG_COLOR);
-        g2d.fillRect(0, 0, width, height);
+        renderer.setColor(BG_COLOR);
+        renderer.drawRect(0, 0, width, height, BG_COLOR);
 
         // 绘制标题
-        stg.util.RenderUtils.enableAntiAliasing(g2d);
-        g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 48));
-        g2d.setColor(Color.WHITE);
+        Font titleFont = new Font("Microsoft YaHei", Font.BOLD, 48);
+        renderer.setFont(titleFont);
+        renderer.setColor(Color.WHITE);
         String title = "选择关卡组";
-        int titleWidth = g2d.getFontMetrics().stringWidth(title);
-        g2d.drawString(title, width / 2 - titleWidth / 2, 100);
+        // 简化处理，假设文本宽度
+        int titleWidth = 250;
+        renderer.drawText(title, width / 2 - titleWidth / 2, 100, titleFont, Color.WHITE);
 
         // 绘制关卡组列表
-        g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 24));
-        g2d.setColor(Color.WHITE);
-        drawStageGroups(g2d, width, height);
+        drawStageGroups(renderer, width, height);
 
         // 绘制操作提示
-        drawControls(g2d, width, height);
+        drawControls(renderer, width, height);
     }
 
-    private void drawStageGroups(Graphics2D g2d, int width, int height) {
+    private void drawStageGroups(IRenderer renderer, int width, int height) {
         if (stageGroups.isEmpty()) {
-            g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 24));
-            g2d.setColor(Color.GRAY);
+            Font msgFont = new Font("Microsoft YaHei", Font.PLAIN, 24);
+            renderer.setFont(msgFont);
+            renderer.setColor(Color.GRAY);
             String noGroupsMsg = "暂无可用关卡组";
-            int msgWidth = g2d.getFontMetrics().stringWidth(noGroupsMsg);
-            g2d.drawString(noGroupsMsg, width / 2 - msgWidth / 2, height / 2);
+            // 简化处理，假设文本宽度
+            int msgWidth = 150;
+            renderer.drawText(noGroupsMsg, width / 2 - msgWidth / 2, height / 2, msgFont, Color.GRAY);
             return;
         }
 
@@ -161,64 +142,73 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
 
             // 绘制背景矩形
             if (isSelected) {
-                g2d.setColor(new Color(255, 200, 100, 50));
-                g2d.fillRoundRect(width / 2 - 300, y - 15, 600, 50, 10, 10);
-                g2d.setColor(SELECTED_COLOR);
+                renderer.setColor(new Color(255, 200, 100, 50));
+                renderer.drawRect(width / 2 - 300, y - 15, 600, 50, new Color(255, 200, 100, 50));
+                renderer.setColor(SELECTED_COLOR);
             } else if (!isUnlockable) {
-                g2d.setColor(LOCKED_COLOR);
+                renderer.setColor(LOCKED_COLOR);
             } else {
-                g2d.setColor(UNSELECTED_COLOR);
+                renderer.setColor(UNSELECTED_COLOR);
             }
 
             // 绘制关卡组信息
             if (isUnlockable || isSelected) {
-                g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 20));
+                Font nameFont = new Font("Microsoft YaHei", Font.BOLD, 20);
+                renderer.setFont(nameFont);
                 String groupName = group.getDisplayName();
-                int nameWidth = g2d.getFontMetrics().stringWidth(groupName);
-                g2d.drawString(groupName, width / 2 - 280, y + 10);
+                renderer.drawText(groupName, width / 2 - 280, y + 10, nameFont, isSelected ? SELECTED_COLOR : UNSELECTED_COLOR);
 
                 // 绘制难度
-                g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 16));
+                Font difficultyFont = new Font("Microsoft YaHei", Font.PLAIN, 16);
+                renderer.setFont(difficultyFont);
                 String difficulty = "难度: " + group.getDifficulty().getDisplayName();
-                g2d.drawString(difficulty, width / 2 - 280, y + 35);
+                renderer.drawText(difficulty, width / 2 - 280, y + 35, difficultyFont, isSelected ? SELECTED_COLOR : UNSELECTED_COLOR);
 
                 // 绘制描述
-                g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 14));
+                Font descFont = new Font("Microsoft YaHei", Font.PLAIN, 14);
+                renderer.setFont(descFont);
                 String description = group.getDescription();
                 if (description.length() > 30) {
                     description = description.substring(0, 30) + "...";
                 }
-                g2d.drawString(description, width / 2, y + 10);
+                renderer.drawText(description, width / 2, y + 10, descFont, isSelected ? SELECTED_COLOR : UNSELECTED_COLOR);
 
                 // 绘制关卡数量
                 int stageCount = group.getStageCount();
                 String stageInfo = "关卡数: " + stageCount;
-                g2d.drawString(stageInfo, width / 2, y + 35);
+                renderer.drawText(stageInfo, width / 2, y + 35, descFont, isSelected ? SELECTED_COLOR : UNSELECTED_COLOR);
             }
 
             // 绘制选中标记
             if (isSelected) {
-                g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 24));
-                g2d.drawString(">", width / 2 - 310, y + 15);
+                Font selectFont = new Font("Microsoft YaHei", Font.BOLD, 24);
+                renderer.setFont(selectFont);
+                renderer.drawText(">", width / 2 - 310, y + 15, selectFont, SELECTED_COLOR);
             }
-
-
 
             // 绘制锁定标记
             if (!isUnlockable) {
-                g2d.setFont(new Font("Microsoft YaHei", Font.BOLD, 16));
-                g2d.drawString("[锁定]", width - 150, y + 15);
+                Font lockFont = new Font("Microsoft YaHei", Font.BOLD, 16);
+                renderer.setFont(lockFont);
+                renderer.drawText("[锁定]", width - 150, y + 15, lockFont, LOCKED_COLOR);
             }
         }
     }
 
-    private void drawControls(Graphics2D g2d, int width, int height) {
+    private void drawControls(IRenderer renderer, int width, int height) {
+        Font hintFont = new Font("Microsoft YaHei", Font.PLAIN, 14);
+        renderer.setFont(hintFont);
+        renderer.setColor(Color.GRAY);
+        renderer.drawText("上下 选择关卡组", width / 2 - 100, height - 60, hintFont, Color.GRAY);
+        renderer.drawText("Z/Enter 确认选择", width / 2 - 100, height - 40, hintFont, Color.GRAY);
+        renderer.drawText("X/ESC  返回", width / 2 - 100, height - 20, hintFont, Color.GRAY);
+    }
 
-        g2d.setFont(new Font("Microsoft YaHei", Font.PLAIN, 14));
-        g2d.setColor(Color.GRAY);
-        g2d.drawString("上下 选择关卡组", width / 2 - 100, height - 60);
-        g2d.drawString("Z/Enter 确认选择", width / 2 - 100, height - 40);
-        g2d.drawString("X/ESC  返回", width / 2 - 100, height - 20);
+    /**
+     * 更新动画帧
+     */
+    public void update() {
+        animationFrame++;
     }
 
     // 虚拟键盘接口实现
@@ -244,14 +234,4 @@ public class StageGroupSelectPanel extends JPanel implements KeyStateProvider {
     public void setZPressed(boolean zPressed) { this.zPressed = zPressed; }
     public void setShiftPressed(boolean shiftPressed) { this.shiftPressed = shiftPressed; }
     public void setXPressed(boolean xPressed) { this.xPressed = xPressed; }
-
-    /**
-     * 停止动画计时
-     */
-    public void stopAnimation() {
-        if (animationTimer != null && animationTimer.isRunning()) {
-            animationTimer.stop();
-        }
-    }
 }
-

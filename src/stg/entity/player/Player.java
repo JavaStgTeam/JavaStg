@@ -2,9 +2,11 @@ package stg.entity.player;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
-import stg.renderer.IRenderer;
+import stg.render.RenderLayer;
+import stg.service.render.IRenderer;
 
 /**
  * 玩家类- 自机角色
@@ -463,6 +465,16 @@ public class Player extends Obj {
 	 */
 	public int getBulletDamage() {
 		return BULLET_DAMAGE;
+	}
+	
+	/**
+	 * 获取渲染层级
+	 * @return 渲染层级
+	 */
+	@Override
+	public RenderLayer getRenderLayer() {
+		// 玩家角色使用PLAYER层级
+		return RenderLayer.PLAYER;
 	}
 
 	/**
