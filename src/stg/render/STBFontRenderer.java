@@ -168,13 +168,13 @@ public class STBFontRenderer {
 					GL11.glBindTexture(GL11.GL_TEXTURE_2D, cached.textureId);
 					
 					float charX = currentX + cached.xOff;
-					float charY = baseline - cached.height - cached.yOff;
+					float charY = baseline - cached.yOff;
 					
 					GL11.glBegin(GL11.GL_QUADS);
-					GL11.glTexCoord2f(0, 1); GL11.glVertex2f(charX, charY);
-					GL11.glTexCoord2f(1, 1); GL11.glVertex2f(charX + cached.width, charY);
-					GL11.glTexCoord2f(1, 0); GL11.glVertex2f(charX + cached.width, charY + cached.height);
-					GL11.glTexCoord2f(0, 0); GL11.glVertex2f(charX, charY + cached.height);
+					GL11.glTexCoord2f(0, 1); GL11.glVertex2f(charX, charY - cached.height);
+					GL11.glTexCoord2f(1, 1); GL11.glVertex2f(charX + cached.width, charY - cached.height);
+					GL11.glTexCoord2f(1, 0); GL11.glVertex2f(charX + cached.width, charY);
+					GL11.glTexCoord2f(0, 0); GL11.glVertex2f(charX, charY);
 					GL11.glEnd();
 					
 					GL11.glDisable(GL11.GL_TEXTURE_2D);

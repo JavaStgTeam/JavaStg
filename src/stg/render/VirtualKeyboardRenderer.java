@@ -69,9 +69,13 @@ public class VirtualKeyboardRenderer {
 			renderer.drawRect(x, y, width, height, 0.39f, 0.78f, 0.39f, 1.0f);
 			renderer.drawRect(x + 2, y + 2, width - 4, height - 4, 0.31f, 0.71f, 0.31f, 1.0f);
 			renderer.drawRect(x + 4, y + 4, width - 8, height - 8, 0.24f, 0.63f, 0.24f, 1.0f);
+			// 绘制文本（白色）
+			renderer.drawText(text, x + width/2 - 10, y + height/2 + 5, 20, new float[]{1.0f, 1.0f, 1.0f, 1.0f});
 		} else {
 			renderer.drawRect(x, y, width, height, 0.24f, 0.24f, 0.31f, 1.0f);
 			renderer.drawRect(x, y, width, height, 0.39f, 0.39f, 0.47f, 1.0f);
+			// 绘制文本（灰色）
+			renderer.drawText(text, x + width/2 - 10, y + height/2 + 5, 20, new float[]{0.7f, 0.7f, 0.7f, 1.0f});
 		}
 	}
 }

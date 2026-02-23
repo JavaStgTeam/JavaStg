@@ -91,6 +91,16 @@ public interface IRenderer {
 	void drawText(String text, float x, float y, java.awt.Font font, java.awt.Color color);
 	
 	/**
+	 * 绘制文本（简化版，使用指定字体大小和颜色数组）
+	 * @param text 文本内容
+	 * @param x X坐标
+	 * @param y Y坐标
+	 * @param fontSize 字体大小
+	 * @param color 颜色数组 [r, g, b, a]
+	 */
+	void drawText(String text, float x, float y, float fontSize, float[] color);
+	
+	/**
 	 * 清理资源
 	 */
 	void cleanup();

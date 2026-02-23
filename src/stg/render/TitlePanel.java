@@ -156,7 +156,7 @@ public class TitlePanel extends Panel {
 		Font titleFont = fontManager.getTitleFont();
 		String title = "东方STG引擎";
 		float titleX = getWidth() / 2 - 150;
-		float titleY = getHeight() / 3;
+		float titleY = getHeight() - getHeight() / 3;
 
 		renderer.drawText(title, titleX, titleY, titleFont, Color.WHITE);
 
@@ -164,7 +164,7 @@ public class TitlePanel extends Panel {
 		Font subtitleFont = fontManager.getFont(18f, Font.PLAIN);
 		String subtitle = "Version 1.0";
 		float subtitleX = getWidth() / 2 - 60;
-		float subtitleY = titleY + 60;
+		float subtitleY = titleY - 60;
 
 		renderer.drawText(subtitle, subtitleX, subtitleY, subtitleFont, Color.GRAY);
 	}
@@ -181,7 +181,7 @@ public class TitlePanel extends Panel {
 		for (int i = 0; i < MAIN_MENU_ITEMS.length; i++) {
 			String item = MAIN_MENU_ITEMS[i];
 			float x = getWidth() / 2 - 80;
-			float y = getHeight() / 2 - 20 + i * 40;
+			float y = getHeight() - getHeight() / 2 - 20 - i * 40;
 
 			if (i == selectedIndex) {
 				// 绘制选中效果
@@ -205,8 +205,8 @@ public class TitlePanel extends Panel {
 		String hint2 = "Z 确认  X 退出";
 
 		float hintX = getWidth() / 2 - 100;
-		float hintY1 = getHeight() * 2 / 3;
-		float hintY2 = hintY1 + 20;
+		float hintY1 = getHeight() - getHeight() * 2 / 3;
+		float hintY2 = hintY1 - 20;
 
 		renderer.drawText(hint1, hintX, hintY1, hintFont, Color.GRAY);
 		renderer.drawText(hint2, hintX, hintY2, hintFont, Color.GRAY);

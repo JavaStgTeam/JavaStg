@@ -562,6 +562,7 @@ public class ALAudioManager implements IAudioManager {
             return -1;
         }
         
+        ShortBuffer pcm = null;
         try {
             STBVorbisInfo info = STBVorbisInfo.malloc(stack);
             STBVorbis.stb_vorbis_get_info(decoder, info);
@@ -571,11 +572,13 @@ public class ALAudioManager implements IAudioManager {
             // 计算总样本数
             int totalSamples = STBVorbis.stb_vorbis_stream_length_in_samples(decoder);
             
-            // 分配缓冲区
-            ShortBuffer pcm = stack.mallocShort(totalSamples * channels);
+            // 分配缓冲区（使用堆内存而不是栈内存）
+            pcm = MemoryUtil.memAllocShort(totalSamples * channels);
             
             // 解码
             int samplesDecoded = STBVorbis.stb_vorbis_get_samples_short_interleaved(decoder, channels, pcm);
+            // 重置缓冲区位置
+            pcm.flip();
             
             // 创建OpenAL缓冲区
             int bufferId = AL10.alGenBuffers();
@@ -591,6 +594,10 @@ public class ALAudioManager implements IAudioManager {
             return bufferId;
         } finally {
             STBVorbis.stb_vorbis_close(decoder);
+            // 释放缓冲区
+            if (pcm != null) {
+                MemoryUtil.memFree(pcm);
+            }
         }
     }
     

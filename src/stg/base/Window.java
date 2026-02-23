@@ -11,6 +11,7 @@ import stg.render.IRenderer;
 import stg.render.LeftPanel;
 import stg.render.RightPanel;
 import stg.render.TitlePanel;
+import stg.util.ALAudioManager;
 import stg.util.CoordinateSystem;
 import user.player.DefaultPlayer;
 
@@ -223,6 +224,8 @@ public class Window {
 			public void onGameStart() {
 				// 开始游戏
 				showTitleScreen = false;
+				// 停止标题音乐
+				ALAudioManager.getInstance().stopMusic("title");
 				startGameLoop();
 				System.out.println("开始游戏");
 			}
@@ -245,6 +248,12 @@ public class Window {
 		
 		leftPanel.setKeyStateProvider(keyStateProvider);
 		
+		// 加载标题音乐
+		ALAudioManager audioManager = ALAudioManager.getInstance();
+		audioManager.init();
+		audioManager.loadMusic("title", "audio/music/luastg 0.08.540 - 1.27.800.ogg");
+		// 播放标题音乐（循环）
+		audioManager.playMusic("title", true);
 		System.out.println("面板布局: 左侧=" + sidePanelWidth + ", 中间=" + gamePanelWidth + ", 右侧=" + sidePanelWidth);
 	}
 	
@@ -359,6 +368,9 @@ public class Window {
 			renderer.cleanup();
 			renderer = null;
 		}
+		
+		// 清理音频资源
+		ALAudioManager.getInstance().cleanup();
 		
 		if (windowHandle != 0) {
 			GLFW.glfwDestroyWindow(windowHandle);

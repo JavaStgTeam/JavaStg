@@ -204,6 +204,27 @@ public class GLRenderer implements IRenderer {
 	}
 	
 	/**
+	 * 绘制文本（简化版，使用指定字体大小和颜色数组）
+	 * @param text 文本内容
+	 * @param x X坐标
+	 * @param y Y坐标
+	 * @param fontSize 字体大小
+	 * @param color 颜色数组 [r, g, b, a]
+	 */
+	@Override
+	public void drawText(String text, float x, float y, float fontSize, float[] color) {
+		try {
+			// 使用STBFontRenderer渲染文本
+			STBFontRenderer fontRenderer = STBFontRenderer.getInstance();
+			fontRenderer.renderText(text, x, y, fontSize, color);
+		} catch (Exception e) {
+			// 如果渲染失败，回退到绘制矩形
+			fallbackDrawText(text, x, y, new java.awt.Font("Arial", java.awt.Font.PLAIN, (int)fontSize), 
+				new java.awt.Color(color[0], color[1], color[2], color[3]));
+		}
+	}
+	
+	/**
 	 * 回退文本渲染方法（当纹理渲染失败时使用）
 	 * @param text 文本内容
 	 * @param x X坐标
