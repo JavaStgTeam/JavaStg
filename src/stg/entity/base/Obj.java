@@ -1,9 +1,8 @@
 package stg.entity.base;
 
 import java.awt.*;
-import stg.service.render.IRenderer;
+import stg.render.IRenderer;
 import stg.render.IRenderable;
-import stg.render.RenderLayer;
 import stg.util.CoordinateSystem;
 import stg.util.objectpool.ConcurrentLinkedObjectPool;
 import stg.util.objectpool.ObjectFactory;
@@ -83,7 +82,7 @@ public abstract class Obj implements IRenderable {
      * @return 屏幕坐标数组 [x, y]
      * @throws IllegalStateException 如果坐标系统未初始化
      */
-    protected float[] toScreenCoords(float worldX, float worldY) {
+    public static float[] toScreenCoords(float worldX, float worldY) {
         requireCoordinateSystem();
         return sharedCoordinateSystem.toScreenCoords(worldX, worldY);
     }
@@ -167,17 +166,32 @@ public abstract class Obj implements IRenderable {
     }
 
     /**
-     * 渲染物体（IRenderer版本，支持OpenGL）
-     * @param renderer 渲染器
-     * @throws IllegalStateException 如果坐标系统未初始化
-     */
-    public void render(IRenderer renderer) {
-        if (!active) return;
+	 * 渲染物体（IRenderer版本，支持OpenGL）
+	 * @param renderer 渲染器
+	 * @throws IllegalStateException 如果坐标系统未初始化
+	 */
+	public void render(IRenderer renderer) {
+		if (!active) return;
 
-        requireCoordinateSystem();
-        // 使用渲染器绘制圆形，保持与Java2D一致的效果
-        renderer.drawCircle(x, y, size/2, color);
-    }
+		requireCoordinateSystem();
+		float[] screenCoords = toScreenCoords(x, y);
+		float screenX = screenCoords[0];
+		float screenY = screenCoords[1];
+		float r = color.getRed() / 255.0f;
+		float g = color.getGreen() / 255.0f;
+		float b = color.getBlue() / 255.0f;
+		float a = color.getAlpha() / 255.0f;
+		renderer.drawCircle(screenX, screenY, size/2, r, g, b, a);
+	}
+
+	/**
+	 * 在屏幕中渲染物体
+	 * @param renderer 渲染器
+	 * @throws IllegalStateException 如果坐标系统未初始化
+	 */
+	public void renderOnScreen(IRenderer renderer) {
+		render(renderer);
+	}
 
     /**
      * 检查物体是否超出边界
@@ -329,9 +343,8 @@ public abstract class Obj implements IRenderable {
      * @return 渲染层级
      */
     @Override
-    public RenderLayer getRenderLayer() {
-        // 默认渲染层级为MIDDLE，子类可以重写此方法设置不同的层级
-        return RenderLayer.MIDDLE;
+    public int getRenderLayer() {
+        return 3;
     }
     
     // ==================== 对象池操作方法 ====================

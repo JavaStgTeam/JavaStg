@@ -30,7 +30,16 @@ public class VirtualKeyboardPanel extends JPanel {
 	}
 
 	/**
-	 * 构造函�?- 接受KeyStateProvider
+	 * 构造函数 - 接受GameCanvas作为KeyStateProvider
+	 * 支持标题界面按键显示\n\t * @since 2026-01-20
+	 */
+	public VirtualKeyboardPanel(GameCanvas gameCanvas) {
+		this.keyStateProvider = gameCanvas;
+		initialize();
+	}
+
+	/**
+	 * 构造函数 - 接受KeyStateProvider
 	 * 支持标题界面按键显示\n\t * @since 2026-01-20
 	 */
 	public VirtualKeyboardPanel(KeyStateProvider keyStateProvider) {

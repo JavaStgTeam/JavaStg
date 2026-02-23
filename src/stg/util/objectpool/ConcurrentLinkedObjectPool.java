@@ -86,10 +86,7 @@ public class ConcurrentLinkedObjectPool<T> implements ObjectPool<T> {
         // 检查是否达到最大容量
         if (maxCapacity == -1 || pool.size() < maxCapacity) {
             // 将对象放回池中
-            boolean success = pool.offer(object);
-            System.out.println("Released object to pool, success: " + success + ", current pool size: " + pool.size());
-        } else {
-            System.out.println("Pool is full, cannot release object");
+            pool.offer(object);
         }
     }
     
@@ -110,7 +107,6 @@ public class ConcurrentLinkedObjectPool<T> implements ObjectPool<T> {
     
     @Override
     public int size() {
-        System.out.println("Pool size requested, current pool size: " + pool.size() + ", totalCreatedObjects: " + totalCreatedObjects);
         return totalCreatedObjects;
     }
     

@@ -194,13 +194,9 @@ public class ObjectPoolManager {
      */
     public int getTotalObjectCount() {
         int total = 0;
-        System.out.println("getTotalObjectCount() called, poolMap size: " + poolMap.size());
         for (ObjectPool<?> pool : poolMap.values()) {
-            int poolSize = pool.size();
-            System.out.println("Pool size: " + poolSize);
-            total += poolSize;
+            total += pool.size();
         }
-        System.out.println("Total object count: " + total);
         return total;
     }
 }

@@ -1,0 +1,281 @@
+package stg.render;
+
+import org.lwjgl.opengl.GL11;
+
+/**
+ * OpenGL渲染器实现
+ * 基于LWJGL的OpenGL渲染器
+ * @since 2026-02-23
+ * @author JavaSTG Team
+ */
+public class GLRenderer implements IRenderer {
+	/** 窗口宽度 */
+	private int width;
+	/** 窗口高度 */
+	private int height;
+	/** 是否已初始化 */
+	private boolean initialized = false;
+	
+	/**
+	 * 构造函数
+	 */
+	public GLRenderer() {
+	}
+	
+	/**
+	 * 初始化渲染器
+	 * @param width 窗口宽度
+	 * @param height 窗口高度
+	 */
+	@Override
+	public void initialize(int width, int height) {
+		this.width = width;
+		this.height = height;
+		
+		System.out.println("GLRenderer: 开始初始化...");
+		
+		GL11.glEnable(GL11.GL_BLEND);
+		System.out.println("GLRenderer: 启用混合模式");
+		
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		System.out.println("GLRenderer: 设置混合函数");
+		
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		System.out.println("GLRenderer: 禁用深度测试");
+		
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		System.out.println("GLRenderer: 设置投影矩阵模式");
+		
+		GL11.glLoadIdentity();
+		System.out.println("GLRenderer: 重置投影矩阵");
+		
+		GL11.glOrtho(0, width, 0, height, -1, 1);
+		System.out.println("GLRenderer: 设置正交投影");
+		
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		System.out.println("GLRenderer: 设置模型视图矩阵模式");
+		
+		GL11.glLoadIdentity();
+		System.out.println("GLRenderer: 重置模型视图矩阵");
+		
+		initialized = true;
+		System.out.println("GLRenderer 初始化完成: " + width + "x" + height);
+	}
+	
+	/**
+	 * 开始渲染帧
+	 */
+	@Override
+	public void beginFrame() {
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+	}
+	
+	/**
+	 * 结束渲染帧
+	 */
+	@Override
+	public void endFrame() {
+		GL11.glFlush();
+	}
+	
+	/**
+	 * 设置视口
+	 * @param x 视口左下角X坐标
+	 * @param y 视口左下角Y坐标
+	 * @param width 视口宽度
+	 * @param height 视口高度
+	 */
+	@Override
+	public void setViewport(int x, int y, int width, int height) {
+		GL11.glViewport(x, y, width, height);
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadIdentity();
+		GL11.glOrtho(0, width, 0, height, -1, 1);
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glLoadIdentity();
+	}
+	
+	/**
+	 * 清除屏幕
+	 * @param r 红色分量
+	 * @param g 绿色分量
+	 * @param b 蓝色分量
+	 * @param a 透明度
+	 */
+	@Override
+	public void clear(float r, float g, float b, float a) {
+		GL11.glClearColor(r, g, b, a);
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+	}
+	
+	/**
+	 * 绘制矩形
+	 * @param x 矩形左下角X坐标
+	 * @param y 矩形左下角Y坐标
+	 * @param width 矩形宽度
+	 * @param height 矩形高度
+	 * @param r 红色分量
+	 * @param g 绿色分量
+	 * @param b 蓝色分量
+	 * @param a 透明度
+	 */
+	@Override
+	public void drawRect(float x, float y, float width, float height, float r, float g, float b, float a) {
+		GL11.glColor4f(r, g, b, a);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glVertex2f(x, y);
+		GL11.glVertex2f(x + width, y);
+		GL11.glVertex2f(x + width, y + height);
+		GL11.glVertex2f(x, y + height);
+		GL11.glEnd();
+	}
+	
+	/**
+	 * 绘制线条
+	 * @param x1 起点X坐标
+	 * @param y1 起点Y坐标
+	 * @param x2 终点X坐标
+	 * @param y2 终点Y坐标
+	 * @param r 红色分量
+	 * @param g 绿色分量
+	 * @param b 蓝色分量
+	 * @param a 透明度
+	 */
+	@Override
+	public void drawLine(float x1, float y1, float x2, float y2, float r, float g, float b, float a) {
+		GL11.glColor4f(r, g, b, a);
+		GL11.glBegin(GL11.GL_LINES);
+		GL11.glVertex2f(x1, y1);
+		GL11.glVertex2f(x2, y2);
+		GL11.glEnd();
+	}
+	
+	/**
+	 * 绘制圆形
+	 * @param x 圆心X坐标
+	 * @param y 圆心Y坐标
+	 * @param radius 半径
+	 * @param r 红色分量
+	 * @param g 绿色分量
+	 * @param b 蓝色分量
+	 * @param a 透明度
+	 */
+	@Override
+	public void drawCircle(float x, float y, float radius, float r, float g, float b, float a) {
+		GL11.glColor4f(r, g, b, a);
+		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+		int segments = 32;
+		GL11.glVertex2f(x, y);
+		for (int i = 0; i <= segments; i++) {
+			float angle = (float) (2 * Math.PI * i / segments);
+			float vx = x + radius * (float) Math.cos(angle);
+			float vy = y + radius * (float) Math.sin(angle);
+			GL11.glVertex2f(vx, vy);
+		}
+		GL11.glEnd();
+	}
+	
+	/**
+	 * 绘制文本
+	 * @param text 文本内容
+	 * @param x X坐标
+	 * @param y Y坐标
+	 * @param font 字体
+	 * @param color 颜色
+	 */
+	@Override
+	public void drawText(String text, float x, float y, java.awt.Font font, java.awt.Color color) {
+		try {
+			// 使用STBFontRenderer渲染文本
+			float fontSize = font.getSize2D();
+			float[] colorArray = {
+				color.getRed() / 255.0f,
+				color.getGreen() / 255.0f,
+				color.getBlue() / 255.0f,
+				color.getAlpha() / 255.0f
+			};
+			
+			STBFontRenderer fontRenderer = STBFontRenderer.getInstance();
+			fontRenderer.renderText(text, x, y, fontSize, colorArray);
+		} catch (Exception e) {
+			// 如果渲染失败，回退到绘制矩形
+			fallbackDrawText(text, x, y, font, color);
+		}
+	}
+	
+	/**
+	 * 回退文本渲染方法（当纹理渲染失败时使用）
+	 * @param text 文本内容
+	 * @param x X坐标
+	 * @param y Y坐标
+	 * @param font 字体
+	 * @param color 颜色
+	 */
+	private void fallbackDrawText(String text, float x, float y, java.awt.Font font, java.awt.Color color) {
+		float r = color.getRed() / 255.0f;
+		float g = color.getGreen() / 255.0f;
+		float b = color.getBlue() / 255.0f;
+		float a = color.getAlpha() / 255.0f;
+		
+		GL11.glColor4f(r, g, b, a);
+		
+		// 计算文本宽度（每个汉字20像素，每个英文字母10像素）
+		float textWidth = 0;
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			if (c >= 0x4E00 && c <= 0x9FFF) { // 汉字范围
+				textWidth += 20;
+			} else {
+				textWidth += 10;
+			}
+		}
+		
+		// 绘制文本背景矩形
+		float charHeight = 25.0f;
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glVertex2f(x, y - charHeight);
+		GL11.glVertex2f(x + textWidth, y - charHeight);
+		GL11.glVertex2f(x + textWidth, y);
+		GL11.glVertex2f(x, y);
+		GL11.glEnd();
+		
+		// 打印文本内容到控制台，确保文本正确
+		System.out.println("Fallback drawing text: " + text + " at (" + x + ", " + y + ")");
+	}
+	
+	/**
+	 * 清理资源
+	 */
+	@Override
+	public void cleanup() {
+		// 清理STB字体渲染器资源
+		STBFontRenderer.getInstance().cleanup();
+		
+		initialized = false;
+		System.out.println("GLRenderer 资源清理完成");
+	}
+	
+	/**
+	 * 检查是否已初始化
+	 * @return 是否已初始化
+	 */
+	public boolean isInitialized() {
+		return initialized;
+	}
+	
+	/**
+	 * 获取窗口宽度
+	 * @return 窗口宽度
+	 */
+	public int getWidth() {
+		return width;
+	}
+	
+	/**
+	 * 获取窗口高度
+	 * @return 窗口高度
+	 */
+	public int getHeight() {
+		return height;
+	}
+}

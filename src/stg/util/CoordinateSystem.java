@@ -64,7 +64,7 @@ public class CoordinateSystem {
 		float logicCenterX = GameConstants.GAME_WIDTH / 2.0f;
 		float logicCenterY = GameConstants.GAME_HEIGHT / 2.0f;
 		float screenX = (x + logicCenterX) * scaleX + offsetX;
-		float screenY = offsetY + gameContentHeight - (y + logicCenterY) * scaleY;
+		float screenY = offsetY + (y + logicCenterY) * scaleY;
 		return new float[]{screenX, screenY};
 	}
 
@@ -88,7 +88,7 @@ public class CoordinateSystem {
 		float logicCenterX = GameConstants.GAME_WIDTH / 2.0f;
 		float logicCenterY = GameConstants.GAME_HEIGHT / 2.0f;
 		float x = ((screenX - offsetX) / scaleX) - logicCenterX;
-		float y = logicCenterY - ((screenY - offsetY) / scaleY);
+		float y = ((screenY - offsetY) / scaleY) - logicCenterY;
 		return new float[]{x, y};
 	}
 

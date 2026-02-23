@@ -1,12 +1,10 @@
 package stg.entity.player;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
 
-import stg.core.GameWorld;
 import stg.entity.base.Obj;
-import stg.render.RenderLayer;
-import stg.service.render.IRenderer;
+import stg.render.IRenderer;
+import stg.base.KeyStateProvider;
 
 /**
  * 玩家类- 自机角色
@@ -29,7 +27,7 @@ public class Player extends Obj {
 	private int invincibleTimer; // 无敌时间计时(帧数)
 	private static final int INVINCIBLE_TIME = 120; // 无敌时间(120f)
 	protected static final int BULLET_DAMAGE = 2; // @since 2026-01-23 子弹伤害，DPS = (2 × 2 × 60) / 2 = 120
-	private GameWorld gameWorld; // 游戏世界引用，用于发射子弹
+	private KeyStateProvider keyStateProvider; // 按键状态提供者
 
 	public Player() {
 		this(0, 0, 5.0f, 2.0f, 20);
@@ -51,6 +49,56 @@ public class Player extends Obj {
 		this.spawnY = y;
 		this.respawning = false;
 		this.invincibleTimer = INVINCIBLE_TIME; // @since 2026-01-23 初始无敌时间
+		this.keyStateProvider = null;
+	}
+	
+	/**
+	 * 设置按键状态提供者
+	 * @param provider 按键状态提供者
+	 */
+	public void setKeyStateProvider(KeyStateProvider provider) {
+		this.keyStateProvider = provider;
+	}
+	
+	/**
+	 * 处理键盘输入
+	 */
+	private void handleKeyboardInput() {
+		if (keyStateProvider == null || respawning) {
+			return;
+		}
+		
+		float currentSpeed = slowMode ? speedSlow : speed;
+		
+		boolean leftPressed = keyStateProvider.isLeftPressed();
+		boolean rightPressed = keyStateProvider.isRightPressed();
+		boolean upPressed = keyStateProvider.isUpPressed();
+		boolean downPressed = keyStateProvider.isDownPressed();
+		
+		// 处理X方向输入 - 同时按住相反方向键时悬停
+		if (leftPressed && rightPressed) {
+			setVx(0);
+		} else if (leftPressed) {
+			setVx(-currentSpeed);
+		} else if (rightPressed) {
+			setVx(currentSpeed);
+		} else {
+			setVx(0);
+		}
+		
+		// 处理Y方向输入 - 同时按住相反方向键时悬停
+		if (upPressed && downPressed) {
+			setVy(0);
+		} else if (upPressed) {
+			setVy(currentSpeed);
+		} else if (downPressed) {
+			setVy(-currentSpeed);
+		} else {
+			setVy(0);
+		}
+		
+		slowMode = keyStateProvider.isShiftPressed();
+		shooting = keyStateProvider.isZPressed();
 	}
 	
 	/**
@@ -201,7 +249,10 @@ public class Player extends Obj {
 		if (getX() > rightBound - getSize()) setPosition(rightBound - getSize(), getY());
 		if (getY() < bottomBound + getSize()) setPosition(getX(), bottomBound + getSize());
 		if (getY() > topBound - getSize()) setPosition(getX(), topBound - getSize());
-
+		
+		// 键盘输入处理
+		handleKeyboardInput();
+		
 		// 更新射击冷却
 		if (shootCooldown > 0) {
 			shootCooldown--;
@@ -228,73 +279,40 @@ public class Player extends Obj {
 	}
 
 	/**
-	 * 渲染玩家 - 简化版本：仅渲染为一个球体
-	 * @param g 图形上下文
-	 */
-	@Override
-	public void render(Graphics2D g) {
-		// 将中心原点坐标转换为屏幕坐标
-		float[] screenCoords = toScreenCoords(getX(), getY());
-		float screenX = screenCoords[0];
-		float screenY = screenCoords[1];
-
-		// 开启抗锯齿
-		stg.util.RenderUtils.enableAntiAliasing(g);
-
-		// @since 2026-01-23 无敌闪烁效果：每5帧闪烁一次
-		boolean shouldRender = true;
-		if (invincibleTimer > 0) {
-			int flashPhase = invincibleTimer % 10; // 10帧为一个闪烁周期
-			if (flashPhase < 5) {
-				shouldRender = false;
-			}
-		}
-
-		// 绘制角色主体（仅为一个简单的红色球体）
-		if (shouldRender) {
-			g.setColor(getColor());
-			g.fillOval((int)(screenX - getSize()), (int)(screenY - getSize()),
-					(int)(getSize() * 2), (int)(getSize() * 2));
-		}
-
-		// 低速模式时显示受击判定点（在球体上方）
-		if (slowMode && shouldRender) {
-			g.setColor(Color.WHITE);
-			g.fillOval((int)(screenX - getHitboxRadius()), (int)(screenY - getHitboxRadius()),
-					(int)(getHitboxRadius() * 2), (int)(getHitboxRadius() * 2));
-		}
-	}
-
-	/**
 	 * 渲染玩家（IRenderer版本，支持OpenGL）
 	 * @param renderer 渲染器
 	 */
 	@Override
 	public void render(IRenderer renderer) {
-		// 开启抗锯齿
-		renderer.enableAntiAliasing();
-
 		// @since 2026-01-23 无敌闪烁效果：每5帧闪烁一次
 		boolean shouldRender = true;
 		if (invincibleTimer > 0) {
-			int flashPhase = invincibleTimer % 10; // 10帧为一个闪烁周期
+			int flashPhase = invincibleTimer % 10;
 			if (flashPhase < 5) {
 				shouldRender = false;
 			}
 		}
 
+		if (!shouldRender) return;
+
+		// 转换为屏幕坐标
+		requireCoordinateSystem();
+		float[] screenCoords = toScreenCoords(getX(), getY());
+		float screenX = screenCoords[0];
+		float screenY = screenCoords[1];
+
 		// 绘制角色主体（仅为一个简单的红色球体）
-		if (shouldRender) {
-			renderer.drawCircle(getX(), getY(), getSize(), getColor());
-		}
+		Color color = getColor();
+		float r = color.getRed() / 255.0f;
+		float g = color.getGreen() / 255.0f;
+		float b = color.getBlue() / 255.0f;
+		float a = color.getAlpha() / 255.0f;
+		renderer.drawCircle(screenX, screenY, getSize()/2, r, g, b, a);
 
 		// 低速模式时显示受击判定点（在球体上方）
-		if (slowMode && shouldRender) {
-			renderer.drawCircle(getX(), getY(), getHitboxRadius(), Color.WHITE);
+		if (slowMode) {
+			renderer.drawCircle(screenX, screenY, getHitboxRadius(), 1.0f, 1.0f, 1.0f, 1.0f);
 		}
-
-		// 禁用抗锯齿
-		renderer.disableAntiAliasing();
 	}
 	/**
 	 * 向上移动 - @since 2026-01-19 Y轴正方向 */
@@ -472,34 +490,17 @@ public class Player extends Obj {
 	 * @return 渲染层级
 	 */
 	@Override
-	public RenderLayer getRenderLayer() {
-		// 玩家角色使用PLAYER层级
-		return RenderLayer.PLAYER;
+	public int getRenderLayer() {
+		return 5;
 	}
-
-	/**
-	 * 设置游戏世界引用
-	 * @param gameWorld 游戏世界实例
-	 */
-	public void setGameWorld(GameWorld gameWorld) {
-		this.gameWorld = gameWorld;
-	}
-
-	/**
-	 * 获取游戏世界引用
-	 * @return 游戏世界实例
-	 */
-	protected GameWorld getGameWorld() {
-		return gameWorld;
-	}
-
+	
 	/**
 	 * 任务开始时触发的方法 - 用于处理开局对话
 	 */
 	protected void onTaskStart() {
 		// 实现任务开始逻辑
 	}
-
+	
 	/**
 	 * 任务结束时触发的方法 - 用于处理boss击破对话和道具掉落
 	 */
