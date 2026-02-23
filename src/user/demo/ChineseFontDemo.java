@@ -285,14 +285,25 @@ public class ChineseFontDemo {
                 samples = STBVorbis.stb_vorbis_get_samples_short_interleaved(
                     vorbisDecoder, vorbisChannels, pcm);
                 if (samples <= 0) {
+                    System.err.println("无法读取音频样本");
                     return false;
                 }
             }
             
+            int actualSize = samples * vorbisChannels;
+            pcm.limit(actualSize);
             pcm.flip();
+            
             int format = vorbisChannels == 1 ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_STEREO16;
             AL10.alBufferData(buffer, format, pcm, vorbisSampleRate);
             
+            int alError = AL10.alGetError();
+            if (alError != AL10.AL_NO_ERROR) {
+                System.err.println("填充缓冲区失败, 错误: " + alError + ", samples=" + samples + ", format=" + format);
+                return false;
+            }
+            
+            System.out.println("缓冲区填充成功: samples=" + samples + ", size=" + (actualSize * 2) + " bytes");
             return true;
         } finally {
             MemoryUtil.memFree(pcm);
