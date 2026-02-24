@@ -525,18 +525,32 @@ public class ALAudioManager implements IAudioManager {
         ByteBuffer buffer = null;
         boolean success = false;
         try {
-            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
-            if (inputStream == null) {
-                LogUtil.error("ALAudioManager", "音频文件不存在: " + path);
-                return null;
+            // 尝试从文件系统直接读取
+            java.nio.file.Path filePath = java.nio.file.Paths.get(path);
+            if (!java.nio.file.Files.exists(filePath)) {
+                // 如果文件不存在，尝试从类路径读取
+                LogUtil.warn("ALAudioManager", "文件系统中找不到音频文件: " + path + "，尝试从类路径读取");
+                InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
+                if (inputStream == null) {
+                    LogUtil.error("ALAudioManager", "音频文件不存在: " + path);
+                    return null;
+                }
+                
+                byte[] bytes = inputStream.readAllBytes();
+                inputStream.close();
+                
+                buffer = MemoryUtil.memAlloc(bytes.length);
+                buffer.put(bytes);
+                buffer.flip();
+            } else {
+                // 从文件系统直接读取
+                byte[] bytes = java.nio.file.Files.readAllBytes(filePath);
+                LogUtil.info("ALAudioManager", "从文件系统读取音频文件: " + path + " (" + bytes.length + " bytes)");
+                
+                buffer = MemoryUtil.memAlloc(bytes.length);
+                buffer.put(bytes);
+                buffer.flip();
             }
-            
-            byte[] bytes = inputStream.readAllBytes();
-            inputStream.close();
-            
-            buffer = MemoryUtil.memAlloc(bytes.length);
-            buffer.put(bytes);
-            buffer.flip();
             
             success = true;
             return buffer;
@@ -568,30 +582,70 @@ public class ALAudioManager implements IAudioManager {
             STBVorbis.stb_vorbis_get_info(decoder, info);
             int channels = info.channels();
             int sampleRate = info.sample_rate();
+            LogUtil.info("ALAudioManager", "音频信息: channels=" + channels + ", sampleRate=" + sampleRate);
             
             // 计算总样本数
             int totalSamples = STBVorbis.stb_vorbis_stream_length_in_samples(decoder);
+            LogUtil.info("ALAudioManager", "总样本数: " + totalSamples);
+            
+            // 为了避免内存溢出，限制最大样本数
+            int maxSamples = 44100 * 60; // 最多1分钟
+            int samplesToRead = Math.min(totalSamples, maxSamples);
+            LogUtil.info("ALAudioManager", "实际读取样本数: " + samplesToRead);
             
             // 分配缓冲区（使用堆内存而不是栈内存）
-            pcm = MemoryUtil.memAllocShort(totalSamples * channels);
+            pcm = MemoryUtil.memAllocShort(samplesToRead * channels);
             
             // 解码
             int samplesDecoded = STBVorbis.stb_vorbis_get_samples_short_interleaved(decoder, channels, pcm);
-            // 重置缓冲区位置
-            pcm.flip();
+            LogUtil.info("ALAudioManager", "成功读取样本数: " + samplesDecoded);
+            
+            if (samplesDecoded <= 0) {
+                LogUtil.error("ALAudioManager", "无法读取音频样本");
+                return -1;
+            }
+            
+            // 手动设置缓冲区的位置和限制
+            pcm.position(0);
+            pcm.limit(samplesDecoded * channels);
+            LogUtil.debug("ALAudioManager", "手动设置后 - PCM缓冲区位置: " + pcm.position());
+            LogUtil.debug("ALAudioManager", "手动设置后 - PCM缓冲区限制: " + pcm.limit());
             
             // 创建OpenAL缓冲区
             int bufferId = AL10.alGenBuffers();
             ALErrorChecker.checkError("ALAudioManager.loadOggFile() - After generating buffer");
+            LogUtil.info("ALAudioManager", "创建的缓冲区ID: " + bufferId);
             
             // 设置格式
             int format = channels == 1 ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_STEREO16;
+            LogUtil.info("ALAudioManager", "使用的音频格式: " + format);
+            LogUtil.debug("ALAudioManager", "PCM缓冲区容量: " + pcm.capacity());
+            LogUtil.debug("ALAudioManager", "PCM缓冲区位置: " + pcm.position());
+            LogUtil.debug("ALAudioManager", "PCM缓冲区限制: " + pcm.limit());
             
             // 上传数据
             AL10.alBufferData(bufferId, format, pcm, sampleRate);
             ALErrorChecker.checkError("ALAudioManager.loadOggFile() - After uploading buffer data");
             
+            // 检查缓冲区填充错误
+            int bufferError = AL10.alGetError();
+            if (bufferError != AL10.AL_NO_ERROR) {
+                LogUtil.error("ALAudioManager", "填充缓冲区错误: " + bufferError);
+                AL10.alDeleteBuffers(bufferId);
+                return -1;
+            }
+            
+            // 检查缓冲区信息
+            int[] bufferSize = new int[1];
+            int[] bufferFrequency = new int[1];
+            AL10.alGetBufferi(bufferId, AL10.AL_SIZE, bufferSize);
+            AL10.alGetBufferi(bufferId, AL10.AL_FREQUENCY, bufferFrequency);
+            LogUtil.info("ALAudioManager", "缓冲区信息: 大小=" + bufferSize[0] + ", 频率=" + bufferFrequency[0]);
+            
             return bufferId;
+        } catch (Exception e) {
+            LogUtil.error("ALAudioManager", "处理OGG文件失败: " + e.getMessage(), e);
+            return -1;
         } finally {
             STBVorbis.stb_vorbis_close(decoder);
             // 释放缓冲区

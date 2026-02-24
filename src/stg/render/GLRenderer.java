@@ -1,6 +1,10 @@
 package stg.render;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+import java.nio.IntBuffer;
 
 /**
  * OpenGL渲染器实现
@@ -264,6 +268,141 @@ public class GLRenderer implements IRenderer {
 		System.out.println("Fallback drawing text: " + text + " at (" + x + ", " + y + ")");
 	}
 	
+	/**
+	 * 加载纹理
+	 * @param path 图片文件路径
+	 * @return 纹理ID
+	 */
+	public int loadTexture(String path) {
+		int textureId = -1;
+		
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			IntBuffer width = stack.mallocInt(1);
+			IntBuffer height = stack.mallocInt(1);
+			IntBuffer channels = stack.mallocInt(1);
+			
+			// 尝试从文件系统直接读取
+			java.nio.file.Path filePath = java.nio.file.Paths.get(path);
+			if (!java.nio.file.Files.exists(filePath)) {
+				// 如果文件不存在，尝试从类路径读取
+				System.out.println("文件系统中找不到图片文件: " + path + "，尝试从类路径读取");
+				// 从类路径读取图片
+				java.io.InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
+				if (inputStream == null) {
+					System.err.println("图片文件不存在: " + path);
+					return -1;
+				}
+				
+				// 读取输入流到字节数组
+				byte[] bytes = inputStream.readAllBytes();
+				inputStream.close();
+				
+				// 分配内存并填充数据
+				java.nio.ByteBuffer buffer = MemoryUtil.memAlloc(bytes.length);
+				buffer.put(bytes);
+				buffer.flip();
+				
+				// 加载图片
+				java.nio.ByteBuffer image = STBImage.stbi_load_from_memory(buffer, width, height, channels, 4);
+				MemoryUtil.memFree(buffer);
+				
+				if (image == null) {
+					System.err.println("加载图片失败: " + STBImage.stbi_failure_reason());
+					return -1;
+				}
+				
+				// 创建纹理
+				textureId = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+				
+				// 设置纹理参数
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				
+				// 保存宽度和高度值
+				int imgWidth = width.get();
+				int imgHeight = height.get();
+				
+				// 上传纹理数据
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, imgWidth, imgHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
+				
+				// 释放图片数据
+				STBImage.stbi_image_free(image);
+				
+				System.out.println("从类路径加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
+			} else {
+				// 从文件系统直接读取
+				java.nio.ByteBuffer image = STBImage.stbi_load(path, width, height, channels, 4);
+				
+				if (image == null) {
+					System.err.println("加载图片失败: " + STBImage.stbi_failure_reason());
+					return -1;
+				}
+				
+				// 创建纹理
+				textureId = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+				
+				// 设置纹理参数
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				
+				// 保存宽度和高度值
+				int imgWidth = width.get();
+				int imgHeight = height.get();
+				
+				// 上传纹理数据
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, imgWidth, imgHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
+				
+				// 释放图片数据
+				STBImage.stbi_image_free(image);
+				
+				System.out.println("从文件系统加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
+			}
+			
+		} catch (Exception e) {
+			System.err.println("加载纹理失败: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		return textureId;
+	}
+
+	/**
+	 * 绘制图片
+	 * @param textureId 纹理ID
+	 * @param x 图片左下角X坐标
+	 * @param y 图片左下角Y坐标
+	 * @param width 图片宽度
+	 * @param height 图片高度
+	 */
+	@Override
+	public void drawImage(int textureId, float x, float y, float width, float height) {
+		if (textureId == -1) {
+			System.err.println("无效的纹理ID");
+			return;
+		}
+		
+		// 启用纹理
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+		
+		// 绘制四边形，调整纹理坐标以修复上下颠倒的问题
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0, 1); // 左上角
+		GL11.glVertex2f(x, y);
+		GL11.glTexCoord2f(1, 1); // 右上角
+		GL11.glVertex2f(x + width, y);
+		GL11.glTexCoord2f(1, 0); // 右下角
+		GL11.glVertex2f(x + width, y + height);
+		GL11.glTexCoord2f(0, 0); // 左下角
+		GL11.glVertex2f(x, y + height);
+		GL11.glEnd();
+		
+		// 禁用纹理
+		GL11.glDisable(GL11.GL_TEXTURE_2D);
+	}
+
 	/**
 	 * 清理资源
 	 */

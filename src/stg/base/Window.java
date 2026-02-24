@@ -238,6 +238,8 @@ public class Window {
 			}
 		});
 		titlePanel.setKeyStateProvider(keyStateProvider);
+		// 加载标题面板背景纹理
+		titlePanel.loadBackgroundTexture(renderer);
 		
 		coordinateSystem = new CoordinateSystem(gamePanelWidth, TOTAL_HEIGHT);
 		stg.entity.base.Obj.setSharedCoordinateSystem(coordinateSystem);
@@ -251,7 +253,9 @@ public class Window {
 		// 加载标题音乐
 		ALAudioManager audioManager = ALAudioManager.getInstance();
 		audioManager.init();
-		audioManager.loadMusic("title", "audio/music/luastg 0.08.540 - 1.27.800.ogg");
+		// 使用绝对路径加载音频文件
+		String musicPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\audio\\music\\luastg 0.08.540 - 1.27.800.ogg";
+		audioManager.loadMusic("title", musicPath);
 		// 播放标题音乐（循环）
 		audioManager.playMusic("title", true);
 		System.out.println("面板布局: 左侧=" + sidePanelWidth + ", 中间=" + gamePanelWidth + ", 右侧=" + sidePanelWidth);

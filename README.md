@@ -165,7 +165,7 @@ audioManager.playMusic("bgm", true);
 
 ## 许可证
 
-本项目使用MIT许可证，详情请参阅 [LICENSE](LICENSE) 文件。许可证内容包含英文原版和中文翻译版本。
+本项目使用MIT License，详情请参阅 [LICENSE.md](LICENSE.md) 文件。
 
 ## 作者
 

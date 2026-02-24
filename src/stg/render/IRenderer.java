@@ -99,7 +99,17 @@ public interface IRenderer {
 	 * @param color 颜色数组 [r, g, b, a]
 	 */
 	void drawText(String text, float x, float y, float fontSize, float[] color);
-	
+
+	/**
+	 * 绘制图片
+	 * @param textureId 纹理ID
+	 * @param x 图片左下角X坐标
+	 * @param y 图片左下角Y坐标
+	 * @param width 图片宽度
+	 * @param height 图片高度
+	 */
+	void drawImage(int textureId, float x, float y, float width, float height);
+
 	/**
 	 * 清理资源
 	 */

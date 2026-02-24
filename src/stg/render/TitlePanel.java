@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 
 import stg.base.KeyStateProvider;
+import stg.render.GLRenderer;
 
 /**
  * 标题页面面板
@@ -28,6 +29,7 @@ public class TitlePanel extends Panel {
 	private int selectedIndex = 0;
 	private MenuState currentState = MenuState.MAIN_MENU;
 	private int animationFrame = 0;
+	private int backgroundTextureId = -1;
 
 	public interface TitleCallback {
 		void onGameStart();
@@ -49,6 +51,37 @@ public class TitlePanel extends Panel {
 		super(x, y, width, height);
 		setBackgroundColor(0.04f, 0.04f, 0.08f, 1.0f);
 		this.callback = callback;
+	}
+	
+	/**
+	 * 加载背景纹理
+	 * @param renderer 渲染器实例
+	 */
+	public void loadBackgroundTexture(IRenderer renderer) {
+		// 使用绝对路径加载背景图片
+		String backgroundPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\images\\menu_bg.png";
+		// 也可以尝试使用相对路径
+		String relativePath = "resources/images/menu_bg.png";
+		
+		// 尝试使用绝对路径加载
+		if (renderer instanceof GLRenderer) {
+			GLRenderer glRenderer = (GLRenderer) renderer;
+			backgroundTextureId = glRenderer.loadTexture(backgroundPath);
+			
+			// 如果绝对路径加载失败，尝试使用相对路径
+			if (backgroundTextureId == -1) {
+				System.out.println("使用绝对路径加载背景纹理失败，尝试使用相对路径");
+				backgroundTextureId = glRenderer.loadTexture(relativePath);
+			}
+			
+			if (backgroundTextureId != -1) {
+				System.out.println("背景纹理加载成功，纹理ID: " + backgroundTextureId);
+			} else {
+				System.err.println("背景纹理加载失败");
+			}
+		} else {
+			System.err.println("无效的渲染器实例");
+		}
 	}
 
 	/**
@@ -129,19 +162,27 @@ public class TitlePanel extends Panel {
 	 */
 	@Override
 	public void render(IRenderer renderer) {
-		renderBackground(renderer);
+		// 首先绘制背景图片
+		drawBackgroundImage(renderer);
 
-		// 绘制标题
+		// 然后绘制标题和菜单
 		drawTitle(renderer);
-
-		// 绘制菜单
 		drawMenu(renderer);
-
-		// 绘制操作提示
 		drawHints(renderer);
 
 		// 更新动画帧
 		animationFrame++;
+	}
+	
+	/**
+	 * 绘制背景图片
+	 * @param renderer 渲染器
+	 */
+	private void drawBackgroundImage(IRenderer renderer) {
+		if (backgroundTextureId != -1) {
+			// 绘制背景图片，覆盖整个面板
+			renderer.drawImage(backgroundTextureId, 0, 0, getWidth(), getHeight());
+		}
 	}
 
 	/**

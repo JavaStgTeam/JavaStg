@@ -5,6 +5,7 @@
 bin/
 .*/
 _legacy*/
+resources/THlib/*/
 
 # 无效的配置文件
 *.invalid
