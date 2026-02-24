@@ -9,17 +9,8 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-1. The above copyright notice and this permission notice shall be included in all
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
-2. The Software shall not be used for any political purposes, including but not limited to:
-   - Political campaigning or advocacy
-   - Political advertising
-   - Political fundraising
-   - Promotion of political parties or candidates
-   - Any other activity primarily aimed at influencing political processes
-
-3. Any derivative works or downstream projects based on the Software must comply with all applicable local laws and regulations in the jurisdictions where they are developed, distributed, or used.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -34,17 +25,14 @@ SOFTWARE.
 
 版权所有 (c) 2026 JavaSTG开发团队
 
-特此免费授予任何获得本软件及相关文档文件（以下简称"软件"）副本的人，不受限制地处理该软件，包括但不限于使用、复制、修改、合并、发布、分发、再许可和/或销售该软件副本的权利，前提是符合以下条件：
+特此免费授予任何获得本软件及相关文档文件（以下简称"软件"）副本的人，
+不受限制地处理该软件，包括但不限于使用、复制、修改、合并、发布、
+分发、再许可和/或销售该软件副本的权利，前提是符合以下条件：
 
-1. 上述版权声明和本许可声明应包含在软件的所有副本或实质性部分中。
+上述版权声明和本许可声明应包含在软件的所有副本或实质性部分中。
 
-2. 本软件不得用于任何政治目的，包括但不限于：
-   - 政治竞选或宣传
-   - 政治广告
-   - 政治筹款
-   - 政党或候选人的推广
-   - 任何其他主要旨在影响政治进程的活动
-
-3. 任何基于本软件的衍生作品或下游项目必须在其开发、分发或使用的司法管辖区遵守所有适用的当地法律法规。
-
-本软件按"原样"提供，不附带任何形式的担保，无论是明示的还是暗示的，包括但不限于对适销性、特定用途适用性和不侵权的担保。在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责，无论是在合同行为、侵权行为或其他法律理论下，无论是由于软件或软件的使用或其他交易而引起的、与之相关的。
+本软件按"原样"提供，不附带任何形式的担保，无论是明示的还是暗示的，
+包括但不限于对适销性、特定用途适用性和不侵权的担保。
+在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责，
+无论是在合同行为、侵权行为或其他法律理论下，
+无论是由于软件或软件的使用或其他交易而引起的、与之相关的。

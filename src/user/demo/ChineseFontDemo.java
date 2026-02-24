@@ -3,7 +3,6 @@ package user.demo;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -12,19 +11,15 @@ import java.util.Map;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.openal.AL;
-import org.lwjgl.openal.AL10;
-import org.lwjgl.openal.ALC;
-import org.lwjgl.openal.ALC10;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
-import org.lwjgl.stb.STBVorbis;
-import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+
+import stg.util.ALAudioManager;
 
 public class ChineseFontDemo {
     private long window;
@@ -33,7 +28,7 @@ public class ChineseFontDemo {
     private STBTTFontinfo fontInfo;
     private ByteBuffer fontBuffer;
     private String fontPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\fonts\\OPPO Sans 4.0.ttf";
-    private String musicPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\audio\\music\\luastg 0.08.540 - 1.27.800.ogg";
+    private String musicPath = "audio/music/luastg 0.08.540 - 1.27.800.ogg";
     
     private Map<Integer, GlyphCache> glyphCache = new HashMap<>();
     
@@ -63,18 +58,10 @@ public class ChineseFontDemo {
     private float scrollY = 0;
     private float maxScrollY = 0;
     
-    private long alDevice;
-    private long alContext;
-    private int musicSource;
-    private int[] musicBuffers;
+    private ALAudioManager audioManager;
     private float musicVolume = 0.5f;
     private boolean musicPlaying = false;
-    private long vorbisDecoder;
-    private ByteBuffer vorbisData;
-    private int vorbisChannels;
-    private int vorbisSampleRate;
-    private static final int BUFFER_SIZE = 44100 * 2;
-    private static final int NUM_BUFFERS = 4;
+    private static final String MUSIC_NAME = "bgm";
     
     private static class GlyphCache {
         int textureId;
@@ -157,188 +144,26 @@ public class ChineseFontDemo {
     
     private void initAudio() {
         try {
-            System.out.println("初始化 OpenAL...");
-            alDevice = ALC10.alcOpenDevice((ByteBuffer) null);
-            if (alDevice == MemoryUtil.NULL) {
-                System.err.println("无法打开OpenAL设备");
+            System.out.println("初始化音频系统...");
+            audioManager = ALAudioManager.getInstance();
+            audioManager.init();
+            
+            if (!audioManager.isInitialized()) {
+                System.err.println("音频系统初始化失败");
                 return;
             }
             
-            alContext = ALC10.alcCreateContext(alDevice, (IntBuffer) null);
-            if (alContext == MemoryUtil.NULL) {
-                ALC10.alcCloseDevice(alDevice);
-                System.err.println("无法创建OpenAL上下文");
-                return;
-            }
-            
-            ALC10.alcMakeContextCurrent(alContext);
-            AL.createCapabilities(ALC.createCapabilities(alDevice));
-            System.out.println("OpenAL 初始化完成");
-            
-            initVorbisStream();
+            System.out.println("加载音乐: " + musicPath);
+            audioManager.loadMusic(MUSIC_NAME, musicPath);
+            audioManager.setMusicVolume(musicVolume);
+            audioManager.playMusic(MUSIC_NAME, true);
+            musicPlaying = true;
+            System.out.println("音乐播放已启动");
             
         } catch (Exception e) {
             System.err.println("初始化音频失败: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    
-    private void initVorbisStream() {
-        try {
-            System.out.println("加载音乐文件: " + musicPath);
-            byte[] bytes = Files.readAllBytes(Paths.get(musicPath));
-            System.out.println("文件大小: " + bytes.length + " bytes");
-            
-            vorbisData = MemoryUtil.memAlloc(bytes.length);
-            vorbisData.put(bytes);
-            vorbisData.flip();
-            
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                IntBuffer error = stack.mallocInt(1);
-                vorbisDecoder = STBVorbis.stb_vorbis_open_memory(vorbisData, error, null);
-                
-                if (vorbisDecoder == MemoryUtil.NULL) {
-                    System.err.println("解码OGG文件失败，错误码: " + error.get(0));
-                    return;
-                }
-                
-                STBVorbisInfo info = STBVorbisInfo.malloc(stack);
-                STBVorbis.stb_vorbis_get_info(vorbisDecoder, info);
-                vorbisChannels = info.channels();
-                vorbisSampleRate = info.sample_rate();
-                System.out.println("音频信息: channels=" + vorbisChannels + ", sampleRate=" + vorbisSampleRate);
-            }
-            
-            musicBuffers = new int[NUM_BUFFERS];
-            for (int i = 0; i < NUM_BUFFERS; i++) {
-                musicBuffers[i] = AL10.alGenBuffers();
-                checkALError("生成缓冲区 " + i);
-            }
-            
-            musicSource = AL10.alGenSources();
-            checkALError("生成音频源");
-            
-            AL10.alSourcef(musicSource, AL10.AL_GAIN, musicVolume);
-            AL10.alSourcei(musicSource, AL10.AL_LOOPING, AL10.AL_FALSE);
-            AL10.alSourcef(musicSource, AL10.AL_PITCH, 1.0f);
-            AL10.alSource3f(musicSource, AL10.AL_POSITION, 0.0f, 0.0f, 0.0f);
-            AL10.alSource3f(musicSource, AL10.AL_VELOCITY, 0.0f, 0.0f, 0.0f);
-            checkALError("设置音频源属性");
-            
-            for (int i = 0; i < NUM_BUFFERS; i++) {
-                boolean success = streamBuffer(musicBuffers[i]);
-                System.out.println("缓冲区 " + i + " 填充: " + (success ? "成功" : "失败"));
-            }
-            
-            IntBuffer buffers = BufferUtils.createIntBuffer(NUM_BUFFERS);
-            for (int i = 0; i < NUM_BUFFERS; i++) {
-                buffers.put(musicBuffers[i]);
-            }
-            buffers.flip();
-            AL10.alSourceQueueBuffers(musicSource, buffers);
-            checkALError("队列缓冲区");
-            
-            int queued = AL10.alGetSourcei(musicSource, AL10.AL_BUFFERS_QUEUED);
-            System.out.println("已队列缓冲区数: " + queued);
-            
-            AL10.alSourcePlay(musicSource);
-            checkALError("播放");
-            
-            int state = AL10.alGetSourcei(musicSource, AL10.AL_SOURCE_STATE);
-            System.out.println("播放后状态: " + stateString(state));
-            
-            musicPlaying = true;
-            System.out.println("音乐播放已启动");
-            
-        } catch (Exception e) {
-            System.err.println("加载音乐失败: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    private void checkALError(String context) {
-        int error = AL10.alGetError();
-        if (error != AL10.AL_NO_ERROR) {
-            System.err.println("OpenAL 错误 [" + context + "]: " + error);
-        }
-    }
-    
-    private String stateString(int state) {
-        return switch (state) {
-            case AL10.AL_PLAYING -> "播放中";
-            case AL10.AL_PAUSED -> "暂停";
-            case AL10.AL_STOPPED -> "停止";
-            case AL10.AL_INITIAL -> "初始";
-            default -> "未知(" + state + ")";
-        };
-    }
-    
-    private boolean streamBuffer(int buffer) {
-        ShortBuffer pcm = MemoryUtil.memAllocShort(BUFFER_SIZE * vorbisChannels);
-        
-        try {
-            int samples = STBVorbis.stb_vorbis_get_samples_short_interleaved(
-                vorbisDecoder, vorbisChannels, pcm);
-            
-            if (samples <= 0) {
-                STBVorbis.stb_vorbis_seek_start(vorbisDecoder);
-                samples = STBVorbis.stb_vorbis_get_samples_short_interleaved(
-                    vorbisDecoder, vorbisChannels, pcm);
-                if (samples <= 0) {
-                    System.err.println("无法读取音频样本");
-                    return false;
-                }
-            }
-            
-            int actualSize = samples * vorbisChannels;
-            pcm.limit(actualSize);
-            pcm.flip();
-            
-            int format = vorbisChannels == 1 ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_STEREO16;
-            AL10.alBufferData(buffer, format, pcm, vorbisSampleRate);
-            
-            int alError = AL10.alGetError();
-            if (alError != AL10.AL_NO_ERROR) {
-                System.err.println("填充缓冲区失败, 错误: " + alError + ", samples=" + samples + ", format=" + format);
-                return false;
-            }
-            
-            System.out.println("缓冲区填充成功: samples=" + samples + ", size=" + (actualSize * 2) + " bytes");
-            return true;
-        } finally {
-            MemoryUtil.memFree(pcm);
-        }
-    }
-    
-    private boolean debugAudioPrinted = false;
-    
-    private void updateAudio() {
-        if (musicSource == 0 || !musicPlaying) return;
-        
-        int processed = AL10.alGetSourcei(musicSource, AL10.AL_BUFFERS_PROCESSED);
-        
-        if (!debugAudioPrinted) {
-            int state = AL10.alGetSourcei(musicSource, AL10.AL_SOURCE_STATE);
-            int queued = AL10.alGetSourcei(musicSource, AL10.AL_BUFFERS_QUEUED);
-            System.out.println("音频更新: 状态=" + stateString(state) + ", 已处理=" + processed + ", 已队列=" + queued);
-        }
-        
-        while (processed-- > 0) {
-            int buffer = AL10.alSourceUnqueueBuffers(musicSource);
-            if (streamBuffer(buffer)) {
-                AL10.alSourceQueueBuffers(musicSource, buffer);
-            }
-        }
-        
-        int state = AL10.alGetSourcei(musicSource, AL10.AL_SOURCE_STATE);
-        if (state != AL10.AL_PLAYING) {
-            if (!debugAudioPrinted) {
-                System.out.println("音频源未在播放，尝试重新启动...");
-            }
-            AL10.alSourcePlay(musicSource);
-        }
-        
-        debugAudioPrinted = true;
     }
 
     private void handleKeyInput(long win, int key, int scancode, int action, int mods) {
@@ -373,14 +198,14 @@ public class ChineseFontDemo {
     }
     
     private void toggleMusic() {
-        if (musicSource == 0) return;
+        if (audioManager == null || !audioManager.isInitialized()) return;
         
         if (musicPlaying) {
-            AL10.alSourcePause(musicSource);
+            audioManager.pauseMusic(MUSIC_NAME);
             musicPlaying = false;
             System.out.println("音乐已暂停");
         } else {
-            AL10.alSourcePlay(musicSource);
+            audioManager.resumeMusic(MUSIC_NAME);
             musicPlaying = true;
             System.out.println("音乐已恢复");
         }
@@ -388,8 +213,8 @@ public class ChineseFontDemo {
     
     private void adjustVolume(float delta) {
         musicVolume = Math.max(0.0f, Math.min(1.0f, musicVolume + delta));
-        if (musicSource != 0) {
-            AL10.alSourcef(musicSource, AL10.AL_GAIN, musicVolume);
+        if (audioManager != null && audioManager.isInitialized()) {
+            audioManager.setMusicVolume(musicVolume);
         }
         System.out.printf("音量: %.0f%%%n", musicVolume * 100);
     }
@@ -440,8 +265,6 @@ public class ChineseFontDemo {
             GL11.glLoadIdentity();
 
             renderUI();
-            
-            updateAudio();
 
             GLFW.glfwSwapBuffers(window);
             GLFW.glfwPollEvents();
@@ -621,26 +444,10 @@ public class ChineseFontDemo {
         
         MemoryUtil.memFree(fontBuffer);
         
-        if (musicSource != 0) {
-            AL10.alSourceStop(musicSource);
-            AL10.alDeleteSources(musicSource);
-        }
-        if (musicBuffers != null) {
-            AL10.alDeleteBuffers(musicBuffers);
-        }
-        if (vorbisDecoder != MemoryUtil.NULL) {
-            STBVorbis.stb_vorbis_close(vorbisDecoder);
-        }
-        if (vorbisData != null) {
-            MemoryUtil.memFree(vorbisData);
-        }
-        
-        if (alContext != MemoryUtil.NULL) {
-            ALC10.alcMakeContextCurrent(MemoryUtil.NULL);
-            ALC10.alcDestroyContext(alContext);
-        }
-        if (alDevice != MemoryUtil.NULL) {
-            ALC10.alcCloseDevice(alDevice);
+        if (audioManager != null && audioManager.isInitialized()) {
+            audioManager.stopMusic(MUSIC_NAME);
+            audioManager.unloadMusic(MUSIC_NAME);
+            audioManager.cleanup();
         }
 
         GLFW.glfwDestroyWindow(window);
