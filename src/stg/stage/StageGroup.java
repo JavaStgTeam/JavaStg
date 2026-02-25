@@ -2,7 +2,7 @@ package stg.stage;
 
 import java.util.ArrayList;
 import java.util.List;
-import stg.ui.GameCanvas;
+import stg.core.GameWorld;
 
 /**
  * 关卡组类 - 管理多个关卡的顺序、切换和状态
@@ -16,7 +16,7 @@ public class StageGroup {
     private List<Stage> stages;
     private int currentStageIndex;
     private boolean completed;
-    private GameCanvas gameCanvas;
+    private GameWorld gameWorld;
 
     /**
      * 难度枚举
@@ -43,16 +43,16 @@ public class StageGroup {
      * @param groupName 关卡组名称
      * @param description 关卡组描述
      * @param difficulty 难度级别
-     * @param gameCanvas 游戏画布引用
+     * @param gameWorld 游戏世界引用
      */
-    public StageGroup(String groupName, String description, Difficulty difficulty, GameCanvas gameCanvas) {
+    public StageGroup(String groupName, String description, Difficulty difficulty, GameWorld gameWorld) {
         this.groupName = groupName;
         this.description = description;
         this.difficulty = difficulty;
         this.stages = new ArrayList<>();
         this.currentStageIndex = -1;
         this.completed = false;
-        this.gameCanvas = gameCanvas;
+        this.gameWorld = gameWorld;
         initStages();
     }
 
@@ -62,10 +62,10 @@ public class StageGroup {
      * @param description 关卡组描述
      * @param difficulty 难度级别
      * @param iconPath 图标路径
-     * @param gameCanvas 游戏画布引用
+     * @param gameWorld 游戏世界引用
      */
-    public StageGroup(String groupName, String description, Difficulty difficulty, String iconPath, GameCanvas gameCanvas) {
-        this(groupName, description, difficulty, gameCanvas);
+    public StageGroup(String groupName, String description, Difficulty difficulty, String iconPath, GameWorld gameWorld) {
+        this(groupName, description, difficulty, gameWorld);
         this.iconPath = iconPath;
     }
 
@@ -224,11 +224,11 @@ public class StageGroup {
     }
 
     /**
-     * 获取游戏画布引用
-     * @return 游戏画布引用
+     * 获取游戏世界引用
+     * @return 游戏世界引用
      */
-    public GameCanvas getGameCanvas() {
-        return gameCanvas;
+    public GameWorld getGameWorld() {
+        return gameWorld;
     }
 
     /**

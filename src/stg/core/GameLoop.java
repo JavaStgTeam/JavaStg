@@ -1,7 +1,7 @@
 package stg.core;
 
 import stg.base.Window;
-import user.player.DefaultPlayer;
+import stg.entity.player.Player;
 
 /**
  * 游戏循环 - 控制游戏主循环
@@ -72,14 +72,18 @@ public class GameLoop implements Runnable {
 			long elapsedTime = currentTime - lastFrameTime;
 			
 			if (window != null) {
-				// 检查是否显示标题页面
+				// 检查当前面板状态并更新对应面板
 				try {
-					// 使用反射获取showTitleScreen字段
-					java.lang.reflect.Field showTitleField = window.getClass().getDeclaredField("showTitleScreen");
-					showTitleField.setAccessible(true);
-					boolean showTitleScreen = showTitleField.getBoolean(window);
+					// 使用反射获取currentPanelState字段
+					java.lang.reflect.Field panelStateField = window.getClass().getDeclaredField("currentPanelState");
+					panelStateField.setAccessible(true);
+					Object panelState = panelStateField.get(window);
 					
-					if (showTitleScreen) {
+					// 获取面板状态的名称
+					String panelStateName = panelState.toString();
+					
+					switch (panelStateName) {
+					case "TITLE":
 						// 更新标题页面
 						java.lang.reflect.Field titlePanelField = window.getClass().getDeclaredField("titlePanel");
 						titlePanelField.setAccessible(true);
@@ -88,18 +92,94 @@ public class GameLoop implements Runnable {
 							java.lang.reflect.Method updateMethod = titlePanel.getClass().getMethod("update");
 							updateMethod.invoke(titlePanel);
 						}
-					} else {
+						break;
+					case "STAGE_GROUP_SELECT":
+						// 更新关卡组选择页面
+						java.lang.reflect.Field stageGroupSelectPanelField = window.getClass().getDeclaredField("stageGroupSelectPanel");
+						stageGroupSelectPanelField.setAccessible(true);
+						Object stageGroupSelectPanel = stageGroupSelectPanelField.get(window);
+						if (stageGroupSelectPanel != null) {
+							java.lang.reflect.Method updateMethod = stageGroupSelectPanel.getClass().getMethod("update");
+							updateMethod.invoke(stageGroupSelectPanel);
+						}
+						break;
+					case "PLAYER_SELECT":
+						// 更新玩家选择页面
+						java.lang.reflect.Field playerSelectPanelField = window.getClass().getDeclaredField("playerSelectPanel");
+						playerSelectPanelField.setAccessible(true);
+						Object playerSelectPanel = playerSelectPanelField.get(window);
+						if (playerSelectPanel != null) {
+							java.lang.reflect.Method updateMethod = playerSelectPanel.getClass().getMethod("update");
+							updateMethod.invoke(playerSelectPanel);
+						}
+						break;
+					case "GAME":
 						// 更新游戏逻辑
-						DefaultPlayer player = window.getPlayer();
+						Player player = window.getPlayer();
 						if (player != null && player.isActive()) {
 							player.update();
 						}
+						
+						// 更新游戏世界和关卡组
+						try {
+							// 使用反射获取gameWorld和selectedStageGroup字段
+							java.lang.reflect.Field gameWorldField = window.getClass().getDeclaredField("gameWorld");
+							gameWorldField.setAccessible(true);
+							Object gameWorld = gameWorldField.get(window);
+							
+							java.lang.reflect.Field stageGroupField = window.getClass().getDeclaredField("selectedStageGroup");
+							stageGroupField.setAccessible(true);
+							Object stageGroup = stageGroupField.get(window);
+							
+							// 更新关卡组
+							if (stageGroup != null) {
+								java.lang.reflect.Method updateMethod = stageGroup.getClass().getMethod("update");
+								updateMethod.invoke(stageGroup);
+							}
+							
+							// 更新游戏世界
+							if (gameWorld != null) {
+								// 假设窗口宽度和高度为1280x960
+								java.lang.reflect.Method updateMethod = gameWorld.getClass().getMethod("update", int.class, int.class);
+								updateMethod.invoke(gameWorld, 720, 960);
+							}
+						} catch (Exception ex) {
+							// 忽略反射异常
+						}
+						break;
 					}
 				} catch (Exception e) {
 					// 如果反射失败，默认更新玩家
-					DefaultPlayer player = window.getPlayer();
+					Player player = window.getPlayer();
 					if (player != null && player.isActive()) {
 						player.update();
+					}
+					
+					// 更新游戏世界和关卡组
+					try {
+						// 使用反射获取gameWorld和selectedStageGroup字段
+						java.lang.reflect.Field gameWorldField = window.getClass().getDeclaredField("gameWorld");
+						gameWorldField.setAccessible(true);
+						Object gameWorld = gameWorldField.get(window);
+						
+						java.lang.reflect.Field stageGroupField = window.getClass().getDeclaredField("selectedStageGroup");
+						stageGroupField.setAccessible(true);
+						Object stageGroup = stageGroupField.get(window);
+						
+						// 更新关卡组
+						if (stageGroup != null) {
+							java.lang.reflect.Method updateMethod = stageGroup.getClass().getMethod("update");
+							updateMethod.invoke(stageGroup);
+						}
+						
+						// 更新游戏世界
+						if (gameWorld != null) {
+							// 假设窗口宽度和高度为1280x960
+							java.lang.reflect.Method updateMethod = gameWorld.getClass().getMethod("update", int.class, int.class);
+							updateMethod.invoke(gameWorld, 720, 960);
+						}
+					} catch (Exception ex) {
+						// 忽略反射异常
 					}
 				}
 			}

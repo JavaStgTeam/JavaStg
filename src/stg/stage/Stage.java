@@ -2,7 +2,7 @@ package stg.stage;
 
 import java.util.List;
 import stg.entity.enemy.Enemy;
-import stg.ui.GameCanvas;
+import stg.core.GameWorld;
 
 /**
  * 关卡类 - 管理单个关卡的逻辑
@@ -12,7 +12,7 @@ public abstract class Stage {
     private final String stageName;
     private final int stageId;
     private State state;
-    private final GameCanvas gameCanvas;
+    private final GameWorld gameWorld;
     private StageCompletionCondition completionCondition;
     
     // 波次管理相关字段
@@ -29,12 +29,12 @@ public abstract class Stage {
      * 构造函数
      * @param stageId 关卡ID
      * @param stageName 关卡名称
-     * @param gameCanvas 游戏画布引用
+     * @param gameWorld 游戏世界引用
      */
-    public Stage(int stageId, String stageName, GameCanvas gameCanvas) {
+    public Stage(int stageId, String stageName, GameWorld gameWorld) {
         this.stageId = stageId;
         this.stageName = stageName;
-        this.gameCanvas = gameCanvas;
+        this.gameWorld = gameWorld;
         this.state = State.CREATED;
         initStage();
         // 移除自动加载和开始逻辑，由调用者显式调用load()和start()
@@ -113,15 +113,11 @@ public abstract class Stage {
      */
     public void addEnemy(Enemy enemy) {
         if (enemy != null) {
-            if (gameCanvas != null) {
-                // 获取游戏世界
-                stg.core.GameWorld world = gameCanvas.getWorld();
-                if (world != null) {
-                    // 设置敌人的游戏世界引用
-                    enemy.setGameWorld(world);
-                    // 添加敌人到游戏世界
-                    world.addEnemy(enemy);
-                }
+            if (gameWorld != null) {
+                // 设置敌人的游戏世界引用
+                enemy.setGameWorld(gameWorld);
+                // 添加敌人到游戏世界
+                gameWorld.addEnemy(enemy);
             }
         }
     }
@@ -171,22 +167,18 @@ public abstract class Stage {
      * @return 敌人列表（不可修改） 
      */
     public List<Enemy> getEnemies() {
-        if (gameCanvas != null) {
-            // 获取游戏世界并返回敌人列表
-                stg.core.GameWorld world = gameCanvas.getWorld();
-            if (world != null) {
-                return world.getEnemies();
-            }
+        if (gameWorld != null) {
+            return gameWorld.getEnemies();
         }
         return java.util.Collections.emptyList();
     }
 
     /**
-     * 获取游戏画布
-     * @return 游戏画布
+     * 获取游戏世界
+     * @return 游戏世界
      */
-    protected GameCanvas getGameCanvas() {
-        return gameCanvas;
+    protected GameWorld getGameWorld() {
+        return gameWorld;
     }
 
     /**

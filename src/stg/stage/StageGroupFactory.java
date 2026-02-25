@@ -3,7 +3,8 @@ package stg.stage;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import stg.ui.GameCanvas;
+
+import stg.core.GameWorld;
 
 /**
  * 关卡组工厂 - 负责创建StageGroup实例
@@ -14,10 +15,10 @@ public class StageGroupFactory {
     /**
      * 根据类列表创建StageGroup实例
      * @param stageGroupClasses 关卡组类列表
-     * @param gameCanvas 游戏画布引用
+     * @param gameWorld 游戏世界引用
      * @return 创建的StageGroup实例列表
      */
-    public List<StageGroup> createInstances(List<Class<?>> stageGroupClasses, GameCanvas gameCanvas) {
+    public List<StageGroup> createInstances(List<Class<?>> stageGroupClasses, GameWorld gameWorld) {
         List<StageGroup> instances = new ArrayList<>();
         
         if (stageGroupClasses == null || stageGroupClasses.isEmpty()) {
@@ -29,7 +30,7 @@ public class StageGroupFactory {
         
         for (Class<?> clazz : stageGroupClasses) {
             try {
-                StageGroup instance = createInstance(clazz, gameCanvas);
+                StageGroup instance = createInstance(clazz, gameWorld);
                 if (instance != null) {
                     instances.add(instance);
                     System.out.println("创建关卡组实例成功: " + instance.getDisplayName());
@@ -48,14 +49,14 @@ public class StageGroupFactory {
     /**
      * 创建单个StageGroup实例
      * @param clazz 关卡组类
-     * @param gameCanvas 游戏画布引用
+     * @param gameWorld 游戏世界引用
      * @return 创建的StageGroup实例，如果创建失败则返回null
      * @throws NoSuchMethodException 如果构造方法不存在
      * @throws InstantiationException 如果实例化失败
      * @throws IllegalAccessException 如果访问权限不足
      * @throws InvocationTargetException 如果构造方法调用失败
      */
-    public StageGroup createInstance(Class<?> clazz, GameCanvas gameCanvas) 
+    public StageGroup createInstance(Class<?> clazz, GameWorld gameWorld) 
             throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
         // 检查是否是有效的StageGroup子类
         if (!isValidStageGroupClass(clazz)) {
@@ -64,7 +65,7 @@ public class StageGroupFactory {
         }
         
         // 尝试通过构造方法创建实例
-        return (StageGroup) clazz.getConstructor(GameCanvas.class).newInstance(gameCanvas);
+        return (StageGroup) clazz.getConstructor(GameWorld.class).newInstance(gameWorld);
     }
     
     /**

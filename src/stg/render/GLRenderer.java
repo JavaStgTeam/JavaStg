@@ -1,10 +1,11 @@
 package stg.render;
 
+import java.nio.IntBuffer;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import java.nio.IntBuffer;
 
 /**
  * OpenGL渲染器实现
@@ -383,9 +384,14 @@ public class GLRenderer implements IRenderer {
 			return;
 		}
 		
-		// 启用纹理
+		// 启用纹理和混合
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+		
+		// 设置颜色为白色，这样纹理的颜色会正常显示
+		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		
 		// 绘制四边形，调整纹理坐标以修复上下颠倒的问题
 		GL11.glBegin(GL11.GL_QUADS);
@@ -399,8 +405,9 @@ public class GLRenderer implements IRenderer {
 		GL11.glVertex2f(x, y + height);
 		GL11.glEnd();
 		
-		// 禁用纹理
+		// 禁用纹理和混合
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 
 	/**

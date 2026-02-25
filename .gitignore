@@ -1,11 +1,12 @@
 # 编译产物
 *.class
+target/
 
 # 目录
 bin/
 .*/
 _legacy*/
-resources/THlib/*/
+resources/THlib/
 
 # 无效的配置文件
 *.invalid

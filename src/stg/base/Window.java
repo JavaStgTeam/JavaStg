@@ -5,12 +5,17 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
 import stg.core.GameLoop;
+import stg.core.GameWorld;
+import stg.entity.player.Player;
 import stg.render.GLRenderer;
 import stg.render.GamePanel;
 import stg.render.IRenderer;
 import stg.render.LeftPanel;
+import stg.render.PlayerSelectPanel;
 import stg.render.RightPanel;
+import stg.render.StageGroupSelectPanel;
 import stg.render.TitlePanel;
+import stg.stage.StageGroup;
 import stg.util.ALAudioManager;
 import stg.util.CoordinateSystem;
 import user.player.DefaultPlayer;
@@ -45,20 +50,33 @@ public class Window {
 	private RightPanel rightPanel;
 	/** 标题面板 */
 	private TitlePanel titlePanel;
+	/** 关卡组选择面板 */
+	private StageGroupSelectPanel stageGroupSelectPanel;
+	/** 玩家选择面板 */
+	private PlayerSelectPanel playerSelectPanel;
 	/** 游戏循环 */
 	private GameLoop gameLoop;
 	/** 玩家实例 */
-	private DefaultPlayer player;
+	private Player player;
 	/** 坐标系统 */
 	private CoordinateSystem coordinateSystem;
+	/** 游戏世界 */
+	private GameWorld gameWorld;
+	/** 当前选择的关卡组 */
+	private StageGroup selectedStageGroup;
 	/** 是否已初始化 */
 	private boolean initialized = false;
-	/** 是否显示标题页面 */
-	private boolean showTitleScreen = true;
+	/** 当前显示的面板 */
+	private PanelState currentPanelState = PanelState.TITLE;
 	/** 按键状态 */
 	private boolean[] keyStates = new boolean[GLFW.GLFW_KEY_LAST];
 	/** 按键状态提供者 */
 	private KeyStateProvider keyStateProvider;
+	
+	/** 面板状态枚举 */
+	private enum PanelState {
+		TITLE, STAGE_GROUP_SELECT, PLAYER_SELECT, GAME
+	}
 	
 	/**
 	 * 构造函数
@@ -108,7 +126,7 @@ public class Window {
 	 * 创建GLFW窗口
 	 */
 	private void createWindow() {
-		windowHandle = GLFW.glfwCreateWindow(TOTAL_WIDTH, TOTAL_HEIGHT, "JavaStg Engine", 0, 0);
+		windowHandle = GLFW.glfwCreateWindow(TOTAL_WIDTH, TOTAL_HEIGHT, "JavaSTG", 0, 0);
 		if (windowHandle == 0) {
 			throw new IllegalStateException("无法创建GLFW窗口");
 		}
@@ -222,12 +240,14 @@ public class Window {
 		titlePanel = new TitlePanel(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new TitlePanel.TitleCallback() {
 			@Override
 			public void onGameStart() {
-				// 开始游戏
-				showTitleScreen = false;
-				// 停止标题音乐
-				ALAudioManager.getInstance().stopMusic("title");
-				startGameLoop();
-				System.out.println("开始游戏");
+				// 重置按键状态
+				for (int i = 0; i < keyStates.length; i++) {
+					keyStates[i] = false;
+				}
+				titlePanel.resetKeyStates();
+				// 进入关卡组选择界面
+				currentPanelState = PanelState.STAGE_GROUP_SELECT;
+				System.out.println("进入关卡组选择界面");
 			}
 			
 			@Override
@@ -241,9 +261,88 @@ public class Window {
 		// 加载标题面板背景纹理
 		titlePanel.loadBackgroundTexture(renderer);
 		
+		// 初始化游戏世界
+		gameWorld = new GameWorld();
+		
+		// 创建关卡组选择面板
+		stageGroupSelectPanel = new StageGroupSelectPanel(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new StageGroupSelectPanel.StageGroupSelectCallback() {
+			@Override
+			public void onStageGroupSelected(StageGroup stageGroup) {
+				// 重置按键状态
+				for (int i = 0; i < keyStates.length; i++) {
+					keyStates[i] = false;
+				}
+				stageGroupSelectPanel.resetKeyStates();
+				// 保存选择的关卡组
+				selectedStageGroup = stageGroup;
+				// 进入玩家选择界面
+				currentPanelState = PanelState.PLAYER_SELECT;
+				System.out.println("选择了关卡组: " + stageGroup.getDisplayName());
+			}
+			
+			@Override
+			public void onBack() {
+				// 重置按键状态
+				for (int i = 0; i < keyStates.length; i++) {
+					keyStates[i] = false;
+				}
+				stageGroupSelectPanel.resetKeyStates();
+				// 返回标题界面
+				currentPanelState = PanelState.TITLE;
+				System.out.println("返回标题界面");
+			}
+		});
+		stageGroupSelectPanel.setKeyStateProvider(keyStateProvider);
+		// 初始化关卡组列表，传递正确的 gameWorld 实例
+		stageGroupSelectPanel.initStageGroups(gameWorld);
+		
+		// 创建玩家选择面板
+		playerSelectPanel = new PlayerSelectPanel(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new PlayerSelectPanel.PlayerSelectCallback() {
+			@Override
+			public void onPlayerSelected(Player selectedPlayer) {
+				// 重置按键状态
+				for (int i = 0; i < keyStates.length; i++) {
+					keyStates[i] = false;
+				}
+				playerSelectPanel.resetKeyStates();
+				// 开始游戏
+					player = selectedPlayer;
+					player.setKeyStateProvider(keyStateProvider);
+					gamePanel.setPlayer(player);
+					// 设置游戏世界到游戏面板
+					gamePanel.setGameWorld(gameWorld);
+					currentPanelState = PanelState.GAME;
+					// 停止标题音乐
+					ALAudioManager.getInstance().stopMusic("title");
+					// 启动选中的关卡组
+					if (selectedStageGroup != null) {
+						selectedStageGroup.start();
+						System.out.println("启动关卡组: " + selectedStageGroup.getDisplayName());
+					}
+					startGameLoop();
+					System.out.println("开始游戏");
+			}
+			
+			@Override
+			public void onBack() {
+				// 重置按键状态
+				for (int i = 0; i < keyStates.length; i++) {
+					keyStates[i] = false;
+				}
+				playerSelectPanel.resetKeyStates();
+				// 返回关卡组选择界面
+				currentPanelState = PanelState.STAGE_GROUP_SELECT;
+				System.out.println("返回关卡组选择界面");
+			}
+		});
+		playerSelectPanel.setKeyStateProvider(keyStateProvider);
+		
+		// 为游戏面板创建坐标系，基于游戏面板的尺寸
 		coordinateSystem = new CoordinateSystem(gamePanelWidth, TOTAL_HEIGHT);
 		stg.entity.base.Obj.setSharedCoordinateSystem(coordinateSystem);
+		System.out.println("坐标系初始化: 宽度=" + gamePanelWidth + " 高度=" + TOTAL_HEIGHT);
 		
+		// 初始化默认玩家
 		player = new DefaultPlayer(0.0f, -200.0f);
 		player.setKeyStateProvider(keyStateProvider);
 		gamePanel.setPlayer(player);
@@ -283,7 +382,7 @@ public class Window {
 	 * 获取玩家
 	 * @return 玩家实例
 	 */
-	public DefaultPlayer getPlayer() {
+	public Player getPlayer() {
 		return player;
 	}
 	
@@ -294,11 +393,27 @@ public class Window {
 		renderer.beginFrame();
 		renderer.clear(0.0f, 0.0f, 0.0f, 1.0f);
 		
-		if (showTitleScreen) {
+		switch (currentPanelState) {
+		case TITLE:
 			// 显示标题页面
 			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
 			titlePanel.render(renderer);
-		} else {
+			break;
+		case STAGE_GROUP_SELECT:
+			// 显示标题背景
+			titlePanel.drawBackgroundImage(renderer);
+			// 显示关卡组选择界面
+			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
+			stageGroupSelectPanel.render(renderer);
+			break;
+		case PLAYER_SELECT:
+			// 显示标题背景
+			titlePanel.drawBackgroundImage(renderer);
+			// 显示玩家选择界面
+			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
+			playerSelectPanel.render(renderer);
+			break;
+		case GAME:
 			// 显示游戏面板
 			renderer.setViewport(leftPanel.getX(), leftPanel.getY(), leftPanel.getWidth(), leftPanel.getHeight());
 			leftPanel.render(renderer);
@@ -311,6 +426,7 @@ public class Window {
 			
 			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
 			renderDividers();
+			break;
 		}
 		
 		renderer.endFrame();
@@ -336,7 +452,7 @@ public class Window {
 	 */
 	public void updateTitle(int objCount, int fps) {
 		if (windowHandle != 0) {
-			GLFW.glfwSetWindowTitle(windowHandle, "JavaStg Engine  obj=" + objCount + "  fps=" + fps);
+			GLFW.glfwSetWindowTitle(windowHandle, "JavaSTG  obj=" + objCount + "  fps=" + fps);
 		}
 	}
 	

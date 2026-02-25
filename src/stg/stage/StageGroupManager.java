@@ -3,7 +3,8 @@ package stg.stage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import stg.ui.GameCanvas;
+
+import stg.core.GameWorld;
 import stg.util.LogUtil;
 
 /**
@@ -51,9 +52,9 @@ public class StageGroupManager {
 
     /**
      * 初始化关卡组
-     * @param gameCanvas 游戏画布引用
+     * @param gameWorld 游戏世界引用
      */
-    public void init(GameCanvas gameCanvas) {
+    public void init(GameWorld gameWorld) {
         stageGroups.clear();
         
         try {
@@ -61,7 +62,7 @@ public class StageGroupManager {
             List<Class<?>> stageGroupClasses = discovery.discoverStageGroupClasses();
             
             // 2. 创建关卡组实例
-            List<StageGroup> instances = factory.createInstances(stageGroupClasses, gameCanvas);
+            List<StageGroup> instances = factory.createInstances(stageGroupClasses, gameWorld);
             
             // 3. 添加到管理器
             stageGroups.addAll(instances);

@@ -2,7 +2,7 @@ package user.stageGroup;
 
 import stg.stage.StageGroup;
 import stg.stage.StageGroupInfo;
-import stg.ui.GameCanvas;
+import stg.core.GameWorld;
 
 /**
  * 自定义关卡组示例
@@ -13,8 +13,8 @@ import stg.ui.GameCanvas;
     difficulty = StageGroup.Difficulty.NORMAL
 )
 public class CustomStageGroup extends StageGroup {
-    public CustomStageGroup(GameCanvas gameCanvas) {
-        super("自定义关卡组", "玩家自定义的关卡组", StageGroup.Difficulty.NORMAL, gameCanvas);
+    public CustomStageGroup(GameWorld gameWorld) {
+        super("自定义关卡组", "玩家自定义的关卡组", StageGroup.Difficulty.NORMAL, gameWorld);
     }
 
     @Override

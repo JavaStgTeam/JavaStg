@@ -1,6 +1,10 @@
 package stg.render;
 
+import stg.core.GameWorld;
 import stg.entity.player.Player;
+import stg.entity.enemy.Enemy;
+import stg.entity.bullet.Bullet;
+import stg.entity.item.Item;
 
 /**
  * 主游戏面板
@@ -16,6 +20,8 @@ public class GamePanel extends Panel {
 	public static final int GAME_LOGICAL_HEIGHT = 480;
 	/** 玩家实例 */
 	private Player player;
+	/** 游戏世界 */
+	private GameWorld gameWorld;
 	/** 坐标系转换工具 */
 	private PanelCoordinateSystem coordinateSystem;
 	
@@ -41,6 +47,14 @@ public class GamePanel extends Panel {
 	}
 	
 	/**
+	 * 设置游戏世界
+	 * @param gameWorld 游戏世界实例
+	 */
+	public void setGameWorld(GameWorld gameWorld) {
+		this.gameWorld = gameWorld;
+	}
+	
+	/**
 	 * 获取玩家
 	 * @return 玩家实例
 	 */
@@ -56,6 +70,37 @@ public class GamePanel extends Panel {
 	public void render(IRenderer renderer) {
 		renderBackground(renderer);
 		
+		// 渲染敌人
+		if (gameWorld != null) {
+			for (Enemy enemy : gameWorld.getEnemies()) {
+				if (enemy != null && enemy.isActive()) {
+					enemy.renderOnScreen(renderer);
+				}
+			}
+			
+			// 渲染敌人子弹
+			for (Bullet bullet : gameWorld.getEnemyBullets()) {
+				if (bullet != null && bullet.isActive()) {
+					bullet.renderOnScreen(renderer);
+				}
+			}
+			
+			// 渲染玩家子弹
+			for (Bullet bullet : gameWorld.getPlayerBullets()) {
+				if (bullet != null && bullet.isActive()) {
+					bullet.renderOnScreen(renderer);
+				}
+			}
+			
+			// 渲染物品
+			for (Item item : gameWorld.getItems()) {
+				if (item != null && item.isActive()) {
+					item.renderOnScreen(renderer);
+				}
+			}
+		}
+		
+		// 渲染玩家（最后渲染，确保玩家在最上层）
 		if (player != null && player.isActive()) {
 			player.renderOnScreen(renderer);
 		}

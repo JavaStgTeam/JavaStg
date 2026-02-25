@@ -2,9 +2,10 @@ package stg.entity.enemy;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
-import stg.service.render.IRenderer;
+import stg.render.IRenderer;
 import stg.util.objectpool.Resettable;
 
 /**
@@ -83,29 +84,42 @@ public abstract class Enemy extends Obj implements Resettable {
 	public void render(IRenderer renderer) {
 		if (!isActive()) return;
 
+		// 转换为屏幕坐标
+		requireCoordinateSystem();
+		float[] screenCoords = toScreenCoords(getX(), getY());
+		float screenX = screenCoords[0];
+		float screenY = screenCoords[1];
+
 		// 绘制敌人主体
-		renderer.drawCircle(getX(), getY(), getSize(), getColor());
+		Color color = getColor();
+		renderer.drawCircle(screenX, screenY, getSize(), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
 
 		// 渲染生命值条
 		renderHealthBar(renderer);
 	}
 
 	/**
-	 * 渲染生命值条 - 使用游戏逻辑坐标
+	 * 渲染生命值条 - 使用屏幕坐标
 	 * @param renderer 渲染器
 	 */
 	protected void renderHealthBar(IRenderer renderer) {
+		// 转换为屏幕坐标
+		requireCoordinateSystem();
+		float[] screenCoords = toScreenCoords(getX(), getY());
+		float screenX = screenCoords[0];
+		float screenY = screenCoords[1];
+		
 		float barWidth = getSize() * 2;
 		float barHeight = 4;
-		float barX = getX() - getSize();
-		float barY = getY() - getSize() - 8;
+		float barX = screenX - getSize();
+		float barY = screenY - getSize() - 8;
 
 		// 背景
-		renderer.drawRect(barX, barY, barWidth, barHeight, Color.GRAY);
+		renderer.drawRect(barX, barY, barWidth, barHeight, 0.5f, 0.5f, 0.5f, 1.0f);
 
 		// 生命值
 		float hpPercent = (float)hp / maxHp;
-		renderer.drawRect(barX, barY, barWidth * hpPercent, barHeight, Color.RED);
+		renderer.drawRect(barX, barY, barWidth * hpPercent, barHeight, 1.0f, 0.0f, 0.0f, 1.0f);
 	}
 
 	/**

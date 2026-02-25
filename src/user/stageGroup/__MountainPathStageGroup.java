@@ -2,7 +2,7 @@ package user.stageGroup;
 
 import stg.stage.StageGroup;
 import stg.stage.StageGroupInfo;
-import stg.ui.GameCanvas;
+import stg.core.GameWorld;
 import user.stage.__MountainPathStage;
 
 @StageGroupInfo(
@@ -11,12 +11,12 @@ import user.stage.__MountainPathStage;
     difficulty = StageGroup.Difficulty.NORMAL
 )
 public class __MountainPathStageGroup extends StageGroup {
-    public __MountainPathStageGroup(GameCanvas gameCanvas) {
-        super("东方风神录一面", "秋静叶的山道", StageGroup.Difficulty.NORMAL, gameCanvas);
+    public __MountainPathStageGroup(GameWorld gameWorld) {
+        super("东方风神录一面", "秋静叶的山道", StageGroup.Difficulty.NORMAL, gameWorld);
     }
 
     @Override
     protected void initStages() {
-        addStage(new __MountainPathStage(1, "山道", getGameCanvas()));
+        addStage(new __MountainPathStage(1, "山道", getGameWorld()));
     }
 }

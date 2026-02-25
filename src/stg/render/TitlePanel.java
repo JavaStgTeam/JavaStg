@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Font;
 
 import stg.base.KeyStateProvider;
-import stg.render.GLRenderer;
 
 /**
  * 标题页面面板
@@ -30,10 +29,24 @@ public class TitlePanel extends Panel {
 	private MenuState currentState = MenuState.MAIN_MENU;
 	private int animationFrame = 0;
 	private int backgroundTextureId = -1;
+	private boolean upPressed = false;
+	private boolean downPressed = false;
+	private boolean zPressed = false;
+	private boolean xPressed = false;
 
 	public interface TitleCallback {
 		void onGameStart();
 		void onExit();
+	}
+
+	/**
+	 * 重置按键状态
+	 */
+	public void resetKeyStates() {
+		upPressed = false;
+		downPressed = false;
+		zPressed = false;
+		xPressed = false;
 	}
 
 	private TitleCallback callback;
@@ -99,40 +112,40 @@ public class TitlePanel extends Panel {
 		if (keyStateProvider == null) return;
 
 		// 处理上下选择
-		if (keyStateProvider.isUpPressed()) {
+		boolean currentUpPressed = keyStateProvider.isUpPressed();
+		if (currentUpPressed && !upPressed) {
 			selectedIndex = (selectedIndex - 1 + MAIN_MENU_ITEMS.length) % MAIN_MENU_ITEMS.length;
-			// 防止重复触发
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		} else if (keyStateProvider.isDownPressed()) {
+			upPressed = true;
+		} else if (!currentUpPressed) {
+			upPressed = false;
+		}
+
+		boolean currentDownPressed = keyStateProvider.isDownPressed();
+		if (currentDownPressed && !downPressed) {
 			selectedIndex = (selectedIndex + 1) % MAIN_MENU_ITEMS.length;
-			// 防止重复触发
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
+			downPressed = true;
+		} else if (!currentDownPressed) {
+			downPressed = false;
 		}
 
 		// 处理确认
-		if (keyStateProvider.isZPressed()) {
+		boolean currentZPressed = keyStateProvider.isZPressed();
+		if (currentZPressed && !zPressed) {
 			handleSelection();
-			// 防止重复触发
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
+			zPressed = true;
+		} else if (!currentZPressed) {
+			zPressed = false;
 		}
 
 		// 处理退出
-		if (keyStateProvider.isXPressed()) {
+		boolean currentXPressed = keyStateProvider.isXPressed();
+		if (currentXPressed && !xPressed) {
 			if (callback != null) {
 				callback.onExit();
 			}
+			xPressed = true;
+		} else if (!currentXPressed) {
+			xPressed = false;
 		}
 	}
 
@@ -178,7 +191,7 @@ public class TitlePanel extends Panel {
 	 * 绘制背景图片
 	 * @param renderer 渲染器
 	 */
-	private void drawBackgroundImage(IRenderer renderer) {
+	public void drawBackgroundImage(IRenderer renderer) {
 		if (backgroundTextureId != -1) {
 			// 绘制背景图片，覆盖整个面板
 			renderer.drawImage(backgroundTextureId, 0, 0, getWidth(), getHeight());
@@ -195,10 +208,16 @@ public class TitlePanel extends Panel {
 		
 		// 绘制主标题
 		Font titleFont = fontManager.getTitleFont();
-		String title = "东方STG引擎";
-		float titleX = getWidth() / 2 - 150;
+		String title = "JavaSTG";
+		float titleX = getWidth() / 2 - 100;
 		float titleY = getHeight() - getHeight() / 3;
 
+		// 绘制黑色边框
+		renderer.drawText(title, titleX - 2, titleY - 2, titleFont, Color.BLACK);
+		renderer.drawText(title, titleX + 2, titleY - 2, titleFont, Color.BLACK);
+		renderer.drawText(title, titleX - 2, titleY + 2, titleFont, Color.BLACK);
+		renderer.drawText(title, titleX + 2, titleY + 2, titleFont, Color.BLACK);
+		// 绘制白色文字
 		renderer.drawText(title, titleX, titleY, titleFont, Color.WHITE);
 
 		// 绘制副标题
@@ -207,6 +226,12 @@ public class TitlePanel extends Panel {
 		float subtitleX = getWidth() / 2 - 60;
 		float subtitleY = titleY - 60;
 
+		// 绘制黑色边框
+		renderer.drawText(subtitle, subtitleX - 1, subtitleY - 1, subtitleFont, Color.BLACK);
+		renderer.drawText(subtitle, subtitleX + 1, subtitleY - 1, subtitleFont, Color.BLACK);
+		renderer.drawText(subtitle, subtitleX - 1, subtitleY + 1, subtitleFont, Color.BLACK);
+		renderer.drawText(subtitle, subtitleX + 1, subtitleY + 1, subtitleFont, Color.BLACK);
+		// 绘制灰色文字
 		renderer.drawText(subtitle, subtitleX, subtitleY, subtitleFont, Color.GRAY);
 	}
 
@@ -226,9 +251,28 @@ public class TitlePanel extends Panel {
 
 			if (i == selectedIndex) {
 				// 绘制选中效果
+				// 绘制黑色边框
+				renderer.drawText(">", x - 30 - 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 30 + 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 30 - 1, y + 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 30 + 1, y + 1, menuFont, Color.BLACK);
+				// 绘制选中颜色
 				renderer.drawText(">", x - 30, y, menuFont, SELECTED_COLOR);
+				
+				// 绘制黑色边框
+				renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(item, x + 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(item, x - 1, y + 1, menuFont, Color.BLACK);
+				renderer.drawText(item, x + 1, y + 1, menuFont, Color.BLACK);
+				// 绘制选中颜色
 				renderer.drawText(item, x, y, menuFont, SELECTED_COLOR);
 			} else {
+				// 绘制黑色边框
+				renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(item, x + 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(item, x - 1, y + 1, menuFont, Color.BLACK);
+				renderer.drawText(item, x + 1, y + 1, menuFont, Color.BLACK);
+				// 绘制未选中颜色
 				renderer.drawText(item, x, y, menuFont, UNSELECTED_COLOR);
 			}
 		}
@@ -249,7 +293,20 @@ public class TitlePanel extends Panel {
 		float hintY1 = getHeight() - getHeight() * 2 / 3;
 		float hintY2 = hintY1 - 20;
 
+		// 绘制黑色边框
+		renderer.drawText(hint1, hintX - 1, hintY1 - 1, hintFont, Color.BLACK);
+		renderer.drawText(hint1, hintX + 1, hintY1 - 1, hintFont, Color.BLACK);
+		renderer.drawText(hint1, hintX - 1, hintY1 + 1, hintFont, Color.BLACK);
+		renderer.drawText(hint1, hintX + 1, hintY1 + 1, hintFont, Color.BLACK);
+		// 绘制灰色文字
 		renderer.drawText(hint1, hintX, hintY1, hintFont, Color.GRAY);
+
+		// 绘制黑色边框
+		renderer.drawText(hint2, hintX - 1, hintY2 - 1, hintFont, Color.BLACK);
+		renderer.drawText(hint2, hintX + 1, hintY2 - 1, hintFont, Color.BLACK);
+		renderer.drawText(hint2, hintX - 1, hintY2 + 1, hintFont, Color.BLACK);
+		renderer.drawText(hint2, hintX + 1, hintY2 + 1, hintFont, Color.BLACK);
+		// 绘制灰色文字
 		renderer.drawText(hint2, hintX, hintY2, hintFont, Color.GRAY);
 	}
 

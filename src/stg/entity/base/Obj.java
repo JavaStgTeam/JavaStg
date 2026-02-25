@@ -1,6 +1,8 @@
 package stg.entity.base;
 
 import java.awt.*;
+import org.lwjgl.opengl.GL11;
+import stg.render.GLRenderer;
 import stg.render.IRenderer;
 import stg.render.IRenderable;
 import stg.util.CoordinateSystem;
@@ -18,6 +20,7 @@ import stg.util.objectpool.ObjectPoolManager;
  * @date 2026-02-16 重构坐标系统，使用固定360*480游戏逻辑尺寸
  * @date 2026-02-18 迁移到stg.entity.base包
  * @date 2026-02-21 添加对象池支持
+ * @date 2026-02-26 添加加载素材方法和纹理渲染支持
  */
 public abstract class Obj implements IRenderable {
     protected float x; // X坐标
@@ -166,32 +169,84 @@ public abstract class Obj implements IRenderable {
     }
 
     /**
-	 * 渲染物体（IRenderer版本，支持OpenGL）
-	 * @param renderer 渲染器
-	 * @throws IllegalStateException 如果坐标系统未初始化
-	 */
-	public void render(IRenderer renderer) {
-		if (!active) return;
+     * 渲染物体（IRenderer版本，支持OpenGL）
+     * @param renderer 渲染器
+     * @throws IllegalStateException 如果坐标系统未初始化
+     */
+    public void render(IRenderer renderer) {
+        if (!active) return;
 
-		requireCoordinateSystem();
-		float[] screenCoords = toScreenCoords(x, y);
-		float screenX = screenCoords[0];
-		float screenY = screenCoords[1];
-		float r = color.getRed() / 255.0f;
-		float g = color.getGreen() / 255.0f;
-		float b = color.getBlue() / 255.0f;
-		float a = color.getAlpha() / 255.0f;
-		renderer.drawCircle(screenX, screenY, size/2, r, g, b, a);
-	}
+        requireCoordinateSystem();
+        float[] screenCoords = toScreenCoords(x, y);
+        float screenX = screenCoords[0];
+        float screenY = screenCoords[1];
+        float r = color.getRed() / 255.0f;
+        float g = color.getGreen() / 255.0f;
+        float b = color.getBlue() / 255.0f;
+        float a = color.getAlpha() / 255.0f;
+        renderer.drawCircle(screenX, screenY, size/2, r, g, b, a);
+    }
+    
+    /**
+     * 渲染物体（使用纹理，支持OpenGL）
+     * @param renderer 渲染器
+     * @param textureId 纹理ID
+     * @param texX 素材在图片内的X坐标
+     * @param texY 素材在图片内的Y坐标
+     * @param texWidth 素材宽度
+     * @param texHeight 素材高度
+     * @param imgWidth 图片总宽度
+     * @param imgHeight 图片总高度
+     * @throws IllegalStateException 如果坐标系统未初始化
+     */
+    public void render(IRenderer renderer, int textureId, float texX, float texY, float texWidth, float texHeight, float imgWidth, float imgHeight) {
+        if (!active) return;
 
-	/**
-	 * 在屏幕中渲染物体
-	 * @param renderer 渲染器
-	 * @throws IllegalStateException 如果坐标系统未初始化
-	 */
-	public void renderOnScreen(IRenderer renderer) {
-		render(renderer);
-	}
+        requireCoordinateSystem();
+        float[] screenCoords = toScreenCoords(x, y);
+        float screenX = screenCoords[0];
+        float screenY = screenCoords[1];
+        
+        // 启用纹理和混合
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+        
+        // 设置颜色为白色，这样纹理的颜色会正常显示
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        
+        // 计算纹理坐标（归一化到0-1范围）
+        float texCoordX1 = texX / imgWidth;
+        float texCoordY1 = texY / imgHeight;
+        float texCoordX2 = (texX + texWidth) / imgWidth;
+        float texCoordY2 = (texY + texHeight) / imgHeight;
+        
+        // 绘制四边形，调整纹理坐标以修复上下颠倒的问题
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glTexCoord2f(texCoordX1, texCoordY2); // 左上角
+        GL11.glVertex2f(screenX - size/2, screenY - size/2);
+        GL11.glTexCoord2f(texCoordX2, texCoordY2); // 右上角
+        GL11.glVertex2f(screenX + size/2, screenY - size/2);
+        GL11.glTexCoord2f(texCoordX2, texCoordY1); // 右下角
+        GL11.glVertex2f(screenX + size/2, screenY + size/2);
+        GL11.glTexCoord2f(texCoordX1, texCoordY1); // 左下角
+        GL11.glVertex2f(screenX - size/2, screenY + size/2);
+        GL11.glEnd();
+        
+        // 禁用纹理和混合
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glDisable(GL11.GL_BLEND);
+    }
+
+    /**
+     * 在屏幕中渲染物体
+     * @param renderer 渲染器
+     * @throws IllegalStateException 如果坐标系统未初始化
+     */
+    public void renderOnScreen(IRenderer renderer) {
+        render(renderer);
+    }
 
     /**
      * 检查物体是否超出边界
@@ -553,5 +608,112 @@ public abstract class Obj implements IRenderable {
      */
     public static boolean isObjectPoolsInitialized() {
         return objectPoolsInitialized;
+    }
+    
+    /**
+     * 加载素材
+     * 使用OpenGL加载图片，支持从图片中截取特定区域的素材
+     * @param path 图片文件路径
+     * @param x 素材在图片内的X坐标
+     * @param y 素材在图片内的Y坐标
+     * @param width 素材宽度
+     * @param height 素材高度
+     * @return 纹理ID
+     */
+    public static int loadTexture(String path, float x, float y, float width, float height) {
+        // 直接使用GL11来加载纹理，不创建新的GLRenderer实例
+        // 这样可以确保在同一个OpenGL上下文中加载纹理
+        int textureId = -1;
+        
+        try (org.lwjgl.system.MemoryStack stack = org.lwjgl.system.MemoryStack.stackPush()) {
+            java.nio.IntBuffer widthBuffer = stack.mallocInt(1);
+            java.nio.IntBuffer heightBuffer = stack.mallocInt(1);
+            java.nio.IntBuffer channelsBuffer = stack.mallocInt(1);
+            
+            // 尝试从文件系统直接读取
+            java.nio.file.Path filePath = java.nio.file.Paths.get(path);
+            if (!java.nio.file.Files.exists(filePath)) {
+                // 如果文件不存在，尝试从类路径读取
+                System.out.println("文件系统中找不到图片文件: " + path + "，尝试从类路径读取");
+                // 从类路径读取图片
+                java.io.InputStream inputStream = Obj.class.getClassLoader().getResourceAsStream(path);
+                if (inputStream == null) {
+                    System.err.println("图片文件不存在: " + path);
+                    return -1;
+                }
+                
+                // 读取输入流到字节数组
+                byte[] bytes = inputStream.readAllBytes();
+                inputStream.close();
+                
+                // 分配内存并填充数据
+                java.nio.ByteBuffer buffer = org.lwjgl.system.MemoryUtil.memAlloc(bytes.length);
+                buffer.put(bytes);
+                buffer.flip();
+                
+                // 加载图片
+                java.nio.ByteBuffer image = org.lwjgl.stb.STBImage.stbi_load_from_memory(buffer, widthBuffer, heightBuffer, channelsBuffer, 4);
+                org.lwjgl.system.MemoryUtil.memFree(buffer);
+                
+                if (image == null) {
+                    System.err.println("加载图片失败: " + org.lwjgl.stb.STBImage.stbi_failure_reason());
+                    return -1;
+                }
+                
+                // 创建纹理
+                textureId = org.lwjgl.opengl.GL11.glGenTextures();
+                org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, textureId);
+                
+                // 设置纹理参数
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                
+                // 保存宽度和高度值
+                int imgWidth = widthBuffer.get();
+                int imgHeight = heightBuffer.get();
+                
+                // 上传纹理数据
+                org.lwjgl.opengl.GL11.glTexImage2D(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL11.GL_RGBA, imgWidth, imgHeight, 0, org.lwjgl.opengl.GL11.GL_RGBA, org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE, image);
+                
+                // 释放图片数据
+                org.lwjgl.stb.STBImage.stbi_image_free(image);
+                
+                System.out.println("从类路径加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
+            } else {
+                // 从文件系统直接读取
+                java.nio.ByteBuffer image = org.lwjgl.stb.STBImage.stbi_load(path, widthBuffer, heightBuffer, channelsBuffer, 4);
+                
+                if (image == null) {
+                    System.err.println("加载图片失败: " + org.lwjgl.stb.STBImage.stbi_failure_reason());
+                    return -1;
+                }
+                
+                // 创建纹理
+                textureId = org.lwjgl.opengl.GL11.glGenTextures();
+                org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, textureId);
+                
+                // 设置纹理参数
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                
+                // 保存宽度和高度值
+                int imgWidth = widthBuffer.get();
+                int imgHeight = heightBuffer.get();
+                
+                // 上传纹理数据
+                org.lwjgl.opengl.GL11.glTexImage2D(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL11.GL_RGBA, imgWidth, imgHeight, 0, org.lwjgl.opengl.GL11.GL_RGBA, org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE, image);
+                
+                // 释放图片数据
+                org.lwjgl.stb.STBImage.stbi_image_free(image);
+                
+                System.out.println("从文件系统加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("加载纹理失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return textureId;
     }
 }

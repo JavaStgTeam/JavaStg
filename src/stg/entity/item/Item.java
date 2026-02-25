@@ -72,13 +72,16 @@ public abstract class Item extends Obj implements Resettable {
 		float screenX = screenCoords[0];
 		float screenY = screenCoords[1];
 
-		stg.util.RenderUtils.enableAntiAliasing(g);
+		// 启用抗锯齿
+		g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
 		g.setColor(getColor());
 		g.fillOval((int)(screenX - getSize()), (int)(screenY - getSize()), (int)(getSize() * 2), (int)(getSize() * 2));
 
 		// 绘制高光效果
 		g.setColor(new Color(255, 255, 255, 150));
 		g.fillOval((int)(screenX - getSize() * 0.4f), (int)(screenY - getSize() * 0.4f), (int)(getSize() * 0.8f), (int)(getSize() * 0.8f));
+		// 禁用抗锯齿
+		g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_OFF);
 	}
 
 	/**
