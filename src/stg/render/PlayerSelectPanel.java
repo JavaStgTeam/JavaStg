@@ -28,6 +28,13 @@ public class PlayerSelectPanel extends Panel {
     private boolean downPressed = false;
     private boolean zPressed = false;
     private boolean xPressed = false;
+    private boolean isTransitioning = false;
+    private boolean isNewPageAnimating = false;
+    private float transitionOffset = 0.0f;
+    private float newPageOffset = 0.0f;
+    private static final float TRANSITION_SPEED = 10.0f;
+    private static final float TRANSITION_DURATION = 0.1f * 60; // 0.1秒，按60fps计算
+    private static final float NEW_PAGE_DURATION = 0.1f * 60; // 0.1秒，按60fps计算
 
     public interface PlayerSelectCallback {
         void onPlayerSelected(Player player);
@@ -157,10 +164,123 @@ public class PlayerSelectPanel extends Panel {
     private void handleSelection() {
         if (playerInfos != null && !playerInfos.isEmpty() && selectedIndex < playerInfos.size()) {
             PlayerInfo selectedInfo = playerInfos.get(selectedIndex);
-            if (callback != null) {
-                callback.onPlayerSelected(selectedInfo.getPlayer());
-            }
+            startTransition(() -> {
+                if (callback != null) {
+                    callback.onPlayerSelected(selectedInfo.getPlayer());
+                }
+            });
         }
+    }
+
+    /**
+     * 开始过渡动画
+     * @param callback 动画结束后执行的回调
+     */
+    private void startTransition(Runnable callback) {
+        isTransitioning = true;
+        transitionOffset = 0.0f;
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 第一阶段：当前页面向左消失
+                for (int i = 0; i < TRANSITION_DURATION; i++) {
+                    transitionOffset += TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 执行页面切换
+                if (callback != null) {
+                    callback.run();
+                }
+                
+                // 重置过渡状态
+                isTransitioning = false;
+                transitionOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * 开始新页面动画（从右侧进入）
+     */
+    public void startNewPageAnimation() {
+        isNewPageAnimating = true;
+        newPageOffset = getWidth() * 0.2f; // 新页面从右侧屏幕的20%位置开始，离中心更近
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 新页面从右侧平移到中间
+                for (int i = 0; i < NEW_PAGE_DURATION; i++) {
+                    newPageOffset -= TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 重置动画状态
+                isNewPageAnimating = false;
+                newPageOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * 开始返回动画（从左侧进入）
+     */
+    public void startBackAnimation() {
+        isNewPageAnimating = true;
+        newPageOffset = -getWidth() * 0.2f; // 新页面从左侧屏幕的20%位置开始，离中心更近
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 新页面从左侧平移到中间
+                for (int i = 0; i < NEW_PAGE_DURATION; i++) {
+                    newPageOffset += TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 重置动画状态
+                isNewPageAnimating = false;
+                newPageOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * 开始返回时的旧页面动画（向右移动）
+     */
+    public void startOldPageBackAnimation(Runnable callback) {
+        isTransitioning = true;
+        transitionOffset = 0.0f;
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 旧页面向右消失
+                for (int i = 0; i < TRANSITION_DURATION; i++) {
+                    transitionOffset += TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 执行页面切换
+                if (callback != null) {
+                    callback.run();
+                }
+                
+                // 重置过渡状态
+                isTransitioning = false;
+                transitionOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     /**
@@ -172,14 +292,17 @@ public class PlayerSelectPanel extends Panel {
         // 绘制背景
         drawBackground(renderer);
 
-        // 绘制标题
-        drawTitle(renderer);
-
-        // 绘制玩家列表
-        drawPlayers(renderer);
-
-        // 绘制操作提示
-        drawHints(renderer);
+        // 绘制标题和玩家列表，应用过渡动画偏移
+        float currentOffset = 0;
+        if (isTransitioning) {
+            // 过渡动画：旧页面向右移动
+            currentOffset = transitionOffset;
+        } else if (isNewPageAnimating) {
+            // 新页面动画：从右侧或左侧进入
+            currentOffset = newPageOffset;
+        }
+        drawTitle(renderer, currentOffset);
+        drawPlayers(renderer, currentOffset);
     }
 
     /**
@@ -193,54 +316,102 @@ public class PlayerSelectPanel extends Panel {
     /**
      * 绘制标题
      * @param renderer 渲染器
+     * @param offsetX 偏移量
      */
-    private void drawTitle(IRenderer renderer) {
+    private void drawTitle(IRenderer renderer, float offsetX) {
         // 获取字体管理器实例
         FontManager fontManager = FontManager.getInstance();
         Font titleFont = fontManager.getTitleFont();
         String title = "选择玩家";
-        float titleX = getWidth() / 2 - 100;
+        float titleX = getWidth() / 2 - 100 + offsetX;
         float titleY = getHeight() - getHeight() / 3;
 
+        // 绘制黑色边框
+        renderer.drawText(title, titleX - 2, titleY - 2, titleFont, Color.BLACK);
+        renderer.drawText(title, titleX + 2, titleY - 2, titleFont, Color.BLACK);
+        renderer.drawText(title, titleX - 2, titleY + 2, titleFont, Color.BLACK);
+        renderer.drawText(title, titleX + 2, titleY + 2, titleFont, Color.BLACK);
+        // 绘制白色文字
         renderer.drawText(title, titleX, titleY, titleFont, Color.WHITE);
     }
 
     /**
      * 绘制玩家列表
      * @param renderer 渲染器
+     * @param offsetX 偏移量
      */
-    private void drawPlayers(IRenderer renderer) {
+    private void drawPlayers(IRenderer renderer, float offsetX) {
         if (playerInfos == null || playerInfos.isEmpty()) {
             // 绘制无玩家提示
             FontManager fontManager = FontManager.getInstance();
-            Font menuFont = fontManager.getMenuFont();
+            Font menuFont = fontManager.getFont(32f, Font.BOLD);
             String message = "没有可用的玩家角色";
-            float x = getWidth() / 2 - 120;
-            float y = getHeight() / 2;
+            float x = getWidth() / 2 - 120 + offsetX;
+            float y = getHeight() - getHeight() / 2 - 20;
+            
+            // 绘制黑色边框
+            renderer.drawText(message, x - 1, y - 1, menuFont, Color.BLACK);
+            renderer.drawText(message, x + 1, y - 1, menuFont, Color.BLACK);
+            renderer.drawText(message, x - 1, y + 1, menuFont, Color.BLACK);
+            renderer.drawText(message, x + 1, y + 1, menuFont, Color.BLACK);
+            // 绘制未选中颜色
             renderer.drawText(message, x, y, menuFont, UNSELECTED_COLOR);
             return;
         }
 
         // 获取字体管理器实例
         FontManager fontManager = FontManager.getInstance();
-        Font menuFont = fontManager.getMenuFont();
-        Font descriptionFont = fontManager.getHintFont();
+        Font menuFont = fontManager.getFont(32f, Font.BOLD);
+        Font descriptionFont = fontManager.getFont(18f, Font.PLAIN);
 
         for (int i = 0; i < playerInfos.size(); i++) {
             PlayerInfo playerInfo = playerInfos.get(i);
             String name = playerInfo.getName();
             String description = playerInfo.getDescription();
-            float x = getWidth() / 2 - 100;
-            float y = getHeight() / 2 - 40 + i * 60;
+            float x = getWidth() / 2 - 120 + offsetX;
+            float y = getHeight() - getHeight() / 2 - 20 - i * 80;
 
             if (i == selectedIndex) {
                 // 绘制选中效果
-                renderer.drawText(">", x - 30, y, menuFont, SELECTED_COLOR);
+                // 绘制黑色边框
+                renderer.drawText(">", x - 50 - 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(">", x - 50 + 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(">", x - 50 - 1, y + 1, menuFont, Color.BLACK);
+                renderer.drawText(">", x - 50 + 1, y + 1, menuFont, Color.BLACK);
+                // 绘制选中颜色
+                renderer.drawText(">", x - 50, y, menuFont, SELECTED_COLOR);
+                
+                // 绘制黑色边框
+                renderer.drawText(name, x - 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(name, x + 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(name, x - 1, y + 1, menuFont, Color.BLACK);
+                renderer.drawText(name, x + 1, y + 1, menuFont, Color.BLACK);
+                // 绘制选中颜色
                 renderer.drawText(name, x, y, menuFont, SELECTED_COLOR);
-                renderer.drawText(description, x + 10, y + 20, descriptionFont, SELECTED_COLOR);
+                
+                // 绘制黑色边框
+                renderer.drawText(description, x + 10 - 1, y + 30 - 1, descriptionFont, Color.BLACK);
+                renderer.drawText(description, x + 10 + 1, y + 30 - 1, descriptionFont, Color.BLACK);
+                renderer.drawText(description, x + 10 - 1, y + 30 + 1, descriptionFont, Color.BLACK);
+                renderer.drawText(description, x + 10 + 1, y + 30 + 1, descriptionFont, Color.BLACK);
+                // 绘制选中颜色
+                renderer.drawText(description, x + 10, y + 30, descriptionFont, SELECTED_COLOR);
             } else {
+                // 绘制黑色边框
+                renderer.drawText(name, x - 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(name, x + 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(name, x - 1, y + 1, menuFont, Color.BLACK);
+                renderer.drawText(name, x + 1, y + 1, menuFont, Color.BLACK);
+                // 绘制未选中颜色
                 renderer.drawText(name, x, y, menuFont, UNSELECTED_COLOR);
-                renderer.drawText(description, x + 10, y + 20, descriptionFont, UNSELECTED_COLOR);
+                
+                // 绘制黑色边框
+                renderer.drawText(description, x + 10 - 1, y + 30 - 1, descriptionFont, Color.BLACK);
+                renderer.drawText(description, x + 10 + 1, y + 30 - 1, descriptionFont, Color.BLACK);
+                renderer.drawText(description, x + 10 - 1, y + 30 + 1, descriptionFont, Color.BLACK);
+                renderer.drawText(description, x + 10 + 1, y + 30 + 1, descriptionFont, Color.BLACK);
+                // 绘制未选中颜色
+                renderer.drawText(description, x + 10, y + 30, descriptionFont, UNSELECTED_COLOR);
             }
         }
     }
@@ -250,18 +421,7 @@ public class PlayerSelectPanel extends Panel {
      * @param renderer 渲染器
      */
     private void drawHints(IRenderer renderer) {
-        // 获取字体管理器实例
-        FontManager fontManager = FontManager.getInstance();
-        Font hintFont = fontManager.getHintFont();
-        String hint1 = "上下 选择玩家";
-        String hint2 = "Z 确认  X 返回";
-
-        float hintX = getWidth() / 2 - 120;
-        float hintY1 = getHeight() - 80;
-        float hintY2 = hintY1 - 20;
-
-        renderer.drawText(hint1, hintX, hintY1, hintFont, Color.GRAY);
-        renderer.drawText(hint2, hintX, hintY2, hintFont, Color.GRAY);
+        // 移除操作提示
     }
 
     /**

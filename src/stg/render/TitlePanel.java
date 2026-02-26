@@ -21,8 +21,10 @@ public class TitlePanel extends Panel {
 	}
 
 	private static final String[] MAIN_MENU_ITEMS = {
-		"开始游戏",
-		"退出游戏"
+		"start game",
+		"replay",
+		"setting",
+		"exit game"
 	};
 
 	private int selectedIndex = 0;
@@ -33,6 +35,13 @@ public class TitlePanel extends Panel {
 	private boolean downPressed = false;
 	private boolean zPressed = false;
 	private boolean xPressed = false;
+	private boolean isTransitioning = false;
+	private boolean isNewPageAnimating = false;
+	private float transitionOffset = 0.0f;
+	private float newPageOffset = 0.0f;
+	private static final float TRANSITION_SPEED = 10.0f;
+	private static final float TRANSITION_DURATION = 0.1f * 60; // 0.1秒，按60fps计算
+	private static final float NEW_PAGE_DURATION = 0.1f * 60; // 0.1秒，按60fps计算
 
 	public interface TitleCallback {
 		void onGameStart();
@@ -156,17 +165,144 @@ public class TitlePanel extends Panel {
 		switch (selectedIndex) {
 		case 0:
 			// 开始游戏
-			if (callback != null) {
-				callback.onGameStart();
-			}
+			startTransition(() -> {
+				if (callback != null) {
+					callback.onGameStart();
+				}
+			});
 			break;
 		case 1:
+			// 重玩
+			startTransition(() -> {
+				if (callback != null) {
+					callback.onGameStart();
+				}
+			});
+			break;
+		case 2:
+			// 设置
+			// 暂时不实现，留作后续扩展
+			break;
+		case 3:
 			// 退出游戏
-			if (callback != null) {
-				callback.onExit();
-			}
+			startTransition(() -> {
+				if (callback != null) {
+					callback.onExit();
+				}
+			});
 			break;
 		}
+	}
+
+	/**
+	 * 开始过渡动画（进入下一个页面，旧页面向左移动）
+	 * @param callback 动画结束后执行的回调
+	 */
+	private void startTransition(Runnable callback) {
+		isTransitioning = true;
+		transitionOffset = 0.0f;
+		
+		// 创建动画线程
+		new Thread(() -> {
+			try {
+				// 第一阶段：当前页面向左消失
+				for (int i = 0; i < TRANSITION_DURATION; i++) {
+					transitionOffset += TRANSITION_SPEED;
+					Thread.sleep(16); // 约60fps
+				}
+				
+				// 执行页面切换
+				if (callback != null) {
+					callback.run();
+				}
+				
+				// 重置过渡状态
+				isTransitioning = false;
+				transitionOffset = 0.0f;
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}).start();
+	}
+	
+	/**
+	 * 开始新页面动画（从右侧进入）
+	 */
+	public void startNewPageAnimation() {
+		isNewPageAnimating = true;
+		newPageOffset = getWidth() * 0.2f; // 新页面从右侧屏幕的20%位置开始，离中心更近
+		
+		// 创建动画线程
+		new Thread(() -> {
+			try {
+				// 新页面从右侧平移到中间
+				for (int i = 0; i < NEW_PAGE_DURATION; i++) {
+					newPageOffset -= TRANSITION_SPEED;
+					Thread.sleep(16); // 约60fps
+				}
+				
+				// 重置动画状态
+				isNewPageAnimating = false;
+				newPageOffset = 0.0f;
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}).start();
+	}
+	
+	/**
+	 * 开始返回动画（从左侧进入）
+	 */
+	public void startBackAnimation() {
+		isNewPageAnimating = true;
+		newPageOffset = -getWidth() * 0.2f; // 新页面从左侧屏幕的20%位置开始，离中心更近
+		
+		// 创建动画线程
+		new Thread(() -> {
+			try {
+				// 新页面从左侧平移到中间
+				for (int i = 0; i < NEW_PAGE_DURATION; i++) {
+					newPageOffset += TRANSITION_SPEED;
+					Thread.sleep(16); // 约60fps
+				}
+				
+				// 重置动画状态
+				isNewPageAnimating = false;
+				newPageOffset = 0.0f;
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}).start();
+	}
+	
+	/**
+	 * 开始返回时的旧页面动画（向右移动）
+	 */
+	public void startOldPageBackAnimation(Runnable callback) {
+		isTransitioning = true;
+		transitionOffset = 0.0f;
+		
+		// 创建动画线程
+		new Thread(() -> {
+			try {
+				// 旧页面向右消失
+				for (int i = 0; i < TRANSITION_DURATION; i++) {
+					transitionOffset += TRANSITION_SPEED;
+					Thread.sleep(16); // 约60fps
+				}
+				
+				// 执行页面切换
+				if (callback != null) {
+					callback.run();
+				}
+				
+				// 重置过渡状态
+				isTransitioning = false;
+				transitionOffset = 0.0f;
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}).start();
 	}
 
 	/**
@@ -178,10 +314,17 @@ public class TitlePanel extends Panel {
 		// 首先绘制背景图片
 		drawBackgroundImage(renderer);
 
-		// 然后绘制标题和菜单
-		drawTitle(renderer);
-		drawMenu(renderer);
-		drawHints(renderer);
+		// 然后绘制标题和菜单，应用过渡动画偏移
+		float currentOffset = 0;
+		if (isTransitioning) {
+			// 过渡动画：旧页面向右移动
+			currentOffset = transitionOffset;
+		} else if (isNewPageAnimating) {
+			// 新页面动画：从右侧或左侧进入
+			currentOffset = newPageOffset;
+		}
+		drawTitle(renderer, currentOffset);
+		drawMenu(renderer, currentOffset);
 
 		// 更新动画帧
 		animationFrame++;
@@ -202,14 +345,14 @@ public class TitlePanel extends Panel {
 	 * 绘制标题
 	 * @param renderer 渲染器
 	 */
-	private void drawTitle(IRenderer renderer) {
+	private void drawTitle(IRenderer renderer, float offsetX) {
 		// 获取字体管理器实例
 		FontManager fontManager = FontManager.getInstance();
 		
 		// 绘制主标题
 		Font titleFont = fontManager.getTitleFont();
 		String title = "JavaSTG";
-		float titleX = getWidth() / 2 - 100;
+		float titleX = getWidth() / 2 - 100 + offsetX;
 		float titleY = getHeight() - getHeight() / 3;
 
 		// 绘制黑色边框
@@ -219,45 +362,32 @@ public class TitlePanel extends Panel {
 		renderer.drawText(title, titleX + 2, titleY + 2, titleFont, Color.BLACK);
 		// 绘制白色文字
 		renderer.drawText(title, titleX, titleY, titleFont, Color.WHITE);
-
-		// 绘制副标题
-		Font subtitleFont = fontManager.getFont(18f, Font.PLAIN);
-		String subtitle = "Version 1.0";
-		float subtitleX = getWidth() / 2 - 60;
-		float subtitleY = titleY - 60;
-
-		// 绘制黑色边框
-		renderer.drawText(subtitle, subtitleX - 1, subtitleY - 1, subtitleFont, Color.BLACK);
-		renderer.drawText(subtitle, subtitleX + 1, subtitleY - 1, subtitleFont, Color.BLACK);
-		renderer.drawText(subtitle, subtitleX - 1, subtitleY + 1, subtitleFont, Color.BLACK);
-		renderer.drawText(subtitle, subtitleX + 1, subtitleY + 1, subtitleFont, Color.BLACK);
-		// 绘制灰色文字
-		renderer.drawText(subtitle, subtitleX, subtitleY, subtitleFont, Color.GRAY);
 	}
 
 	/**
 	 * 绘制菜单
 	 * @param renderer 渲染器
 	 */
-	private void drawMenu(IRenderer renderer) {
+	private void drawMenu(IRenderer renderer, float offsetX) {
 		// 获取字体管理器实例
 		FontManager fontManager = FontManager.getInstance();
-		Font menuFont = fontManager.getMenuFont();
+		// 获取更大加粗的菜单字体
+		Font menuFont = fontManager.getFont(32f, Font.BOLD);
 
 		for (int i = 0; i < MAIN_MENU_ITEMS.length; i++) {
 			String item = MAIN_MENU_ITEMS[i];
-			float x = getWidth() / 2 - 80;
-			float y = getHeight() - getHeight() / 2 - 20 - i * 40;
+			float x = getWidth() / 2 - 120 + offsetX;
+			float y = getHeight() - getHeight() / 2 - 20 - i * 60;
 
 			if (i == selectedIndex) {
 				// 绘制选中效果
 				// 绘制黑色边框
-				renderer.drawText(">", x - 30 - 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 30 + 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 30 - 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 30 + 1, y + 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 50 - 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 50 + 1, y - 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 50 - 1, y + 1, menuFont, Color.BLACK);
+				renderer.drawText(">", x - 50 + 1, y + 1, menuFont, Color.BLACK);
 				// 绘制选中颜色
-				renderer.drawText(">", x - 30, y, menuFont, SELECTED_COLOR);
+				renderer.drawText(">", x - 50, y, menuFont, SELECTED_COLOR);
 				
 				// 绘制黑色边框
 				renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
@@ -283,31 +413,7 @@ public class TitlePanel extends Panel {
 	 * @param renderer 渲染器
 	 */
 	private void drawHints(IRenderer renderer) {
-		// 获取字体管理器实例
-		FontManager fontManager = FontManager.getInstance();
-		Font hintFont = fontManager.getHintFont();
-		String hint1 = "上下 选择菜单";
-		String hint2 = "Z 确认  X 退出";
-
-		float hintX = getWidth() / 2 - 100;
-		float hintY1 = getHeight() - getHeight() * 2 / 3;
-		float hintY2 = hintY1 - 20;
-
-		// 绘制黑色边框
-		renderer.drawText(hint1, hintX - 1, hintY1 - 1, hintFont, Color.BLACK);
-		renderer.drawText(hint1, hintX + 1, hintY1 - 1, hintFont, Color.BLACK);
-		renderer.drawText(hint1, hintX - 1, hintY1 + 1, hintFont, Color.BLACK);
-		renderer.drawText(hint1, hintX + 1, hintY1 + 1, hintFont, Color.BLACK);
-		// 绘制灰色文字
-		renderer.drawText(hint1, hintX, hintY1, hintFont, Color.GRAY);
-
-		// 绘制黑色边框
-		renderer.drawText(hint2, hintX - 1, hintY2 - 1, hintFont, Color.BLACK);
-		renderer.drawText(hint2, hintX + 1, hintY2 - 1, hintFont, Color.BLACK);
-		renderer.drawText(hint2, hintX - 1, hintY2 + 1, hintFont, Color.BLACK);
-		renderer.drawText(hint2, hintX + 1, hintY2 + 1, hintFont, Color.BLACK);
-		// 绘制灰色文字
-		renderer.drawText(hint2, hintX, hintY2, hintFont, Color.GRAY);
+		// 移除操作提示，按照要求不要其他任何内容
 	}
 
 	/**

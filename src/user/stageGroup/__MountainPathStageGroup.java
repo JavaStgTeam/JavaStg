@@ -1,18 +1,18 @@
 package user.stageGroup;
 
+import stg.core.GameWorld;
 import stg.stage.StageGroup;
 import stg.stage.StageGroupInfo;
-import stg.core.GameWorld;
 import user.stage.__MountainPathStage;
 
 @StageGroupInfo(
-    name = "东方风神录一面",
+    name = "测试关卡",
     description = "秋静叶的山道",
     difficulty = StageGroup.Difficulty.NORMAL
 )
 public class __MountainPathStageGroup extends StageGroup {
     public __MountainPathStageGroup(GameWorld gameWorld) {
-        super("东方风神录一面", "秋静叶的山道", StageGroup.Difficulty.NORMAL, gameWorld);
+        super("测试关卡", "秋静叶的山道", StageGroup.Difficulty.NORMAL, gameWorld);
     }
 
     @Override

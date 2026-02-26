@@ -126,34 +126,44 @@ public class ALAudioManager implements IAudioManager {
     
     @Override
     public void loadSound(String name, String path) {
+        System.out.println("开始加载音效: " + name + " 路径: " + path);
         if (!initialized) {
+            System.out.println("音频管理器未初始化，正在初始化...");
             init();
+            System.out.println("音频管理器初始化完成: " + initialized);
         }
         
         try {
             // 如果已经加载过，直接返回
             if (soundBuffers.containsKey(name)) {
+                System.out.println("音效已加载: " + name);
                 return;
             }
             
             // 加载音频文件
+            System.out.println("加载音频文件: " + path);
             int bufferId = loadAudioFile(path);
             if (bufferId == -1) {
+                System.out.println("加载音频文件失败: " + path);
                 return;
             }
+            System.out.println("音频文件加载成功，缓冲区ID: " + bufferId);
             
             // 创建源池
             ConcurrentLinkedQueue<Integer> sourcePool = new ConcurrentLinkedQueue<>();
             
             // 为每个音效创建多个源
+            System.out.println("创建源池，大小: " + DEFAULT_SOUND_SOURCES_PER_SOUND);
             for (int i = 0; i < DEFAULT_SOUND_SOURCES_PER_SOUND; i++) {
                 int sourceId = AL10.alGenSources();
+                System.out.println("创建源 " + i + ": " + sourceId);
                 ALErrorChecker.checkError("ALAudioManager.loadSound() - After generating source");
                 AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
                 ALErrorChecker.checkError("ALAudioManager.loadSound() - After setting buffer");
                 AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
                 ALErrorChecker.checkError("ALAudioManager.loadSound() - After setting gain");
                 sourcePool.offer(sourceId);
+                System.out.println("源 " + sourceId + " 添加到池");
             }
             
             // 存储
@@ -161,9 +171,10 @@ public class ALAudioManager implements IAudioManager {
             soundSources.put(name, sourcePool);
             soundPaths.put(name, path);
             
-            LogUtil.info("ALAudioManager", "音效加载成功: " + name + " (" + DEFAULT_SOUND_SOURCES_PER_SOUND + "个源)");
+            System.out.println("音效加载成功: " + name + " (" + DEFAULT_SOUND_SOURCES_PER_SOUND + "个源)");
         } catch (Exception e) {
-            LogUtil.error("ALAudioManager", "加载音效失败: " + name, e);
+            System.out.println("加载音效失败: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -198,48 +209,68 @@ public class ALAudioManager implements IAudioManager {
     
     @Override
     public void playSound(String name) {
-        if (!initialized || !soundSources.containsKey(name)) {
+        System.out.println("开始播放音效: " + name);
+        if (!initialized) {
+            System.out.println("音频管理器未初始化");
+            return;
+        }
+        
+        if (!soundSources.containsKey(name)) {
+            System.out.println("音效不存在: " + name);
             return;
         }
         
         try {
             ConcurrentLinkedQueue<Integer> sourcePool = soundSources.get(name);
+            System.out.println("音效源池大小: " + sourcePool.size());
+            
             Integer sourceId = null;
             
             // 查找可用的源
             for (Integer id : sourcePool) {
-                if (AL10.alGetSourcei(id, AL10.AL_SOURCE_STATE) != AL10.AL_PLAYING) {
+                int state = AL10.alGetSourcei(id, AL10.AL_SOURCE_STATE);
+                System.out.println("源ID: " + id + " 状态: " + state);
+                if (state != AL10.AL_PLAYING) {
                     sourceId = id;
+                    System.out.println("找到可用源: " + id);
                     break;
                 }
             }
             
             // 如果没有可用源，创建新的源
             if (sourceId == null) {
+                System.out.println("没有可用源，创建新源");
                 int bufferId = soundBuffers.get(name);
+                System.out.println("缓冲区ID: " + bufferId);
                 sourceId = AL10.alGenSources();
+                System.out.println("新源ID: " + sourceId);
                 ALErrorChecker.checkError("ALAudioManager.playSound() - After generating source");
                 AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
                 ALErrorChecker.checkError("ALAudioManager.playSound() - After setting buffer");
                 AL10.alSourcef(sourceId, AL10.AL_GAIN, soundVolume);
                 ALErrorChecker.checkError("ALAudioManager.playSound() - After setting gain");
                 sourcePool.offer(sourceId);
-                LogUtil.info("ALAudioManager", "为音效 " + name + " 创建新源: " + sourceId);
+                System.out.println("新源添加到池: " + sourceId);
             }
             
             // 重置并播放
+            System.out.println("重置源: " + sourceId);
             AL10.alSourceStop(sourceId);
             ALErrorChecker.checkError("ALAudioManager.playSound() - After stopping source");
             AL10.alSourceRewind(sourceId);
             ALErrorChecker.checkError("ALAudioManager.playSound() - After rewinding source");
             
             // 播放
+            System.out.println("开始播放: " + sourceId);
             AL10.alSourcePlay(sourceId);
             ALErrorChecker.checkError("ALAudioManager.playSound() - After playing source");
             
-            LogUtil.info("ALAudioManager", "播放音效: " + name);
+            int state = AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE);
+            System.out.println("播放后状态: " + state);
+            System.out.println("音效播放完成: " + name);
         } catch (Exception e) {
-            LogUtil.error("ALAudioManager", "播放音效失败: " + name, e);
+            System.out.println("播放音效失败: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -527,35 +558,47 @@ public class ALAudioManager implements IAudioManager {
         try {
             // 尝试从文件系统直接读取
             java.nio.file.Path filePath = java.nio.file.Paths.get(path);
+            System.out.println("读取文件: " + path);
+            System.out.println("文件存在: " + java.nio.file.Files.exists(filePath));
             if (!java.nio.file.Files.exists(filePath)) {
                 // 如果文件不存在，尝试从类路径读取
-                LogUtil.warn("ALAudioManager", "文件系统中找不到音频文件: " + path + "，尝试从类路径读取");
+                System.out.println("文件系统中找不到音频文件，尝试从类路径读取: " + path);
                 InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
                 if (inputStream == null) {
-                    LogUtil.error("ALAudioManager", "音频文件不存在: " + path);
+                    System.out.println("音频文件不存在: " + path);
                     return null;
                 }
                 
                 byte[] bytes = inputStream.readAllBytes();
                 inputStream.close();
+                System.out.println("从类路径读取音频文件: " + path + " (" + bytes.length + " bytes)");
                 
                 buffer = MemoryUtil.memAlloc(bytes.length);
                 buffer.put(bytes);
                 buffer.flip();
+                System.out.println("缓冲区大小: " + buffer.limit());
             } else {
                 // 从文件系统直接读取
                 byte[] bytes = java.nio.file.Files.readAllBytes(filePath);
-                LogUtil.info("ALAudioManager", "从文件系统读取音频文件: " + path + " (" + bytes.length + " bytes)");
+                System.out.println("从文件系统读取音频文件: " + path + " (" + bytes.length + " bytes)");
                 
                 buffer = MemoryUtil.memAlloc(bytes.length);
                 buffer.put(bytes);
                 buffer.flip();
+                System.out.println("缓冲区大小: " + buffer.limit());
+                // 打印文件头信息
+                if (buffer.limit() >= 4) {
+                    int header = buffer.getInt(0);
+                    System.out.println("文件头: 0x" + Integer.toHexString(header));
+                    buffer.position(0); // 重置位置
+                }
             }
             
             success = true;
             return buffer;
         } catch (IOException e) {
-            LogUtil.error("ALAudioManager", "读取音频文件失败: " + path, e);
+            System.out.println("读取音频文件失败: " + e.getMessage());
+            e.printStackTrace();
             return null;
         } finally {
             if (!success && buffer != null) {
@@ -662,22 +705,34 @@ public class ALAudioManager implements IAudioManager {
         // 简单的WAV文件解析
         // 这里只处理PCM格式的WAV文件
         try {
-            // 检查RIFF头
-            if (data.getInt() != 0x52494646) { // RIFF
+            // 检查RIFF头（考虑小端字节序）
+            int riffHeader = data.getInt();
+            // 小端字节序转换
+            riffHeader = ((riffHeader & 0xFF) << 24) | ((riffHeader & 0xFF00) << 8) | ((riffHeader & 0xFF0000) >> 8) | ((riffHeader & 0xFF000000) >>> 24);
+            if (riffHeader != 0x52494646) { // RIFF
                 LogUtil.error("ALAudioManager", "无效的WAV文件: 缺少RIFF头");
                 return -1;
             }
             
             data.getInt(); // 文件大小
             
-            // 检查WAVE头
-            if (data.getInt() != 0x57415645) { // WAVE
+            // 检查WAVE头（考虑小端字节序）
+            int waveHeader = data.getInt();
+            // 小端字节序转换
+            waveHeader = ((waveHeader & 0xFF) << 24) | ((waveHeader & 0xFF00) << 8) | ((waveHeader & 0xFF0000) >> 8) | ((waveHeader & 0xFF000000) >>> 24);
+            if (waveHeader != 0x57415645) { // WAVE
                 LogUtil.error("ALAudioManager", "无效的WAV文件: 缺少WAVE头");
                 return -1;
             }
             
             // 寻找fmt chunk
-            while (data.getInt() != 0x666d7420) { // fmt
+            while (true) {
+                int chunkHeader = data.getInt();
+                // 小端字节序转换
+                chunkHeader = ((chunkHeader & 0xFF) << 24) | ((chunkHeader & 0xFF00) << 8) | ((chunkHeader & 0xFF0000) >> 8) | ((chunkHeader & 0xFF000000) >>> 24);
+                if (chunkHeader == 0x666d7420) { // fmt
+                    break;
+                }
                 int chunkSize = data.getInt();
                 data.position(data.position() + chunkSize);
                 if (data.position() >= data.limit()) {
@@ -702,7 +757,13 @@ public class ALAudioManager implements IAudioManager {
             }
             
             // 寻找data chunk
-            while (data.getInt() != 0x64617461) { // data
+            while (true) {
+                int chunkHeader = data.getInt();
+                // 小端字节序转换
+                chunkHeader = ((chunkHeader & 0xFF) << 24) | ((chunkHeader & 0xFF00) << 8) | ((chunkHeader & 0xFF0000) >> 8) | ((chunkHeader & 0xFF000000) >>> 24);
+                if (chunkHeader == 0x64617461) { // data
+                    break;
+                }
                 int chunkSize = data.getInt();
                 data.position(data.position() + chunkSize);
                 if (data.position() >= data.limit()) {

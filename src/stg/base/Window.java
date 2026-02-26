@@ -247,6 +247,12 @@ public class Window {
 				titlePanel.resetKeyStates();
 				// 进入关卡组选择界面
 				currentPanelState = PanelState.STAGE_GROUP_SELECT;
+				// 播放页面切换音效
+				System.out.println("播放页面切换音效");
+				ALAudioManager.getInstance().playSound("pageSwitch");
+				System.out.println("音效播放完成");
+				// 启动新页面动画
+				stageGroupSelectPanel.startNewPageAnimation();
 				System.out.println("进入关卡组选择界面");
 			}
 			
@@ -277,6 +283,12 @@ public class Window {
 				selectedStageGroup = stageGroup;
 				// 进入玩家选择界面
 				currentPanelState = PanelState.PLAYER_SELECT;
+				// 播放页面切换音效
+				System.out.println("播放页面切换音效");
+				ALAudioManager.getInstance().playSound("pageSwitch");
+				System.out.println("音效播放完成");
+				// 启动新页面动画
+				playerSelectPanel.startNewPageAnimation();
 				System.out.println("选择了关卡组: " + stageGroup.getDisplayName());
 			}
 			
@@ -287,9 +299,18 @@ public class Window {
 					keyStates[i] = false;
 				}
 				stageGroupSelectPanel.resetKeyStates();
-				// 返回标题界面
-				currentPanelState = PanelState.TITLE;
-				System.out.println("返回标题界面");
+				// 播放页面切换音效
+				System.out.println("播放页面切换音效");
+				ALAudioManager.getInstance().playSound("pageSwitch");
+				System.out.println("音效播放完成");
+				// 启动返回时的旧页面动画（向右移动）
+				stageGroupSelectPanel.startOldPageBackAnimation(() -> {
+					// 切换到标题界面
+					currentPanelState = PanelState.TITLE;
+					// 启动新页面动画（从左侧进入）
+					titlePanel.startBackAnimation();
+					System.out.println("返回标题界面");
+				});
 			}
 		});
 		stageGroupSelectPanel.setKeyStateProvider(keyStateProvider);
@@ -330,9 +351,18 @@ public class Window {
 					keyStates[i] = false;
 				}
 				playerSelectPanel.resetKeyStates();
-				// 返回关卡组选择界面
-				currentPanelState = PanelState.STAGE_GROUP_SELECT;
-				System.out.println("返回关卡组选择界面");
+				// 播放页面切换音效
+				System.out.println("播放页面切换音效");
+				ALAudioManager.getInstance().playSound("pageSwitch");
+				System.out.println("音效播放完成");
+				// 启动返回时的旧页面动画（向右移动）
+				playerSelectPanel.startOldPageBackAnimation(() -> {
+					// 切换到关卡组选择界面
+					currentPanelState = PanelState.STAGE_GROUP_SELECT;
+					// 启动新页面动画（从左侧进入）
+					stageGroupSelectPanel.startBackAnimation();
+					System.out.println("返回关卡组选择界面");
+				});
 			}
 		});
 		playerSelectPanel.setKeyStateProvider(keyStateProvider);
@@ -351,12 +381,26 @@ public class Window {
 		
 		// 加载标题音乐
 		ALAudioManager audioManager = ALAudioManager.getInstance();
+		System.out.println("初始化音频管理器...");
 		audioManager.init();
+		System.out.println("音频管理器初始化完成: " + audioManager.isInitialized());
 		// 使用绝对路径加载音频文件
 		String musicPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\audio\\music\\luastg 0.08.540 - 1.27.800.ogg";
+		System.out.println("加载标题音乐: " + musicPath);
 		audioManager.loadMusic("title", musicPath);
+		System.out.println("标题音乐加载完成");
+		// 加载页面切换音效
+		String soundPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\audio\\sfx\\se_cancel00.wav";
+		System.out.println("加载页面切换音效: " + soundPath);
+		audioManager.loadSound("pageSwitch", soundPath);
+		System.out.println("音效加载完成");
 		// 播放标题音乐（循环）
 		audioManager.playMusic("title", true);
+		System.out.println("标题音乐开始播放");
+		// 测试播放音效
+		System.out.println("测试播放音效");
+		audioManager.playSound("pageSwitch");
+		System.out.println("测试音效播放完成");
 		System.out.println("面板布局: 左侧=" + sidePanelWidth + ", 中间=" + gamePanelWidth + ", 右侧=" + sidePanelWidth);
 	}
 	

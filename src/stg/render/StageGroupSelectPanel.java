@@ -28,6 +28,13 @@ public class StageGroupSelectPanel extends Panel {
     private boolean downPressed = false;
     private boolean zPressed = false;
     private boolean xPressed = false;
+    private boolean isTransitioning = false;
+    private boolean isNewPageAnimating = false;
+    private float transitionOffset = 0.0f;
+    private float newPageOffset = 0.0f;
+    private static final float TRANSITION_SPEED = 10.0f;
+    private static final float TRANSITION_DURATION = 0.1f * 60; // 0.1秒，按60fps计算
+    private static final float NEW_PAGE_DURATION = 0.1f * 60; // 0.1秒，按60fps计算
 
     public interface StageGroupSelectCallback {
         void onStageGroupSelected(StageGroup stageGroup);
@@ -134,10 +141,123 @@ public class StageGroupSelectPanel extends Panel {
     private void handleSelection() {
         if (stageGroups != null && !stageGroups.isEmpty() && selectedIndex < stageGroups.size()) {
             StageGroup selectedGroup = stageGroups.get(selectedIndex);
-            if (callback != null) {
-                callback.onStageGroupSelected(selectedGroup);
-            }
+            startTransition(() -> {
+                if (callback != null) {
+                    callback.onStageGroupSelected(selectedGroup);
+                }
+            });
         }
+    }
+
+    /**
+     * 开始过渡动画
+     * @param callback 动画结束后执行的回调
+     */
+    private void startTransition(Runnable callback) {
+        isTransitioning = true;
+        transitionOffset = 0.0f;
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 第一阶段：当前页面向左消失
+                for (int i = 0; i < TRANSITION_DURATION; i++) {
+                    transitionOffset += TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 执行页面切换
+                if (callback != null) {
+                    callback.run();
+                }
+                
+                // 重置过渡状态
+                isTransitioning = false;
+                transitionOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * 开始新页面动画（从右侧进入）
+     */
+    public void startNewPageAnimation() {
+        isNewPageAnimating = true;
+        newPageOffset = getWidth() * 0.2f; // 新页面从右侧屏幕的20%位置开始，离中心更近
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 新页面从右侧平移到中间
+                for (int i = 0; i < NEW_PAGE_DURATION; i++) {
+                    newPageOffset -= TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 重置动画状态
+                isNewPageAnimating = false;
+                newPageOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * 开始返回动画（从左侧进入）
+     */
+    public void startBackAnimation() {
+        isNewPageAnimating = true;
+        newPageOffset = -getWidth() * 0.2f; // 新页面从左侧屏幕的20%位置开始，离中心更近
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 新页面从左侧平移到中间
+                for (int i = 0; i < NEW_PAGE_DURATION; i++) {
+                    newPageOffset += TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 重置动画状态
+                isNewPageAnimating = false;
+                newPageOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * 开始返回时的旧页面动画（向右移动）
+     */
+    public void startOldPageBackAnimation(Runnable callback) {
+        isTransitioning = true;
+        transitionOffset = 0.0f;
+        
+        // 创建动画线程
+        new Thread(() -> {
+            try {
+                // 旧页面向右消失
+                for (int i = 0; i < TRANSITION_DURATION; i++) {
+                    transitionOffset += TRANSITION_SPEED;
+                    Thread.sleep(16); // 约60fps
+                }
+                
+                // 执行页面切换
+                if (callback != null) {
+                    callback.run();
+                }
+                
+                // 重置过渡状态
+                isTransitioning = false;
+                transitionOffset = 0.0f;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     /**
@@ -149,14 +269,17 @@ public class StageGroupSelectPanel extends Panel {
         // 绘制背景
         drawBackground(renderer);
 
-        // 绘制标题
-        drawTitle(renderer);
-
-        // 绘制关卡组列表
-        drawStageGroups(renderer);
-
-        // 绘制操作提示
-        drawHints(renderer);
+        // 绘制标题和关卡组列表，应用过渡动画偏移
+        float currentOffset = 0;
+        if (isTransitioning) {
+            // 过渡动画：旧页面向右移动
+            currentOffset = transitionOffset;
+        } else if (isNewPageAnimating) {
+            // 新页面动画：从右侧或左侧进入
+            currentOffset = newPageOffset;
+        }
+        drawTitle(renderer, currentOffset);
+        drawStageGroups(renderer, currentOffset);
     }
 
     /**
@@ -171,14 +294,20 @@ public class StageGroupSelectPanel extends Panel {
      * 绘制标题
      * @param renderer 渲染器
      */
-    private void drawTitle(IRenderer renderer) {
+    private void drawTitle(IRenderer renderer, float offsetX) {
         // 获取字体管理器实例
         FontManager fontManager = FontManager.getInstance();
         Font titleFont = fontManager.getTitleFont();
         String title = "选择关卡组";
-        float titleX = getWidth() / 2 - 120;
+        float titleX = getWidth() / 2 - 120 + offsetX;
         float titleY = getHeight() - getHeight() / 3;
 
+        // 绘制黑色边框
+        renderer.drawText(title, titleX - 2, titleY - 2, titleFont, Color.BLACK);
+        renderer.drawText(title, titleX + 2, titleY - 2, titleFont, Color.BLACK);
+        renderer.drawText(title, titleX - 2, titleY + 2, titleFont, Color.BLACK);
+        renderer.drawText(title, titleX + 2, titleY + 2, titleFont, Color.BLACK);
+        // 绘制白色文字
         renderer.drawText(title, titleX, titleY, titleFont, Color.WHITE);
     }
 
@@ -186,21 +315,28 @@ public class StageGroupSelectPanel extends Panel {
      * 绘制关卡组列表
      * @param renderer 渲染器
      */
-    private void drawStageGroups(IRenderer renderer) {
+    private void drawStageGroups(IRenderer renderer, float offsetX) {
         if (stageGroups == null || stageGroups.isEmpty()) {
             // 绘制无关卡组提示
             FontManager fontManager = FontManager.getInstance();
-            Font menuFont = fontManager.getMenuFont();
+            Font menuFont = fontManager.getFont(32f, Font.BOLD);
             String message = "没有可用的关卡组";
-            float x = getWidth() / 2 - 120;
-            float y = getHeight() / 2;
+            float x = getWidth() / 2 - 120 + offsetX;
+            float y = getHeight() - getHeight() / 2 - 20;
+            
+            // 绘制黑色边框
+            renderer.drawText(message, x - 1, y - 1, menuFont, Color.BLACK);
+            renderer.drawText(message, x + 1, y - 1, menuFont, Color.BLACK);
+            renderer.drawText(message, x - 1, y + 1, menuFont, Color.BLACK);
+            renderer.drawText(message, x + 1, y + 1, menuFont, Color.BLACK);
+            // 绘制未选中颜色
             renderer.drawText(message, x, y, menuFont, UNSELECTED_COLOR);
             return;
         }
 
         // 获取字体管理器实例
         FontManager fontManager = FontManager.getInstance();
-        Font menuFont = fontManager.getMenuFont();
+        Font menuFont = fontManager.getFont(32f, Font.BOLD);
 
         int maxItems = 5; // 最多显示5个关卡组
         int startIndex = Math.max(0, selectedIndex - 2);
@@ -209,14 +345,33 @@ public class StageGroupSelectPanel extends Panel {
         for (int i = startIndex; i < endIndex; i++) {
             StageGroup stageGroup = stageGroups.get(i);
             String item = stageGroup.getDisplayName() + " - " + stageGroup.getDifficulty().getDisplayName();
-            float x = getWidth() / 2 - 150;
-            float y = getHeight() / 2 - 80 + (i - startIndex) * 40;
+            float x = getWidth() / 2 - 120 + offsetX;
+            float y = getHeight() - getHeight() / 2 - 20 - (i - startIndex) * 60;
 
             if (i == selectedIndex) {
                 // 绘制选中效果
-                renderer.drawText(">", x - 30, y, menuFont, SELECTED_COLOR);
+                // 绘制黑色边框
+                renderer.drawText(">", x - 50 - 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(">", x - 50 + 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(">", x - 50 - 1, y + 1, menuFont, Color.BLACK);
+                renderer.drawText(">", x - 50 + 1, y + 1, menuFont, Color.BLACK);
+                // 绘制选中颜色
+                renderer.drawText(">", x - 50, y, menuFont, SELECTED_COLOR);
+                
+                // 绘制黑色边框
+                renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(item, x + 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(item, x - 1, y + 1, menuFont, Color.BLACK);
+                renderer.drawText(item, x + 1, y + 1, menuFont, Color.BLACK);
+                // 绘制选中颜色
                 renderer.drawText(item, x, y, menuFont, SELECTED_COLOR);
             } else {
+                // 绘制黑色边框
+                renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(item, x + 1, y - 1, menuFont, Color.BLACK);
+                renderer.drawText(item, x - 1, y + 1, menuFont, Color.BLACK);
+                renderer.drawText(item, x + 1, y + 1, menuFont, Color.BLACK);
+                // 绘制未选中颜色
                 renderer.drawText(item, x, y, menuFont, UNSELECTED_COLOR);
             }
         }
@@ -227,18 +382,7 @@ public class StageGroupSelectPanel extends Panel {
      * @param renderer 渲染器
      */
     private void drawHints(IRenderer renderer) {
-        // 获取字体管理器实例
-        FontManager fontManager = FontManager.getInstance();
-        Font hintFont = fontManager.getHintFont();
-        String hint1 = "上下 选择关卡组";
-        String hint2 = "Z 确认  X 返回";
-
-        float hintX = getWidth() / 2 - 120;
-        float hintY1 = getHeight() - 80;
-        float hintY2 = hintY1 - 20;
-
-        renderer.drawText(hint1, hintX, hintY1, hintFont, Color.GRAY);
-        renderer.drawText(hint2, hintX, hintY2, hintFont, Color.GRAY);
+        // 移除操作提示
     }
 
     /**
