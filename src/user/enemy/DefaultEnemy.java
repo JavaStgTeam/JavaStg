@@ -2,11 +2,14 @@ package user.enemy;
 
 import java.awt.Color;
 import stg.entity.enemy.Enemy;
+import stg.util.objectpool.Pooled;
 
 /**
  * 默认敌人类 - 水平移动并在碰到版边时反弹
  * @since 2026-02-13
+ * @date 2026-02-22 添加@Pooled注解支持对象池
  */
+@Pooled(initialCapacity = 10, maxCapacity = 50, name = "DefaultEnemyPool")
 public class DefaultEnemy extends Enemy {
     private static final float ENEMY_SPEED = 5.0f; // 敌人移动速度
     private static final float ENEMY_SIZE = 20.0f; // 敌人大小

@@ -1,13 +1,14 @@
 package stg.entity.base;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
+
 import org.lwjgl.opengl.GL11;
-import stg.render.GLRenderer;
-import stg.render.IRenderer;
+
 import stg.render.IRenderable;
+import stg.render.IRenderer;
 import stg.util.CoordinateSystem;
-import stg.util.objectpool.ConcurrentLinkedObjectPool;
-import stg.util.objectpool.ObjectFactory;
+import stg.util.objectpool.ObjectPoolConfig;
 import stg.util.objectpool.ObjectPoolManager;
 
 /**
@@ -21,6 +22,7 @@ import stg.util.objectpool.ObjectPoolManager;
  * @date 2026-02-18 迁移到stg.entity.base包
  * @date 2026-02-21 添加对象池支持
  * @date 2026-02-26 添加加载素材方法和纹理渲染支持
+ * @date 2026-02-22 将对象池配置独立到 ObjectPoolConfig 类，支持@Pooled注解自动注册
  */
 public abstract class Obj implements IRenderable {
     protected float x; // X坐标
@@ -36,10 +38,11 @@ public abstract class Obj implements IRenderable {
     // 坐标系统（用于动态坐标转换）
     private static CoordinateSystem sharedCoordinateSystem;
     
-    // 对象池初始化标志
-    private static volatile boolean objectPoolsInitialized = false;
-    // 对象池初始化锁
-    private static final Object poolInitLock = new Object();
+    // 静态初始化块：当Obj类被加载时执行
+    static {
+        // 初始化对象池系统
+        ObjectPoolConfig.initialize();
+    }
 
     /**
      * 设置共享的坐标系统
@@ -83,7 +86,6 @@ public abstract class Obj implements IRenderable {
      * @param worldX 游戏世界X坐标
      * @param worldY 游戏世界Y坐标
      * @return 屏幕坐标数组 [x, y]
-     * @throws IllegalStateException 如果坐标系统未初始化
      */
     public static float[] toScreenCoords(float worldX, float worldY) {
         requireCoordinateSystem();
@@ -406,6 +408,7 @@ public abstract class Obj implements IRenderable {
     
     /**
      * 从对象池创建实例
+     * 注意：使用此方法前需要先调用 ObjectPoolConfig.initialize() 初始化对象池
      * @param <T> 对象类型
      * @param clazz 对象类型的 Class
      * @param args 构造函数参数
@@ -414,11 +417,6 @@ public abstract class Obj implements IRenderable {
     @SuppressWarnings("unchecked")
     public static <T extends Obj> T create(Class<T> clazz, Object... args) {
         try {
-            // 确保对象池已初始化
-            if (!objectPoolsInitialized) {
-                initializeObjectPools();
-            }
-            
             // 尝试从对象池获取或创建对象
             try {
                 // 获取或创建对象池
@@ -453,11 +451,9 @@ public abstract class Obj implements IRenderable {
                         
                         // 将新创建的对象添加到对象池中（如果对象池存在）
                         try {
-                            if (objectPoolsInitialized) {
-                                ObjectPoolManager.getInstance().release(object);
-                                // 重新从对象池获取，这样可以确保对象被正确跟踪
-                                return ObjectPoolManager.getInstance().acquire(clazz);
-                            }
+                            ObjectPoolManager.getInstance().release(object);
+                            // 重新从对象池获取，这样可以确保对象被正确跟踪
+                            return ObjectPoolManager.getInstance().acquire(clazz);
                         } catch (Exception e) {
                             // 忽略异常，直接返回创建的对象
                         }
@@ -490,124 +486,6 @@ public abstract class Obj implements IRenderable {
             // 如果对象池未初始化或失败，忽略异常
             // 对象会被 GC 回收
         }
-    }
-    
-    /**
-     * 初始化对象池
-     */
-    public static void initializeObjectPools() {
-        if (objectPoolsInitialized) {
-            return; // 已经初始化过
-        }
-        
-        synchronized (poolInitLock) {
-            if (objectPoolsInitialized) {
-                return; // 双重检查锁定
-            }
-            
-            try {
-                ObjectPoolManager manager = ObjectPoolManager.getInstance();
-                
-                // 注册基类对象池
-                registerPool(manager, "stg.entity.bullet.Bullet", 100, 500);
-                registerPool(manager, "stg.entity.enemy.Enemy", 20, 100);
-                registerPool(manager, "stg.entity.item.Item", 50, 200);
-                
-                // 注册用户定义的子弹类
-                registerPool(manager, "user.bullet.DefaultPlayerMainBullet", 50, 200);
-                registerPool(manager, "user.bullet.SimpleBullet", 100, 500);
-                
-                // 注册用户定义的敌人类
-                registerPool(manager, "user.enemy.DefaultEnemy", 10, 50);
-                registerPool(manager, "user.enemy.__FairyEnemy", 15, 75);
-                registerPool(manager, "user.enemy.__MidFairyEnemy", 5, 25);
-                registerPool(manager, "user.boss.__MinorikoBoss", 1, 5);
-                
-                // 初始化所有对象池
-                manager.initializeAllPools();
-                
-                objectPoolsInitialized = true;
-            } catch (Exception e) {
-                // 初始化失败，记录异常但继续运行
-                e.printStackTrace();
-            }
-        }
-    }
-    
-    /**
-     * 注册指定类型的对象池
-     * @param manager 对象池管理器
-     * @param className 类名
-     * @param initialCapacity 初始容量
-     * @param maxCapacity 最大容量
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static void registerPool(ObjectPoolManager manager, String className, int initialCapacity, int maxCapacity) {
-        try {
-            Class<?> clazz = Class.forName(className);
-            
-            // 检查是否已经注册
-            if (manager.hasPool(clazz)) {
-                return;
-            }
-            
-            // 创建对象池
-            ConcurrentLinkedObjectPool pool = new ConcurrentLinkedObjectPool(
-                new ObjectFactory() {
-                    @Override
-                    public Object create() {
-                        // 对于不同类型的对象，使用不同的默认参数
-                        try {
-                            if (className.contains("FairyEnemy")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("MidFairyEnemy")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("DefaultEnemy")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("TestBoss")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("MinorikoBoss")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("DefaultPlayerMainBullet")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("SimpleBullet")) {
-                                return clazz.getConstructor(float.class, float.class, float.class, float.class, float.class, java.awt.Color.class).newInstance(0.0f, 0.0f, 0.0f, 0.0f, 5.0f, java.awt.Color.RED);
-                            } else if (className.contains("Bullet")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("Enemy")) {
-                                return clazz.getConstructor(float.class, float.class).newInstance(0.0f, 0.0f);
-                            } else if (className.contains("Item")) {
-                                return clazz.getConstructor(float.class, float.class, float.class, float.class).newInstance(0.0f, 0.0f, 0.0f, 0.0f);
-                            } else {
-                                // 尝试使用默认构造函数
-                                return clazz.newInstance();
-                            }
-                        } catch (Exception e) {
-                            // 如果创建失败，返回一个简单的实例
-                            System.err.println("Failed to create object for " + className + ": " + e.getMessage());
-                            return null;
-                        }
-                    }
-                },
-                0, // 初始容量为 0，避免初始化时创建对象
-                maxCapacity
-            );
-            
-            // 注册对象池
-            manager.registerPool(clazz, pool);
-            System.out.println("Registered pool for " + className + ", pool size: " + pool.size());
-        } catch (Exception e) {
-            // 注册失败，记录异常但继续
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * 检查对象池是否已初始化
-     * @return 是否已初始化
-     */
-    public static boolean isObjectPoolsInitialized() {
-        return objectPoolsInitialized;
     }
     
     /**

@@ -2,12 +2,15 @@ package user.bullet;
 
 import java.awt.Color;
 import stg.entity.bullet.Bullet;
+import stg.util.objectpool.Pooled;
 
 /**
  * 简单子弹类 - 提供空的task实现
  * 用于不需要特殊task行为的子弹
  * @since 2026-02-10 创建默认实现
+ * @date 2026-02-22 添加@Pooled注解支持对象池
  */
+@Pooled(initialCapacity = 100, maxCapacity = 500, name = "SimpleBulletPool")
 public class SimpleBullet extends Bullet {
 
 	/**

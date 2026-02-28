@@ -2,12 +2,15 @@ package user.bullet;
 
 import java.awt.Color;
 import stg.entity.bullet.Bullet;
+import stg.util.objectpool.Pooled;
 
 /**
  * 默认玩家主子弹类 - 沿y方向竖直向上的子弹
  * 弹速为75像素/tick（原速度的五倍）
  * @since 2026-02-11
+ * @date 2026-02-22 添加@Pooled注解支持对象池
  */
+@Pooled(initialCapacity = 50, maxCapacity = 200, name = "PlayerMainBulletPool")
 public class DefaultPlayerMainBullet extends Bullet {
     private static final float BULLET_SPEED = 75.0f; // 弹速：75像素/tick（原速度的五倍）
     private static final float BULLET_SIZE = 4.0f; // 子弹大小

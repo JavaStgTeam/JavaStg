@@ -2,7 +2,7 @@ package stg.base;
 
 import java.awt.*;
 import javax.swing.*;
-import stg.ui.GameCanvas;
+import stg.util.RenderUtils;
 
 /**
  * 虚拟键盘面板 - 显示按键状态
@@ -12,9 +12,9 @@ import stg.ui.GameCanvas;
 public class VirtualKeyboardPanel extends JPanel {
 	private KeyStateProvider keyStateProvider;
 	private Timer updateTimer;
-	private int keyWidth = 45;
-	private int keyHeight = 45;
-	private int keyGap = 6;
+	private final int keyWidth = 45;
+	private final int keyHeight = 45;
+	private final int keyGap = 6;
 
 	private boolean upPressed = false;
 	private boolean downPressed = false;
@@ -31,7 +31,8 @@ public class VirtualKeyboardPanel extends JPanel {
 
 	/**
 	 * 构造函数 - 接受GameCanvas作为KeyStateProvider
-	 * 支持标题界面按键显示\n\t * @since 2026-01-20
+	 * 支持标题界面按键显示
+	 * @since 2026-01-20
 	 */
 	public VirtualKeyboardPanel(GameCanvas gameCanvas) {
 		this.keyStateProvider = gameCanvas;
@@ -40,7 +41,8 @@ public class VirtualKeyboardPanel extends JPanel {
 
 	/**
 	 * 构造函数 - 接受KeyStateProvider
-	 * 支持标题界面按键显示\n\t * @since 2026-01-20
+	 * 支持标题界面按键显示
+	 * @since 2026-01-20
 	 */
 	public VirtualKeyboardPanel(KeyStateProvider keyStateProvider) {
 		this.keyStateProvider = keyStateProvider;
