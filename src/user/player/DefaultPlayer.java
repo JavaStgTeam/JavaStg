@@ -1,7 +1,7 @@
 package user.player;
 
 import java.awt.Color;
-import stg.entity.base.Obj;
+
 import stg.entity.player.Player;
 
 /**
@@ -26,6 +26,6 @@ public class DefaultPlayer extends Player {
      */
     @Override
     protected void shoot() {
-        System.out.println("DefaultPlayer shoot");
+        
     }
 }

@@ -13,7 +13,7 @@ import stg.util.objectpool.ObjectPoolManager;
 
 /**
  * 游戏物体基类 - 所有游戏中的物体都继承自此类
- * @since 1.0
+ * @since 26-01-19 初始创建
  * @author JavaSTG Team
  * @date 2026-01-19 初始创建
  * @date 2026-01-20 将类移动到stg.game.obj
