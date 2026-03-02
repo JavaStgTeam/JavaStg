@@ -6,6 +6,8 @@ import stg.render.IRenderer;
  * 精灵表渲染工具类
  * 用于处理精灵表的渲染，支持动画帧的裁剪和显示
  * @since 2026-03-02
+ * @author JavaSTG Team
+ * @date 2026-03-02 添加动画帧采样位置调整
  */
 public class SpriteSheetRenderer {
     /**
@@ -48,6 +50,19 @@ public class SpriteSheetRenderer {
         // 计算纹理坐标（0-1范围）
         float texX = (float) (col * spriteWidth) / spriteSheetWidth;
         float texY = (float) (row * spriteHeight) / spriteSheetHeight;
+        
+        // 特殊处理：动画帧的采样位置调整
+        //@Author: JavaSTG Team
+        if (currentAnimation == 1) { // 左移帧
+            // 偏上3像素，需要向下调整采样位置
+            float offsetPixels = 3.0f;
+            texY += offsetPixels / spriteSheetHeight;
+        } else if (currentAnimation == 2) { // 右移帧
+            // 偏上10像素，需要向下调整采样位置
+            float offsetPixels = 10.0f;
+            texY += offsetPixels / spriteSheetHeight;
+        }
+        
         float texWidth = (float) spriteWidth / spriteSheetWidth;
         float texHeight = (float) spriteHeight / spriteSheetHeight;
         

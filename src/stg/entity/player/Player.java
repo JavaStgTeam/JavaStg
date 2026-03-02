@@ -2,9 +2,9 @@ package stg.entity.player;
 
 import java.awt.Color;
 
+import stg.base.KeyStateProvider;
 import stg.entity.base.Obj;
 import stg.render.IRenderer;
-import stg.base.KeyStateProvider;
 
 /**
  * 玩家类- 自机角色
