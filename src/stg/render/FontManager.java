@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import stg.util.ResourceManager;
 
 /**
  * 字体管理器
@@ -41,24 +42,10 @@ public class FontManager {
 	 */
 	private void loadFonts() {
 		try {
-			// 尝试不同的路径加载OPPO Sans字体
-			String[] fontPaths = {
-				"fonts/OPPO Sans 4.0.ttf",
-				"resources/fonts/OPPO Sans 4.0.ttf",
-				"fonts/OPPO+Sans+4.0.ttf",
-				"fonts/OPPO_Sans_4.0.ttf"
-			};
+			// 尝试从类路径加载字体文件
+			InputStream fontStream = getClass().getClassLoader().getResourceAsStream("resources/fonts/OPPO Sans 4.0.ttf");
 			
-			InputStream fontStream = null;
-			for (String path : fontPaths) {
-				fontStream = FontManager.class.getClassLoader().getResourceAsStream(path);
-				if (fontStream != null) {
-					System.out.println("找到字体文件: " + path);
-					break;
-				}
-			}
-			
-			// 尝试使用文件系统路径
+			// 尝试使用文件系统路径（备用）
 			if (fontStream == null) {
 				File fontFile = new File("resources/fonts/OPPO Sans 4.0.ttf");
 				if (fontFile.exists()) {

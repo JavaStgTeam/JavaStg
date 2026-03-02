@@ -384,13 +384,13 @@ public class Window {
 		System.out.println("初始化音频管理器...");
 		audioManager.init();
 		System.out.println("音频管理器初始化完成: " + audioManager.isInitialized());
-		// 使用绝对路径加载音频文件
-		String musicPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\audio\\music\\luastg 0.08.540 - 1.27.800.ogg";
+		// 使用相对路径加载音频文件
+		String musicPath = "audio/music/luastg 0.08.540 - 1.27.800.ogg";
 		System.out.println("加载标题音乐: " + musicPath);
 		audioManager.loadMusic("title", musicPath);
 		System.out.println("标题音乐加载完成");
 		// 加载页面切换音效
-		String soundPath = "e:\\Myproject\\Game\\jstg_Team\\JavaStg\\resources\\audio\\sfx\\se_cancel00.wav";
+		String soundPath = "audio/sfx/se_cancel00.wav";
 		System.out.println("加载页面切换音效: " + soundPath);
 		audioManager.loadSound("pageSwitch", soundPath);
 		System.out.println("音效加载完成");

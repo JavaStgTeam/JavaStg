@@ -556,46 +556,71 @@ public class ALAudioManager implements IAudioManager {
         ByteBuffer buffer = null;
         boolean success = false;
         try {
-            // 尝试从文件系统直接读取
+            // 检查是否为绝对路径
             java.nio.file.Path filePath = java.nio.file.Paths.get(path);
-            System.out.println("读取文件: " + path);
-            System.out.println("文件存在: " + java.nio.file.Files.exists(filePath));
-            if (!java.nio.file.Files.exists(filePath)) {
-                // 如果文件不存在，尝试从类路径读取
-                System.out.println("文件系统中找不到音频文件，尝试从类路径读取: " + path);
-                InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
-                if (inputStream == null) {
-                    System.out.println("音频文件不存在: " + path);
-                    return null;
+            if (filePath.isAbsolute()) {
+                System.out.println("尝试从绝对路径读取音频文件: " + path);
+                if (java.nio.file.Files.exists(filePath)) {
+                    // 从文件系统直接读取绝对路径
+                    byte[] bytes = java.nio.file.Files.readAllBytes(filePath);
+                    System.out.println("从绝对路径读取音频文件: " + path + " (" + bytes.length + " bytes)");
+                    
+                    buffer = MemoryUtil.memAlloc(bytes.length);
+                    buffer.put(bytes);
+                    buffer.flip();
+                    System.out.println("缓冲区大小: " + buffer.limit());
+                    // 打印文件头信息
+                    if (buffer.limit() >= 4) {
+                        int header = buffer.getInt(0);
+                        System.out.println("文件头: 0x" + Integer.toHexString(header));
+                        buffer.position(0); // 重置位置
+                    }
+                    success = true;
+                    return buffer;
+                }
+            } else {
+                // 尝试从类路径读取（优先）
+                System.out.println("尝试从类路径读取音频文件: resources/" + path);
+                InputStream inputStream = getClass().getClassLoader().getResourceAsStream("resources/" + path);
+                if (inputStream != null) {
+                    byte[] bytes = inputStream.readAllBytes();
+                    inputStream.close();
+                    System.out.println("从类路径读取音频文件: " + path + " (" + bytes.length + " bytes)");
+                    
+                    buffer = MemoryUtil.memAlloc(bytes.length);
+                    buffer.put(bytes);
+                    buffer.flip();
+                    System.out.println("缓冲区大小: " + buffer.limit());
+                    success = true;
+                    return buffer;
                 }
                 
-                byte[] bytes = inputStream.readAllBytes();
-                inputStream.close();
-                System.out.println("从类路径读取音频文件: " + path + " (" + bytes.length + " bytes)");
-                
-                buffer = MemoryUtil.memAlloc(bytes.length);
-                buffer.put(bytes);
-                buffer.flip();
-                System.out.println("缓冲区大小: " + buffer.limit());
-            } else {
-                // 从文件系统直接读取
-                byte[] bytes = java.nio.file.Files.readAllBytes(filePath);
-                System.out.println("从文件系统读取音频文件: " + path + " (" + bytes.length + " bytes)");
-                
-                buffer = MemoryUtil.memAlloc(bytes.length);
-                buffer.put(bytes);
-                buffer.flip();
-                System.out.println("缓冲区大小: " + buffer.limit());
-                // 打印文件头信息
-                if (buffer.limit() >= 4) {
-                    int header = buffer.getInt(0);
-                    System.out.println("文件头: 0x" + Integer.toHexString(header));
-                    buffer.position(0); // 重置位置
+                // 尝试从文件系统读取相对路径（备用）
+                java.nio.file.Path relativePath = java.nio.file.Paths.get("resources/" + path);
+                System.out.println("尝试从文件系统读取音频文件: " + relativePath);
+                System.out.println("文件存在: " + java.nio.file.Files.exists(relativePath));
+                if (java.nio.file.Files.exists(relativePath)) {
+                    // 从文件系统直接读取
+                    byte[] bytes = java.nio.file.Files.readAllBytes(relativePath);
+                    System.out.println("从文件系统读取音频文件: " + path + " (" + bytes.length + " bytes)");
+                    
+                    buffer = MemoryUtil.memAlloc(bytes.length);
+                    buffer.put(bytes);
+                    buffer.flip();
+                    System.out.println("缓冲区大小: " + buffer.limit());
+                    // 打印文件头信息
+                    if (buffer.limit() >= 4) {
+                        int header = buffer.getInt(0);
+                        System.out.println("文件头: 0x" + Integer.toHexString(header));
+                        buffer.position(0); // 重置位置
+                    }
+                    success = true;
+                    return buffer;
                 }
             }
             
-            success = true;
-            return buffer;
+            System.out.println("音频文件不存在: " + path);
+            return null;
         } catch (IOException e) {
             System.out.println("读取音频文件失败: " + e.getMessage());
             e.printStackTrace();
