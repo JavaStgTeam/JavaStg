@@ -171,10 +171,11 @@ public abstract class Obj implements IRenderable {
     }
 
     /**
-     * 渲染物体（IRenderer版本，支持OpenGL）
+     * 渲染物体,仅用于纯色物体渲染
      * @param renderer 渲染器
      * @throws IllegalStateException 如果坐标系统未初始化
      */
+    @Override
     public void render(IRenderer renderer) {
         if (!active) return;
 
@@ -190,7 +191,7 @@ public abstract class Obj implements IRenderable {
     }
     
     /**
-     * 渲染物体（使用纹理，支持OpenGL）
+     * 渲染物体,使用纹理，支持OpenGL
      * @param renderer 渲染器
      * @param textureId 纹理ID
      * @param texX 素材在图片内的X坐标
@@ -255,6 +256,7 @@ public abstract class Obj implements IRenderable {
      * @return 是否超出边界
      * @throws IllegalStateException 如果坐标系统未初始化
      */
+    //TODO,整理到新的工具类
     public boolean isOutOfBounds() {
         requireCoordinateSystem();
         CoordinateSystem cs = sharedCoordinateSystem;
@@ -428,6 +430,7 @@ public abstract class Obj implements IRenderable {
                     // 设置对象的属性
                     if (args.length >= 2) {
                         // 处理不同类型的参数
+                        //TODO,存在访问安全问题
                         if (args[0] instanceof Number) {
                             object.setX(((Number) args[0]).floatValue());
                         }
@@ -498,6 +501,7 @@ public abstract class Obj implements IRenderable {
      * @param height 素材高度
      * @return 纹理ID
      */
+    //TODO,整理到新的工具类
     public static int loadTexture(String path, float x, float y, float width, float height) {
         // 直接使用GL11来加载纹理，不创建新的GLRenderer实例
         // 这样可以确保在同一个OpenGL上下文中加载纹理
