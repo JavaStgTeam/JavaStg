@@ -179,5 +179,16 @@ public class CoordinateSystem {
 	public float getScaleY() {
 		return scaleY;
 	}
+
+	/**
+	 * 检查游戏逻辑坐标是否超出游戏世界边界
+	 * @param x 游戏逻辑X坐标
+	 * @param y 游戏逻辑Y坐标
+	 * @return 如果坐标超出边界返回true，否则返回false
+	 * @since 2026-03-04
+	 */
+	public boolean isOutOfBounds(float x, float y) {
+		return x < getLeftBound() || x > getRightBound() || y < getBottomBound() || y > getTopBound();
+	}
 }
 

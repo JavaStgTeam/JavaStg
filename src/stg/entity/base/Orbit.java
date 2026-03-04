@@ -2,7 +2,7 @@ package stg.entity.base;
 
 /**
  * 轨道类 - 用于描述实体的轨道运动
- * @since 26-03-04 初始创建
+ * @since 2026-03-04 初始创建
  * @author JavaSTG Team
  */
 public class Orbit {

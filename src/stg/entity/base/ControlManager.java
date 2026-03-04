@@ -2,7 +2,7 @@ package stg.entity.base;
 
 /**
  * 控制管理器 - 用于管理实体的移动、旋转和加速
- * @since 26-03-04 初始创建
+ * @since 2026-03-04 初始创建
  * @author JavaSTG Team
  */
 public class ControlManager {
