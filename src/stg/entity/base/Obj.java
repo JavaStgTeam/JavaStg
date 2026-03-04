@@ -25,6 +25,14 @@ import stg.util.objectpool.ObjectPoolManager;
  * @date 2026-02-22 将对象池配置独立到 ObjectPoolConfig 类，支持@Pooled注解自动注册
  */
 public abstract class Obj implements IRenderable {
+    // 生命周期状态枚举
+    public enum LifecycleState {
+        CREATED,    // 已创建
+        INITIALIZED, // 已初始化
+        ACTIVE,     // 活动中
+        DESTROYED   // 已销毁
+    }
+    
     protected float x; // X坐标
     protected float y; // Y坐标
     protected float vx; // X方向速度
@@ -34,6 +42,9 @@ public abstract class Obj implements IRenderable {
     protected float hitboxRadius; // 碰撞判定半径
     protected boolean active; // 激活状态
     protected int frame; // 帧计数器
+    protected LifecycleState lifecycleState; // 生命周期状态
+    protected float angle; // 角度（度），x轴正方向为0，顺时针为正
+    protected float angularVelocity; // 角速度（度/秒）
     
     // 坐标系统（用于动态坐标转换）
     private static CoordinateSystem sharedCoordinateSystem;
@@ -111,7 +122,11 @@ public abstract class Obj implements IRenderable {
         this.hitboxRadius = size;
         this.active = true;
         this.frame = 0;
+        this.angle = 0;
+        this.angularVelocity = 0;
+        this.lifecycleState = LifecycleState.CREATED;
         initBehavior();
+        init();
     }
 
     /**
@@ -121,9 +136,32 @@ public abstract class Obj implements IRenderable {
     protected void initBehavior() {
         // 子类可以重写此方法初始化行为参数
     }
+    
+    /**
+     * 初始化实体
+     * 用于初始化实体的资源和状态
+     */
+    public void init() {
+        if (lifecycleState == LifecycleState.CREATED) {
+            // 执行初始化逻辑
+            onInit();
+            lifecycleState = LifecycleState.INITIALIZED;
+        }
+    }
+    
+    /**
+     * 自定义初始化逻辑
+     * 子类可以重写此方法实现特定的初始化行为
+     */
+    protected void onInit() {
+        // 子类可以重写此方法实现特定的初始化行为
+    }
 
     /**
      * 实现每帧的自定义更新逻辑
+     * 子类可以重写此方法来实现特定的更新行为，如状态变化、动画控制等
+     * 此方法在update()方法中被调用，位于位置更新之前
+     * 注意：此方法仅在物体处于激活状态时被调用
      */
     protected void onUpdate() {
         // 子类可以重写此方法实现每帧的自定义更新逻辑
@@ -131,6 +169,10 @@ public abstract class Obj implements IRenderable {
 
     /**
      * 实现自定义移动逻辑
+     * 子类可以重写此方法来实现特定的移动行为，如路径跟随、避障等
+     * 此方法在update()方法中被调用，位于位置更新之前
+     * 注意：此方法仅在物体处于激活状态时被调用
+     * 子类可以在此方法中修改vx和vy的值，以实现复杂的移动效果
      */
     protected void onMove() {
         // 子类可以重写此方法实现自定义移动逻辑
@@ -140,6 +182,21 @@ public abstract class Obj implements IRenderable {
      * 更新物体状态
      */
     public void update() {
+        // 检查生命周期状态
+        if (lifecycleState != LifecycleState.INITIALIZED && lifecycleState != LifecycleState.ACTIVE) {
+            return;
+        }
+        
+        // 检查激活状态，如果未激活则不执行更新
+        if (!active) {
+            return;
+        }
+        
+        // 如果是首次更新，设置为活动状态
+        if (lifecycleState == LifecycleState.INITIALIZED) {
+            lifecycleState = LifecycleState.ACTIVE;
+        }
+        
         frame++;
 
         // 调用自定义更新逻辑
@@ -151,6 +208,14 @@ public abstract class Obj implements IRenderable {
         // 更新位置
         x += vx;
         y += vy;
+        
+        // 更新角度
+        angle += angularVelocity;
+        
+        // 检查边界，如果超出边界则设置为非激活状态
+        if (isOutOfBounds()) {
+            setActive(false);
+        }
     }
 
     /**
@@ -327,10 +392,47 @@ public abstract class Obj implements IRenderable {
 
     /**
      * 重置物体状态
+     * 用于对象池回收和重用时，确保对象状态完全重置
      */
     public void reset() {
         this.active = true;
         this.frame = 0;
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.angle = 0;
+        this.angularVelocity = 0;
+        this.lifecycleState = LifecycleState.CREATED;
+    }
+    
+    /**
+     * 销毁实体
+     * 用于释放实体占用的资源
+     */
+    public void destroy() {
+        if (lifecycleState != LifecycleState.DESTROYED) {
+            // 执行销毁逻辑
+            onDestroy();
+            lifecycleState = LifecycleState.DESTROYED;
+            active = false;
+        }
+    }
+    
+    /**
+     * 自定义销毁逻辑
+     * 子类可以重写此方法实现特定的销毁行为
+     */
+    protected void onDestroy() {
+        // 子类可以重写此方法实现特定的销毁行为
+    }
+    
+    /**
+     * 获取生命周期状态
+     * @return 生命周期状态
+     */
+    public LifecycleState getLifecycleState() {
+        return lifecycleState;
     }
 
     /**
@@ -395,6 +497,38 @@ public abstract class Obj implements IRenderable {
      */
     public float getHitboxRadius() {
         return hitboxRadius;
+    }
+    
+    /**
+     * 获取角度
+     * @return 角度（度）
+     */
+    public float getAngle() {
+        return angle;
+    }
+    
+    /**
+     * 设置角度
+     * @param angle 角度（度）
+     */
+    public void setAngle(float angle) {
+        this.angle = angle;
+    }
+    
+    /**
+     * 获取角速度
+     * @return 角速度（度/秒）
+     */
+    public float getAngularVelocity() {
+        return angularVelocity;
+    }
+    
+    /**
+     * 设置角速度
+     * @param angularVelocity 角速度（度/秒）
+     */
+    public void setAngularVelocity(float angularVelocity) {
+        this.angularVelocity = angularVelocity;
     }
     
     /**
