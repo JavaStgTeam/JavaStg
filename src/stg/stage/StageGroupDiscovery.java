@@ -76,7 +76,9 @@ public class StageGroupDiscovery {
         
         // 直接尝试加载已知的关卡组类
         String[] stageGroupClasses = {
-            "user.stageGroup.CustomStageGroup"
+            "user.stageGroup.CustomStageGroup",
+            "user.stageGroup.__MountainPathStageGroup",
+            "user.stageGroup.__JavaTestStageGroup"
         };
         
         for (String className : stageGroupClasses) {

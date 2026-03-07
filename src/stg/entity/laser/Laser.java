@@ -4,9 +4,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import stg.renderer.IRenderer;
-import stg.ui.GameCanvas;
-import stg.util.RenderUtils;
+
+import stg.render.IRenderer;
 
 /**
  * 激光基类- 所有激光的父类
@@ -19,7 +18,7 @@ public abstract class Laser {
 	protected float length; // 激光长度
 	protected float width; // 激光宽度
 	protected Color color; // 激光颜色
-	protected GameCanvas gameCanvas; // 画布引用
+	
 	protected boolean warningOnly; // 是否仅显示预警线
 	protected int warningTime; // 预警持续时间(帧)
 	protected int warningTimer; // 预警计时器
@@ -111,7 +110,6 @@ public abstract class Laser {
 
 		// 设置抗锯齿
 		Graphics2D g2d = (Graphics2D) g.create();
-		RenderUtils.enableAntiAliasing(g2d);
 
 		if (!active) {
 			// 渲染预警线
@@ -131,9 +129,6 @@ public abstract class Laser {
 	public void render(IRenderer renderer) {
 		if (!visible) return;
 
-		// 开启抗锯齿
-		renderer.enableAntiAliasing();
-
 		if (!active) {
 			// 渲染预警线
 			renderWarningLineGL(renderer);
@@ -141,9 +136,6 @@ public abstract class Laser {
 			// 渲染实际激光
 			renderLaserGL(renderer);
 		}
-
-		// 禁用抗锯齿
-		renderer.disableAntiAliasing();
 	}
 
 	/**
@@ -158,15 +150,8 @@ public abstract class Laser {
 		g2d.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 100));
 		g2d.setStroke(new BasicStroke(width * 0.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
-		// 使用坐标系统转换
-		if (gameCanvas != null && gameCanvas.getCoordinateSystem() != null) {
-			float[] startScreenCoords = gameCanvas.getCoordinateSystem().toScreenCoords(x, y);
-			float[] endScreenCoords = gameCanvas.getCoordinateSystem().toScreenCoords(endX, endY);
-			g2d.drawLine((int)startScreenCoords[0], (int)startScreenCoords[1], (int)endScreenCoords[0], (int)endScreenCoords[1]);
-		} else {
-			//  fallback: 直接使用游戏坐标作为屏幕坐标
-			g2d.drawLine((int)x, (int)y, (int)endX, (int)endY);
-		}
+		// 直接使用游戏坐标作为屏幕坐标
+		g2d.drawLine((int)x, (int)y, (int)endX, (int)endY);
 	}
 
 	/**
@@ -179,21 +164,11 @@ public abstract class Laser {
 
 		int screenStartX, screenStartY, screenEndX, screenEndY;
 
-		// 使用坐标系统转换
-		if (gameCanvas != null && gameCanvas.getCoordinateSystem() != null) {
-			float[] startScreenCoords = gameCanvas.getCoordinateSystem().toScreenCoords(x, y);
-			float[] endScreenCoords = gameCanvas.getCoordinateSystem().toScreenCoords(endX, endY);
-			screenStartX = (int)startScreenCoords[0];
-			screenStartY = (int)startScreenCoords[1];
-			screenEndX = (int)endScreenCoords[0];
-			screenEndY = (int)endScreenCoords[1];
-		} else {
-			//  fallback: 直接使用游戏坐标作为屏幕坐标
-			screenStartX = (int)x;
-			screenStartY = (int)y;
-			screenEndX = (int)endX;
-			screenEndY = (int)endY;
-		}
+		// 直接使用游戏坐标作为屏幕坐标
+		screenStartX = (int)x;
+		screenStartY = (int)y;
+		screenEndX = (int)endX;
+		screenEndY = (int)endY;
 
 		// 绘制激光核心
 		g2d.setColor(color);
@@ -215,7 +190,8 @@ public abstract class Laser {
 		float endY = y + (float)(Math.sin(angle) * length);
 
 		// 绘制虚线预警（使用半透明颜色模拟）
-		renderer.drawLine(x, y, endX, endY, width * 0.5f, new Color(color.getRed(), color.getGreen(), color.getBlue(), 100));
+		java.awt.Color warningColor = new java.awt.Color(color.getRed(), color.getGreen(), color.getBlue(), 100);
+		renderer.drawLine(x, y, endX, endY, warningColor.getRed() / 255f, warningColor.getGreen() / 255f, warningColor.getBlue() / 255f, warningColor.getAlpha() / 255f);
 	}
 
 	/**
@@ -227,10 +203,11 @@ public abstract class Laser {
 		float endY = y + (float)(Math.sin(angle) * length);
 
 		// 绘制激光核心
-		renderer.drawLine(x, y, endX, endY, width, color);
+		renderer.drawLine(x, y, endX, endY, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() / 255f);
 
 		// 绘制高光
-		renderer.drawLine(x, y, endX, endY, width * 0.3f, new Color(255, 255, 255, 150));
+		java.awt.Color highlightColor = new java.awt.Color(255, 255, 255, 150);
+		renderer.drawLine(x, y, endX, endY, highlightColor.getRed() / 255f, highlightColor.getGreen() / 255f, highlightColor.getBlue() / 255f, highlightColor.getAlpha() / 255f);
 	}
 
 	/**
@@ -326,12 +303,7 @@ public abstract class Laser {
 		initBehavior();
 	}
 
-	/**
-	 * 设置画布引用
-	 */
-	public void setGameCanvas(GameCanvas gameCanvas) {
-		this.gameCanvas = gameCanvas;
-	}
+
 
 	/**
 	 * 任务开始时触发的方法- 用于处理开局对话等
