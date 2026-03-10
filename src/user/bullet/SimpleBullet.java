@@ -1,6 +1,7 @@
 package user.bullet;
 
 import java.awt.Color;
+
 import stg.entity.bullet.Bullet;
 import stg.util.objectpool.Pooled;
 
@@ -29,7 +30,6 @@ public class SimpleBullet extends Bullet {
 	/**
 	 * 任务开始时触发的方法- 空实现
 	 */
-	@Override
 	protected void onTaskStart() {
 		// 空实现，不需要特殊行为
 	}
@@ -37,7 +37,6 @@ public class SimpleBullet extends Bullet {
 	/**
 	 * 任务结束时触发的方法 - 空实现
 	 */
-	@Override
 	protected void onTaskEnd() {
 		// 空实现，不需要特殊行为
 	}
