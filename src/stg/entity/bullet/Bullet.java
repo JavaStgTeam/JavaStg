@@ -28,6 +28,8 @@ public class Bullet extends Obj implements Resettable, IBullet {
     protected float sizeMultiplier = 1.0f; // 大小倍率
     protected boolean hasTrail = false; // 是否有轨迹效果
     protected float trailLength = 10.0f; // 轨迹长度
+    protected BulletSpriteSheet.BulletElement spriteElement; // 精灵元素
+    protected BulletSpriteSheet.BulletType bulletType; // 子弹类型
     
     /**
      * 构造函数
@@ -42,6 +44,26 @@ public class Bullet extends Obj implements Resettable, IBullet {
         super(x, y, vx, vy, size, color);
         // 设置碰撞判定半径为size的5倍，确保高速子弹不会穿透敌人
         setHitboxRadius(size * 5.0f);
+    }
+    
+    /**
+     * 构造函数（带精灵元素）
+     * @param x 初始X坐标
+     * @param y 初始Y坐标
+     * @param vx X方向速度
+     * @param vy Y方向速度
+     * @param size 子弹大小
+     * @param color 子弹颜色
+     * @param spriteElement 精灵元素
+     * @param bulletType 子弹类型
+     */
+    public Bullet(float x, float y, float vx, float vy, float size, Color color, 
+                 BulletSpriteSheet.BulletElement spriteElement, BulletSpriteSheet.BulletType bulletType) {
+        super(x, y, vx, vy, size, color);
+        // 设置碰撞判定半径为size的5倍，确保高速子弹不会穿透敌人
+        setHitboxRadius(size * 5.0f);
+        this.spriteElement = spriteElement;
+        this.bulletType = bulletType;
     }
 
     // ========== 伤害相关 ==========
@@ -187,15 +209,22 @@ public class Bullet extends Obj implements Resettable, IBullet {
         float screenY = screenCoords[1];
         float renderSize = getSize() * sizeMultiplier;
         
-        // 优化：避免重复设置颜色
-        g.setColor(getColor());
-        
-        // 优化：使用整数坐标进行渲染
-        int intX = Math.round(screenX - renderSize / 2);
-        int intY = Math.round(screenY - renderSize / 2);
-        int intSize = Math.round(renderSize);
-        
-        g.fillOval(intX, intY, intSize, intSize);
+        // 优先使用精灵元素进行渲染
+        if (spriteElement != null) {
+            // 这里应该使用精灵图进行渲染，暂时保留原逻辑
+            // 后续需要实现精灵图渲染逻辑
+        } else {
+            // 没有精灵元素时，使用颜色绘制
+            // 优化：避免重复设置颜色
+            g.setColor(getColor());
+            
+            // 优化：使用整数坐标进行渲染
+            int intX = Math.round(screenX - renderSize / 2);
+            int intY = Math.round(screenY - renderSize / 2);
+            int intSize = Math.round(renderSize);
+            
+            g.fillOval(intX, intY, intSize, intSize);
+        }
         
         // 渲染轨迹效果
         if (hasTrail) {
@@ -267,6 +296,8 @@ public class Bullet extends Obj implements Resettable, IBullet {
         sizeMultiplier = 1.0f;
         hasTrail = false;
         trailLength = 10.0f;
+        spriteElement = null;
+        bulletType = null;
     }
     
     // ========== 子弹属性相关方法 ==========
@@ -429,6 +460,40 @@ public class Bullet extends Obj implements Resettable, IBullet {
      */
     public void setTrailLength(float trailLength) {
         this.trailLength = trailLength;
+    }
+    
+    // ========== 精灵相关方法 ==========
+    
+    /**
+     * 获取精灵元素
+     * @return 精灵元素
+     */
+    public BulletSpriteSheet.BulletElement getSpriteElement() {
+        return spriteElement;
+    }
+    
+    /**
+     * 设置精灵元素
+     * @param spriteElement 精灵元素
+     */
+    public void setSpriteElement(BulletSpriteSheet.BulletElement spriteElement) {
+        this.spriteElement = spriteElement;
+    }
+    
+    /**
+     * 获取子弹类型
+     * @return 子弹类型
+     */
+    public BulletSpriteSheet.BulletType getBulletType() {
+        return bulletType;
+    }
+    
+    /**
+     * 设置子弹类型
+     * @param bulletType 子弹类型
+     */
+    public void setBulletType(BulletSpriteSheet.BulletType bulletType) {
+        this.bulletType = bulletType;
     }
     
     // ========== 辅助方法 ==========

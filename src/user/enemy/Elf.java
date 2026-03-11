@@ -2,6 +2,8 @@ package user.enemy;
 
 import java.awt.Color;
 
+import stg.core.GameWorld;
+import stg.entity.bullet.Bullet;
 import stg.entity.enemy.Enemy;
 import stg.render.IRenderer;
 
@@ -33,6 +35,32 @@ public class Elf extends Enemy {
         super(x, y, ENEMY_SPEED, 0, ENEMY_SIZE, ENEMY_COLOR, ENEMY_HP);
         // 延迟加载纹理，直到第一次渲染时
         System.out.println("Elf created at (" + x + ", " + y + ")");
+        // 生成时发射一次基础子弹
+        fireBullet();
+    }
+    
+    /**
+     * 发射子弹
+     */
+    private void fireBullet() {
+        // 获取游戏世界引用
+        GameWorld world = getGameWorld();
+        if (world != null) {
+            // 创建基础子弹，竖直向下发射
+            float bulletSpeed = 4.0f;
+            float bulletSize = 8.0f;
+            Color bulletColor = Color.RED;
+            
+            // 创建子弹，从敌人位置发射，竖直向下
+            Bullet bullet = new Bullet(getX(), getY(), 0, bulletSpeed, bulletSize, bulletColor);
+            bullet.setPlayerBullet(false); // 标记为敌人子弹
+            
+            // 添加到游戏世界
+            world.addEnemyBullet(bullet);
+            System.out.println("Elf fired bullet at (" + getX() + ", " + getY() + ")");
+        } else {
+            System.out.println("GameWorld is null, cannot fire bullet");
+        }
     }
 
     /**
@@ -41,7 +69,7 @@ public class Elf extends Enemy {
      */
     private int loadTexture() {
         // 直接使用GL11来加载纹理，确保在同一个OpenGL上下文中加载
-        int textureId = -1;
+        int texId = -1;
         
         try (org.lwjgl.system.MemoryStack stack = org.lwjgl.system.MemoryStack.stackPush()) {
             java.nio.IntBuffer widthBuffer = stack.mallocInt(1);
@@ -85,8 +113,8 @@ public class Elf extends Enemy {
             }
             
             // 创建纹理
-            textureId = org.lwjgl.opengl.GL11.glGenTextures();
-            org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, textureId);
+            texId = org.lwjgl.opengl.GL11.glGenTextures();
+            org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, texId);
             
             // 设置纹理参数
             org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
@@ -108,7 +136,7 @@ public class Elf extends Enemy {
             e.printStackTrace();
         }
         
-        return textureId;
+        return texId;
     }
 
     /**
