@@ -188,4 +188,11 @@ public class GameWorld {
     public void removeItem(Item item) {
         items.remove(item);
     }
+    
+    /**
+     * 清理游戏世界资源
+     */
+    public void cleanup() {
+        clear();
+    }
 }

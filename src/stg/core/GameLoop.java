@@ -114,37 +114,88 @@ public class GameLoop implements Runnable {
 						}
 						break;
 					case "GAME":
-						// 更新游戏逻辑
-						Player player = window.getPlayer();
-						if (player != null && player.isActive()) {
-							player.update();
-						}
-						
-						// 更新游戏世界和关卡组
+						// 检查是否暂停
 						try {
-							// 使用反射获取gameWorld和selectedStageGroup字段
-							java.lang.reflect.Field gameWorldField = window.getClass().getDeclaredField("gameWorld");
-							gameWorldField.setAccessible(true);
-							Object gameWorld = gameWorldField.get(window);
+							java.lang.reflect.Field isPausedField = window.getClass().getDeclaredField("isPaused");
+							isPausedField.setAccessible(true);
+							boolean isPaused = isPausedField.getBoolean(window);
 							
-							java.lang.reflect.Field stageGroupField = window.getClass().getDeclaredField("selectedStageGroup");
-							stageGroupField.setAccessible(true);
-							Object stageGroup = stageGroupField.get(window);
-							
-							// 更新关卡组
-							if (stageGroup != null) {
-								java.lang.reflect.Method updateMethod = stageGroup.getClass().getMethod("update");
-								updateMethod.invoke(stageGroup);
-							}
-							
-							// 更新游戏世界
-							if (gameWorld != null) {
-								// 假设窗口宽度和高度为1280x960
-								java.lang.reflect.Method updateMethod = gameWorld.getClass().getMethod("update", int.class, int.class);
-								updateMethod.invoke(gameWorld, 720, 960);
+							if (isPaused) {
+								// 暂停时只更新暂停菜单
+								java.lang.reflect.Field pauseMenuField = window.getClass().getDeclaredField("pauseMenu");
+								pauseMenuField.setAccessible(true);
+								Object pauseMenu = pauseMenuField.get(window);
+								if (pauseMenu != null) {
+									java.lang.reflect.Method updateMethod = pauseMenu.getClass().getMethod("update");
+									updateMethod.invoke(pauseMenu);
+								}
+							} else {
+								// 更新游戏逻辑
+								Player player = window.getPlayer();
+								if (player != null && player.isActive()) {
+									player.update();
+								}
+								
+								// 更新游戏世界和关卡组
+								try {
+									// 使用反射获取gameWorld和selectedStageGroup字段
+									java.lang.reflect.Field gameWorldField = window.getClass().getDeclaredField("gameWorld");
+									gameWorldField.setAccessible(true);
+									Object gameWorld = gameWorldField.get(window);
+									
+									java.lang.reflect.Field stageGroupField = window.getClass().getDeclaredField("selectedStageGroup");
+									stageGroupField.setAccessible(true);
+									Object stageGroup = stageGroupField.get(window);
+									
+									// 更新关卡组
+									if (stageGroup != null) {
+										java.lang.reflect.Method updateMethod = stageGroup.getClass().getMethod("update");
+										updateMethod.invoke(stageGroup);
+									}
+									
+									// 更新游戏世界
+									if (gameWorld != null) {
+										// 假设窗口宽度和高度为1280x960
+										java.lang.reflect.Method updateMethod = gameWorld.getClass().getMethod("update", int.class, int.class);
+										updateMethod.invoke(gameWorld, 720, 960);
+									}
+								} catch (Exception ex) {
+									// 忽略反射异常
+								}
 							}
 						} catch (Exception ex) {
-							// 忽略反射异常
+							// 如果反射失败，默认更新玩家
+							Player player = window.getPlayer();
+							if (player != null && player.isActive()) {
+								player.update();
+							}
+							
+							// 更新游戏世界和关卡组
+							try {
+								// 使用反射获取gameWorld和selectedStageGroup字段
+								java.lang.reflect.Field gameWorldField = window.getClass().getDeclaredField("gameWorld");
+								gameWorldField.setAccessible(true);
+								Object gameWorld = gameWorldField.get(window);
+								
+								java.lang.reflect.Field stageGroupField = window.getClass().getDeclaredField("selectedStageGroup");
+								stageGroupField.setAccessible(true);
+								Object stageGroup = stageGroupField.get(window);
+								
+								// 更新关卡组
+								if (stageGroup != null) {
+									java.lang.reflect.Method updateMethod = stageGroup.getClass().getMethod("update");
+									updateMethod.invoke(stageGroup);
+								}
+								
+								// 更新游戏世界
+								if (gameWorld != null) {
+									// 假设窗口宽度和高度为1280x960
+									java.lang.reflect.Method updateMethod = gameWorld.getClass().getMethod("update", int.class, int.class);
+									updateMethod.invoke(gameWorld, 720, 960);
+								}
+							} catch (Exception ex2) {
+								// 忽略反射异常
+							}
 						}
 						break;
 					}

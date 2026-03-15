@@ -11,6 +11,7 @@ import stg.render.GLRenderer;
 import stg.render.GamePanel;
 import stg.render.IRenderer;
 import stg.render.LeftPanel;
+import stg.render.PauseMenu;
 import stg.render.PlayerSelectPanel;
 import stg.render.RightPanel;
 import stg.render.StageGroupSelectPanel;
@@ -54,6 +55,8 @@ public class Window {
 	private StageGroupSelectPanel stageGroupSelectPanel;
 	/** 玩家选择面板 */
 	private PlayerSelectPanel playerSelectPanel;
+	/** 暂停菜单 */
+	private PauseMenu pauseMenu;
 	/** 游戏循环 */
 	private GameLoop gameLoop;
 	/** 玩家实例 */
@@ -68,6 +71,8 @@ public class Window {
 	private boolean initialized = false;
 	/** 当前显示的面板 */
 	private PanelState currentPanelState = PanelState.TITLE;
+	/** 是否暂停 */
+	private boolean isPaused = false;
 	/** 按键状态 */
 	private boolean[] keyStates = new boolean[GLFW.GLFW_KEY_LAST];
 	/** 按键状态提供者 */
@@ -147,7 +152,13 @@ public class Window {
 			}
 			
 			if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_RELEASE) {
-				GLFW.glfwSetWindowShouldClose(window, true);
+				if (currentPanelState == PanelState.GAME && !isPaused) {
+					togglePause();
+				} else if (currentPanelState == PanelState.GAME && isPaused) {
+					togglePause();
+				} else {
+					GLFW.glfwSetWindowShouldClose(window, true);
+				}
 			}
 		});
 		
@@ -185,6 +196,11 @@ public class Window {
 			@Override
 			public boolean isXPressed() {
 				return keyStates[GLFW.GLFW_KEY_X];
+			}
+			
+			@Override
+			public boolean isEscPressed() {
+				return keyStates[GLFW.GLFW_KEY_ESCAPE];
 			}
 		};
 	}
@@ -428,6 +444,25 @@ public class Window {
 		}
 		
 		System.out.println("面板布局: 左侧=" + sidePanelWidth + ", 中间=" + gamePanelWidth + ", 右侧=" + sidePanelWidth);
+		
+		// 创建暂停菜单
+		pauseMenu = new PauseMenu(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new PauseMenu.PauseCallback() {
+			@Override
+			public void onResume() {
+				togglePause();
+			}
+			
+			@Override
+			public void onReturnToTitle() {
+				returnToTitle();
+			}
+			
+			@Override
+			public void onRestart() {
+				restartGame();
+			}
+		});
+		pauseMenu.setKeyStateProvider(keyStateProvider);
 	}
 	
 	/**
@@ -496,6 +531,11 @@ public class Window {
 			
 			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
 			renderDividers();
+			
+			// 如果暂停，显示暂停菜单
+			if (isPaused) {
+				pauseMenu.render(renderer);
+			}
 			break;
 		}
 		
@@ -639,5 +679,76 @@ public class Window {
 	 */
 	public int getObjectCount() {
 		return 0;
+	}
+	
+	/**
+	 * 切换暂停状态
+	 */
+	public void togglePause() {
+		if (currentPanelState == PanelState.GAME) {
+			isPaused = !isPaused;
+			if (isPaused) {
+				System.out.println("游戏暂停");
+				pauseMenu.resetKeyStates();
+			} else {
+				System.out.println("游戏继续");
+				for (int i = 0; i < keyStates.length; i++) {
+					keyStates[i] = false;
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 检查是否暂停
+	 * @return 是否暂停
+	 */
+	public boolean isPaused() {
+		return isPaused;
+	}
+	
+	/**
+	 * 返回标题界面
+	 */
+	private void returnToTitle() {
+		isPaused = false;
+		currentPanelState = PanelState.TITLE;
+		for (int i = 0; i < keyStates.length; i++) {
+			keyStates[i] = false;
+		}
+		pauseMenu.resetKeyStates();
+		titlePanel.resetKeyStates();
+		
+		if (selectedStageGroup != null) {
+			selectedStageGroup.cleanup();
+		}
+		gameWorld.cleanup();
+		
+		if (player != null) {
+			player.reset();
+		}
+		
+		ALAudioManager.getInstance().stopMusic("title");
+		ALAudioManager.getInstance().playMusic("title", true);
+		System.out.println("返回标题界面");
+	}
+	
+	/**
+	 * 重新开始游戏
+	 */
+	private void restartGame() {
+		isPaused = false;
+		for (int i = 0; i < keyStates.length; i++) {
+			keyStates[i] = false;
+		}
+		pauseMenu.resetKeyStates();
+		
+		if (selectedStageGroup != null) {
+			selectedStageGroup.cleanup();
+			gameWorld.cleanup();
+			selectedStageGroup.reset();
+			selectedStageGroup.start();
+		}
+		System.out.println("重新开始游戏");
 	}
 }

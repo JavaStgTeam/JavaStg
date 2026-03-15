@@ -1,11 +1,12 @@
 package user.stageGroup;
 
+import stg.core.GameWorld;
 import stg.stage.StageGroup;
 import stg.stage.StageGroupInfo;
-import stg.core.GameWorld;
-
+import user.stage.TestStage;
 /**
- * 自定义关卡组示例
+ * 自定义关卡组
+ * @since 2026-02-26
  */
 @StageGroupInfo(
     name = "自定义关卡组",
@@ -19,6 +20,6 @@ public class CustomStageGroup extends StageGroup {
 
     @Override
     protected void initStages() {
-        // 自定义关卡组 - 暂无关卡
+        addStage(new TestStage(1, "测试关卡", getGameWorld()));
     }
 }
