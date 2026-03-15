@@ -145,31 +145,54 @@ public class Elf extends Enemy {
      */
     @Override
     public void render(IRenderer renderer) {
-        if (!isActive()) return;
+        try {
+            if (!isActive()) return;
 
-        // 延迟加载纹理，直到第一次渲染时
-        if (textureId == -1) {
-            textureId = loadTexture();
-            System.out.println("First render, loading texture: " + textureId);
+            // 延迟加载纹理，直到第一次渲染时
+            if (textureId == -1) {
+                textureId = loadTexture();
+                System.out.println("First render, loading texture: " + textureId);
+            }
+
+            // 调试信息
+            System.out.println("Rendering Elf at (" + getX() + ", " + getY() + "), textureId: " + textureId + ", size: " + size + ", color: " + color);
+            
+            // 使用纹理渲染
+            if (textureId != -1) {
+                // 使用Obj类的纹理渲染方法，这样可以正确渲染图片中的特定区域
+                System.out.println("Using texture render, texX: " + TEX_X + ", texY: " + TEX_Y + ", texWidth: " + TEX_WIDTH + ", texHeight: " + TEX_HEIGHT);
+                // 计算纹理坐标（归一化到0-1范围）
+                float texCoordX1 = TEX_X / IMG_WIDTH;
+                float texCoordY1 = TEX_Y / IMG_HEIGHT;
+                float texCoordX2 = (TEX_X + TEX_WIDTH) / IMG_WIDTH;
+                float texCoordY2 = (TEX_Y + TEX_HEIGHT) / IMG_HEIGHT;
+                
+                // 转换为屏幕坐标
+                requireCoordinateSystem();
+                float[] screenCoords = toScreenCoords(getX(), getY());
+                float screenX = screenCoords[0];
+                float screenY = screenCoords[1];
+                System.out.println("Screen coordinates: (" + screenX + ", " + screenY + "), size: " + size);
+                
+                // 使用renderer绘制图片
+                renderer.drawImage(textureId, screenX - size/2, screenY - size/2, size, size, texCoordX1, texCoordY1, texCoordX2 - texCoordX1, texCoordY2 - texCoordY1);
+                System.out.println("Texture render completed");
+            } else {
+                // 纹理加载失败，使用默认渲染
+                System.out.println("Texture ID is -1, using default render");
+                super.render(renderer);
+                System.out.println("Texture failed, using default render");
+            }
+
+            // 渲染生命值条
+            // 使用父类的renderHealthBar方法
+            System.out.println("Rendering health bar");
+            super.renderHealthBar(renderer);
+            System.out.println("Health bar rendered");
+        } catch (Exception e) {
+            System.err.println("Error in Elf.render(): " + e.getMessage());
+            e.printStackTrace();
         }
-
-        // 调试信息
-        System.out.println("Rendering Elf at (" + getX() + ", " + getY() + "), textureId: " + textureId);
-        
-        // 使用纹理渲染
-        if (textureId != -1) {
-            // 使用Obj类的纹理渲染方法，这样可以正确渲染图片中的特定区域
-            System.out.println("Using texture render, texX: " + TEX_X + ", texY: " + TEX_Y + ", texWidth: " + TEX_WIDTH + ", texHeight: " + TEX_HEIGHT);
-            render(renderer, textureId, TEX_X, TEX_Y, TEX_WIDTH, TEX_HEIGHT, IMG_WIDTH, IMG_HEIGHT);
-        } else {
-            // 纹理加载失败，使用默认渲染
-            System.out.println("Texture ID is -1, using default render");
-            super.render(renderer);
-            System.out.println("Texture failed, using default render");
-        }
-
-        // 渲染生命值条
-        renderHealthBar(renderer);
     }
     
     /**

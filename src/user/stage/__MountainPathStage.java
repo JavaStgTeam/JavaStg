@@ -1,11 +1,9 @@
 package user.stage;
 
-import stg.stage.Stage;
 import stg.core.GameWorld;
 import stg.entity.base.Obj;
+import stg.stage.Stage;
 import user.boss.__MinorikoBoss;
-import user.enemy.__FairyEnemy;
-import user.enemy.__MidFairyEnemy;
 import user.enemy.Elf;
 
 public class __MountainPathStage extends Stage {
@@ -46,22 +44,22 @@ public class __MountainPathStage extends Stage {
         int frame = getCurrentFrame();
         
         System.out.println("updateWaveLogic called, frame: " + frame + ", elfCount: " + elfCount);
-        
+        /*
         if (frame >= 60 && frame % 90 == 0 && fairyCount < MAX_FAIRIES) {
             float x = (float) (Math.random() * 600 - 300);
             __FairyEnemy fairy = Obj.create(__FairyEnemy.class, x, -400);
             addEnemy(fairy);
             fairyCount++;
             System.out.println("生成Fairy敌人: " + fairyCount);
-        }
-        
+        }*/
+       /*
         if (frame >= 300 && frame % 180 == 0 && midFairyCount < MAX_MID_FAIRIES) {
             float x = (float) (Math.random() * 400 - 200);
             __MidFairyEnemy midFairy = Obj.create(__MidFairyEnemy.class, x, -400);
             addEnemy(midFairy);
             midFairyCount++;
             System.out.println("生成MidFairy敌人: " + midFairyCount);
-        }
+        }*/
         
         // 每隔1秒（60帧）在屏幕正中心生成一个Elf敌人
         if (frame >= 60 && frame % 60 == 0) {
