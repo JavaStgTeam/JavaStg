@@ -12,9 +12,6 @@ resources/THlib/
 # 无效的配置文件
 *.invalid
 
-# ai调试报告
-ai_debug/
-
 # 测试相关
 **/test/**
 **/*Test*.java
