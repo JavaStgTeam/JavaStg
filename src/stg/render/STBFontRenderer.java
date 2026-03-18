@@ -87,7 +87,6 @@ public class STBFontRenderer {
 			for (String path : paths) {
 				try {
 					fontBytes = Files.readAllBytes(Paths.get(path));
-					System.out.println("字体加载成功: " + path + " (" + fontBytes.length + " bytes)");
 					break;
 				} catch (IOException e) {
 					System.err.println("字体加载失败: " + path);
@@ -106,8 +105,6 @@ public class STBFontRenderer {
 			if (!STBTruetype.stbtt_InitFont(fontInfo, fontBuffer)) {
 				throw new RuntimeException("无法初始化字体信息");
 			}
-			
-			System.out.println("STB字体渲染器初始化成功");
 		} catch (Exception e) {
 			System.err.println("字体初始化失败: " + e.getMessage());
 			e.printStackTrace();
@@ -260,7 +257,5 @@ public class STBFontRenderer {
 			fontInfo.free();
 			fontInfo = null;
 		}
-		
-		System.out.println("STB字体渲染器资源清理完成");
 	}
 }

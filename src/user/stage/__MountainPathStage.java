@@ -43,14 +43,12 @@ public class __MountainPathStage extends Stage {
     protected void updateWaveLogic() {
         int frame = getCurrentFrame();
         
-        System.out.println("updateWaveLogic called, frame: " + frame + ", elfCount: " + elfCount);
         /*
         if (frame >= 60 && frame % 90 == 0 && fairyCount < MAX_FAIRIES) {
             float x = (float) (Math.random() * 600 - 300);
             __FairyEnemy fairy = Obj.create(__FairyEnemy.class, x, -400);
             addEnemy(fairy);
             fairyCount++;
-            System.out.println("生成Fairy敌人: " + fairyCount);
         }*/
        /*
         if (frame >= 300 && frame % 180 == 0 && midFairyCount < MAX_MID_FAIRIES) {
@@ -58,7 +56,6 @@ public class __MountainPathStage extends Stage {
             __MidFairyEnemy midFairy = Obj.create(__MidFairyEnemy.class, x, -400);
             addEnemy(midFairy);
             midFairyCount++;
-            System.out.println("生成MidFairy敌人: " + midFairyCount);
         }*/
         
         // 每隔1秒（60帧）在屏幕正中心生成一个Elf敌人
@@ -68,14 +65,12 @@ public class __MountainPathStage extends Stage {
             elf.setVy(3.0f);
             addEnemy(elf);
             elfCount++;
-            System.out.println("生成Elf敌人: " + elfCount);
         }
         
         if (frame >= 900 && !hasSpawnedBoss) {
             __MinorikoBoss boss = Obj.create(__MinorikoBoss.class, 0, -300);
             addEnemy(boss);
             hasSpawnedBoss = true;
-            System.out.println("生成Boss敌人");
         }
     }
 

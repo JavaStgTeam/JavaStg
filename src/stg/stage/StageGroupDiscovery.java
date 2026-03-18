@@ -22,8 +22,6 @@ public class StageGroupDiscovery {
     public List<Class<?>> discoverStageGroupClasses() throws IOException {
         List<Class<?>> discoveredClasses = new ArrayList<>();
         
-        System.out.println("开始发现关卡组...");
-        
         // 1. 首先尝试使用注解扫描发现关卡组
         discoveredClasses.addAll(discoverByAnnotation());
         
@@ -37,7 +35,6 @@ public class StageGroupDiscovery {
             }
         }
         
-        System.out.println("发现关卡组完成，共发现 " + discoveredClasses.size() + " 个关卡组类");
         return discoveredClasses;
     }
     
@@ -48,14 +45,12 @@ public class StageGroupDiscovery {
     private List<Class<?>> discoverByAnnotation() {
         List<Class<?>> classes = new ArrayList<>();
         
-        System.out.println("尝试使用注解扫描发现关卡组...");
         try {
             List<Class<?>> annotatedClasses = AnnotationScanner.scanClassesWithAnnotation("user.stageGroup", StageGroupInfo.class);
             
             for (Class<?> clazz : annotatedClasses) {
                 if (isValidStageGroupClass(clazz)) {
                     classes.add(clazz);
-                    System.out.println("通过注解扫描发现关卡组类: " + clazz.getName());
                 }
             }
         } catch (Exception e) {
@@ -72,8 +67,6 @@ public class StageGroupDiscovery {
     private List<Class<?>> discoverByTraditionalLoading() {
         List<Class<?>> classes = new ArrayList<>();
         
-        System.out.println("注解扫描未发现关卡组，尝试使用传统方法...");
-        
         // 直接尝试加载已知的关卡组类
         String[] stageGroupClasses = {
             "user.stageGroup.CustomStageGroup",
@@ -86,7 +79,6 @@ public class StageGroupDiscovery {
                 Class<?> clazz = Class.forName(className);
                 if (isValidStageGroupClass(clazz)) {
                     classes.add(clazz);
-                    System.out.println("通过传统加载发现关卡组类: " + className);
                 }
             } catch (ClassNotFoundException e) {
                 // 类未找到，继续尝试其他类
@@ -103,8 +95,6 @@ public class StageGroupDiscovery {
      */
     private List<Class<?>> discoverByFilesystem() throws IOException {
         List<Class<?>> classes = new ArrayList<>();
-        
-        System.out.println("直接加载失败，尝试使用文件系统扫描发现关卡组...");
         
         // 扫描多个包
         String[] packageNames = {
@@ -135,7 +125,6 @@ public class StageGroupDiscovery {
                                         Class<?> clazz = Class.forName(className);
                                         if (isValidStageGroupClass(clazz)) {
                                             classes.add(clazz);
-                                            System.out.println("通过文件系统扫描发现关卡组类: " + className);
                                         }
                                     } catch (ClassNotFoundException e) {
                                         // 类未找到，继续尝试其他类

@@ -34,7 +34,6 @@ public class Elf extends Enemy {
     public Elf(float x, float y) {
         super(x, y, ENEMY_SPEED, 0, ENEMY_SIZE, ENEMY_COLOR, ENEMY_HP);
         // 延迟加载纹理，直到第一次渲染时
-        System.out.println("Elf created at (" + x + ", " + y + ")");
         // 生成时发射一次基础子弹
         fireBullet();
     }
@@ -57,9 +56,8 @@ public class Elf extends Enemy {
             
             // 添加到游戏世界
             world.addEnemyBullet(bullet);
-            System.out.println("Elf fired bullet at (0, 0) (screen center)");
         } else {
-            System.out.println("GameWorld is null, cannot fire bullet");
+            System.err.println("GameWorld is null, cannot fire bullet");
         }
     }
 
@@ -82,7 +80,6 @@ public class Elf extends Enemy {
             
             if (!java.nio.file.Files.exists(filePath)) {
                 // 如果文件不存在，尝试从类路径读取
-                System.out.println("文件系统中找不到图片文件: " + IMAGE_PATH + "，尝试从类路径读取");
                 // 从类路径读取图片
                 java.io.InputStream inputStream = getClass().getClassLoader().getResourceAsStream(IMAGE_PATH);
                 if (inputStream == null) {
@@ -129,8 +126,6 @@ public class Elf extends Enemy {
             
             // 释放图片数据
             org.lwjgl.stb.STBImage.stbi_image_free(image);
-            
-            System.out.println("加载纹理成功: " + IMAGE_PATH + " (" + imgWidth + "x" + imgHeight + ")");
         } catch (Exception e) {
             System.err.println("加载纹理失败: " + e.getMessage());
             e.printStackTrace();
@@ -151,16 +146,11 @@ public class Elf extends Enemy {
             // 延迟加载纹理，直到第一次渲染时
             if (textureId == -1) {
                 textureId = loadTexture();
-                System.out.println("First render, loading texture: " + textureId);
             }
 
-            // 调试信息
-            System.out.println("Rendering Elf at (" + getX() + ", " + getY() + "), textureId: " + textureId + ", size: " + size + ", color: " + color);
-            
             // 使用纹理渲染
             if (textureId != -1) {
                 // 使用Obj类的纹理渲染方法，这样可以正确渲染图片中的特定区域
-                System.out.println("Using texture render, texX: " + TEX_X + ", texY: " + TEX_Y + ", texWidth: " + TEX_WIDTH + ", texHeight: " + TEX_HEIGHT);
                 // 计算纹理坐标（归一化到0-1范围）
                 float texCoordX1 = TEX_X / IMG_WIDTH;
                 float texCoordY1 = TEX_Y / IMG_HEIGHT;
@@ -172,23 +162,17 @@ public class Elf extends Enemy {
                 float[] screenCoords = toScreenCoords(getX(), getY());
                 float screenX = screenCoords[0];
                 float screenY = screenCoords[1];
-                System.out.println("Screen coordinates: (" + screenX + ", " + screenY + "), size: " + size);
                 
                 // 使用renderer绘制图片
                 renderer.drawImage(textureId, screenX - size/2, screenY - size/2, size, size, texCoordX1, texCoordY1, texCoordX2 - texCoordX1, texCoordY2 - texCoordY1);
-                System.out.println("Texture render completed");
             } else {
                 // 纹理加载失败，使用默认渲染
-                System.out.println("Texture ID is -1, using default render");
                 super.render(renderer);
-                System.out.println("Texture failed, using default render");
             }
 
             // 渲染生命值条
             // 使用父类的renderHealthBar方法
-            System.out.println("Rendering health bar");
             super.renderHealthBar(renderer);
-            System.out.println("Health bar rendered");
         } catch (Exception e) {
             System.err.println("Error in Elf.render(): " + e.getMessage());
             e.printStackTrace();

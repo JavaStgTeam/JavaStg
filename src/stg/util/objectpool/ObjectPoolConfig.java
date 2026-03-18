@@ -36,7 +36,6 @@ public class ObjectPoolConfig {
                 registerHardcodedPools();
                 
                 initialized = true;
-                System.out.println("Object pools initialized successfully");
             } catch (Exception e) {
                 // 初始化失败，记录异常但继续运行
                 System.err.println("Failed to initialize object pools: " + e.getMessage());
@@ -105,7 +104,6 @@ public class ObjectPoolConfig {
             
             // 注册对象池
             manager.registerPool(clazz, pool);
-            System.out.println("Registered pool for " + className + ", pool size: " + pool.size());
         } catch (Exception e) {
             // 注册失败，记录异常但继续
             System.err.println("Failed to register pool for " + className + ": " + e.getMessage());
@@ -153,8 +151,6 @@ public class ObjectPoolConfig {
             
             // 注册对象池
             manager.registerPool(clazz, pool);
-            System.out.println("Registered pool for @Pooled class: " + clazz.getName() + 
-                " [name=" + poolName + ", initial=" + initialCapacity + ", max=" + maxCapacity + "]");
         } catch (Exception e) {
             System.err.println("Failed to register @Pooled class " + clazz.getName() + ": " + e.getMessage());
         }
