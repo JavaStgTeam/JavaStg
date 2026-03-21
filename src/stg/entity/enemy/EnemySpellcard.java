@@ -5,7 +5,7 @@ package stg.entity.enemy;
  * 用于定义Boss的攻击模式和阶段
  * @since 2026-02-14
  */
-public abstract class EnemySpellcard {
+public abstract class EnemySpellcard implements ISpellcard {
     protected String name; // 符卡名称，空字符串表示非符卡阶段
     protected int phase; // 对应阶段
     protected Boss boss; // 所属Boss
@@ -48,12 +48,21 @@ public abstract class EnemySpellcard {
     
     /**
      * 开始符卡
+     * @param boss Boss实例
      */
-    public void start() {
+    @Override
+    public void start(IBoss boss) {
         this.active = true;
         this.currentFrame = 0;
         this.hp = maxHp; // 重置生命值
         onStart();
+    }
+    
+    /**
+     * 开始符卡（兼容旧方法）
+     */
+    public void start() {
+        start(this.boss);
     }
     
     /**
@@ -155,9 +164,21 @@ public abstract class EnemySpellcard {
     /**
      * 受到伤害
      * @param damage 伤害值
+     */
+    @Override
+    public void takeDamage(int damage) {
+        hp -= damage;
+        if (hp <= 0) {
+            hp = 0;
+        }
+    }
+    
+    /**
+     * 受到伤害（兼容旧方法）
+     * @param damage 伤害值
      * @return 是否被击败
      */
-    public boolean takeDamage(int damage) {
+    public boolean takeDamageWithReturn(int damage) {
         hp -= damage;
         if (hp <= 0) {
             hp = 0;

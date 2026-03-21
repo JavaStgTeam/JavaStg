@@ -13,6 +13,9 @@ import org.lwjgl.system.MemoryUtil;
  * @since 2026-02-23
  * @author JavaSTG Team
  */
+import java.util.ArrayList;
+import java.util.List;
+
 public class GLRenderer implements IRenderer {
 	/** 窗口宽度 */
 	private int width;
@@ -20,11 +23,49 @@ public class GLRenderer implements IRenderer {
 	private int height;
 	/** 是否已初始化 */
 	private boolean initialized = false;
-	
+	/** 纹理ID列表，用于管理和释放纹理 */
+	private List<Integer> textureIds;
+
 	/**
 	 * 构造函数
 	 */
 	public GLRenderer() {
+		textureIds = new ArrayList<>();
+	}
+	
+	/**
+	 * 检查OpenGL错误
+	 * @param operation 操作名称
+	 */
+	private void checkGLError(String operation) {
+		int error = GL11.glGetError();
+		if (error != GL11.GL_NO_ERROR) {
+			System.err.println("OpenGL错误: " + operation + " - " + getGLErrorString(error));
+		}
+	}
+	
+	/**
+	 * 获取OpenGL错误字符串
+	 * @param error 错误代码
+	 * @return 错误字符串
+	 */
+	private String getGLErrorString(int error) {
+		switch (error) {
+		case GL11.GL_INVALID_ENUM:
+			return "GL_INVALID_ENUM";
+		case GL11.GL_INVALID_VALUE:
+			return "GL_INVALID_VALUE";
+		case GL11.GL_INVALID_OPERATION:
+			return "GL_INVALID_OPERATION";
+		case GL11.GL_STACK_OVERFLOW:
+			return "GL_STACK_OVERFLOW";
+		case GL11.GL_STACK_UNDERFLOW:
+			return "GL_STACK_UNDERFLOW";
+		case GL11.GL_OUT_OF_MEMORY:
+			return "GL_OUT_OF_MEMORY";
+		default:
+			return "未知错误: " + error;
+		}
 	}
 	
 	/**
@@ -37,34 +78,31 @@ public class GLRenderer implements IRenderer {
 		this.width = width;
 		this.height = height;
 		
-		System.out.println("GLRenderer: 开始初始化...");
-		
 		GL11.glEnable(GL11.GL_BLEND);
-		System.out.println("GLRenderer: 启用混合模式");
+		checkGLError("启用混合模式");
 		
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		System.out.println("GLRenderer: 设置混合函数");
+		checkGLError("设置混合函数");
 		
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		System.out.println("GLRenderer: 禁用深度测试");
+		checkGLError("禁用深度测试");
 		
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		System.out.println("GLRenderer: 设置投影矩阵模式");
+		checkGLError("设置投影矩阵模式");
 		
 		GL11.glLoadIdentity();
-		System.out.println("GLRenderer: 重置投影矩阵");
+		checkGLError("重置投影矩阵");
 		
 		GL11.glOrtho(0, width, 0, height, -1, 1);
-		System.out.println("GLRenderer: 设置正交投影");
+		checkGLError("设置正交投影");
 		
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		System.out.println("GLRenderer: 设置模型视图矩阵模式");
+		checkGLError("设置模型视图矩阵模式");
 		
 		GL11.glLoadIdentity();
-		System.out.println("GLRenderer: 重置模型视图矩阵");
+		checkGLError("重置模型视图矩阵");
 		
 		initialized = true;
-		System.out.println("GLRenderer 初始化完成: " + width + "x" + height);
 	}
 	
 	/**
@@ -73,6 +111,7 @@ public class GLRenderer implements IRenderer {
 	@Override
 	public void beginFrame() {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+		checkGLError("开始帧");
 	}
 	
 	/**
@@ -81,6 +120,7 @@ public class GLRenderer implements IRenderer {
 	@Override
 	public void endFrame() {
 		GL11.glFlush();
+		checkGLError("结束帧");
 	}
 	
 	/**
@@ -93,11 +133,17 @@ public class GLRenderer implements IRenderer {
 	@Override
 	public void setViewport(int x, int y, int width, int height) {
 		GL11.glViewport(x, y, width, height);
+		checkGLError("设置视口");
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		checkGLError("设置投影矩阵模式");
 		GL11.glLoadIdentity();
+		checkGLError("重置投影矩阵");
 		GL11.glOrtho(0, width, 0, height, -1, 1);
+		checkGLError("设置正交投影");
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		checkGLError("设置模型视图矩阵模式");
 		GL11.glLoadIdentity();
+		checkGLError("重置模型视图矩阵");
 	}
 	
 	/**
@@ -110,7 +156,9 @@ public class GLRenderer implements IRenderer {
 	@Override
 	public void clear(float r, float g, float b, float a) {
 		GL11.glClearColor(r, g, b, a);
+		checkGLError("设置清除颜色");
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+		checkGLError("清除屏幕");
 	}
 	
 	/**
@@ -126,13 +174,43 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void drawRect(float x, float y, float width, float height, float r, float g, float b, float a) {
-		GL11.glColor4f(r, g, b, a);
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(x, y);
-		GL11.glVertex2f(x + width, y);
-		GL11.glVertex2f(x + width, y + height);
-		GL11.glVertex2f(x, y + height);
-		GL11.glEnd();
+		try {
+			// 保存当前矩阵模式
+			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+			
+			// 确保在模型视图矩阵模式下
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			checkGLError("设置模型视图矩阵模式");
+			
+			// 禁用纹理，确保使用颜色绘制
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			checkGLError("禁用纹理");
+			
+			// 启用混合
+			GL11.glEnable(GL11.GL_BLEND);
+			checkGLError("启用混合");
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			checkGLError("设置混合函数");
+			
+			// 设置颜色
+			GL11.glColor4f(r, g, b, a);
+			checkGLError("设置颜色");
+			
+			// 绘制矩形
+			GL11.glBegin(GL11.GL_QUADS);
+			checkGLError("开始绘制矩形");
+			GL11.glVertex2f(x, y);
+			GL11.glVertex2f(x + width, y);
+			GL11.glVertex2f(x + width, y + height);
+			GL11.glVertex2f(x, y + height);
+			GL11.glEnd();
+			checkGLError("结束绘制矩形");
+			
+			// 恢复之前的矩阵模式
+			GL11.glMatrixMode(previousMatrixMode);
+			checkGLError("恢复矩阵模式");
+		} catch (Exception e) {
+		}
 	}
 	
 	/**
@@ -148,11 +226,41 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void drawLine(float x1, float y1, float x2, float y2, float r, float g, float b, float a) {
-		GL11.glColor4f(r, g, b, a);
-		GL11.glBegin(GL11.GL_LINES);
-		GL11.glVertex2f(x1, y1);
-		GL11.glVertex2f(x2, y2);
-		GL11.glEnd();
+		try {
+			// 保存当前矩阵模式
+			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+			
+			// 确保在模型视图矩阵模式下
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			checkGLError("设置模型视图矩阵模式");
+			
+			// 禁用纹理，确保使用颜色绘制
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			checkGLError("禁用纹理");
+			
+			// 启用混合
+			GL11.glEnable(GL11.GL_BLEND);
+			checkGLError("启用混合");
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			checkGLError("设置混合函数");
+			
+			// 设置颜色
+			GL11.glColor4f(r, g, b, a);
+			checkGLError("设置颜色");
+			
+			// 绘制线条
+			GL11.glBegin(GL11.GL_LINES);
+			checkGLError("开始绘制线条");
+			GL11.glVertex2f(x1, y1);
+			GL11.glVertex2f(x2, y2);
+			GL11.glEnd();
+			checkGLError("结束绘制线条");
+			
+			// 恢复之前的矩阵模式
+			GL11.glMatrixMode(previousMatrixMode);
+			checkGLError("恢复矩阵模式");
+		} catch (Exception e) {
+		}
 	}
 	
 	/**
@@ -167,17 +275,47 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void drawCircle(float x, float y, float radius, float r, float g, float b, float a) {
-		GL11.glColor4f(r, g, b, a);
-		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
-		int segments = 32;
-		GL11.glVertex2f(x, y);
-		for (int i = 0; i <= segments; i++) {
-			float angle = (float) (2 * Math.PI * i / segments);
-			float vx = x + radius * (float) Math.cos(angle);
-			float vy = y + radius * (float) Math.sin(angle);
-			GL11.glVertex2f(vx, vy);
+		try {
+			// 保存当前矩阵模式
+			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+			
+			// 确保在模型视图矩阵模式下
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			checkGLError("设置模型视图矩阵模式");
+			
+			// 禁用纹理，确保使用颜色绘制
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			checkGLError("禁用纹理");
+			
+			// 启用混合
+			GL11.glEnable(GL11.GL_BLEND);
+			checkGLError("启用混合");
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			checkGLError("设置混合函数");
+			
+			// 设置颜色
+			GL11.glColor4f(r, g, b, a);
+			checkGLError("设置颜色");
+			
+			// 绘制圆形
+			GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+			checkGLError("开始绘制圆形");
+			int segments = 32;
+			GL11.glVertex2f(x, y);
+			for (int i = 0; i <= segments; i++) {
+				float angle = (float) (2 * Math.PI * i / segments);
+				float vx = x + radius * (float) Math.cos(angle);
+				float vy = y + radius * (float) Math.sin(angle);
+				GL11.glVertex2f(vx, vy);
+			}
+			GL11.glEnd();
+			checkGLError("结束绘制圆形");
+			
+			// 恢复之前的矩阵模式
+			GL11.glMatrixMode(previousMatrixMode);
+			checkGLError("恢复矩阵模式");
+		} catch (Exception e) {
 		}
-		GL11.glEnd();
 	}
 	
 	/**
@@ -286,8 +424,7 @@ public class GLRenderer implements IRenderer {
 			java.nio.file.Path filePath = java.nio.file.Paths.get(path);
 			if (!java.nio.file.Files.exists(filePath)) {
 				// 如果文件不存在，尝试从类路径读取
-				System.out.println("文件系统中找不到图片文件: " + path + "，尝试从类路径读取");
-				// 从类路径读取图片
+			// 从类路径读取图片
 				java.io.InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
 				if (inputStream == null) {
 					System.err.println("图片文件不存在: " + path);
@@ -313,27 +450,30 @@ public class GLRenderer implements IRenderer {
 				}
 				
 				// 创建纹理
-				textureId = GL11.glGenTextures();
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-				
-				// 设置纹理参数
-				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-				
-				// 保存宽度和高度值
-				int imgWidth = width.get();
-				int imgHeight = height.get();
-				
-				// 上传纹理数据
-				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, imgWidth, imgHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
-				
-				// 释放图片数据
-				STBImage.stbi_image_free(image);
-				
-				System.out.println("从类路径加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
+			textureId = GL11.glGenTextures();
+			textureIds.add(textureId); // 添加到纹理ID列表
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+			
+			// 设置纹理参数
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+			
+			// 保存宽度和高度值
+			int imgWidth = width.get();
+			int imgHeight = height.get();
+			
+			// 上传纹理数据
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, imgWidth, imgHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
+			
+			// 释放图片数据
+			STBImage.stbi_image_free(image);
+			
+
 			} else {
-				// 从文件系统直接读取
-				java.nio.ByteBuffer image = STBImage.stbi_load(path, width, height, channels, 4);
+				// 尝试从文件系统直接读取
+			// 尝试使用绝对路径
+			String absolutePath = java.nio.file.Paths.get(path).toAbsolutePath().toString();
+			java.nio.ByteBuffer image = STBImage.stbi_load(absolutePath, width, height, channels, 4);
 				
 				if (image == null) {
 					System.err.println("加载图片失败: " + STBImage.stbi_failure_reason());
@@ -342,6 +482,7 @@ public class GLRenderer implements IRenderer {
 				
 				// 创建纹理
 				textureId = GL11.glGenTextures();
+				textureIds.add(textureId); // 添加到纹理ID列表
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
 				
 				// 设置纹理参数
@@ -358,7 +499,7 @@ public class GLRenderer implements IRenderer {
 				// 释放图片数据
 				STBImage.stbi_image_free(image);
 				
-				System.out.println("从文件系统加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
+	
 			}
 			
 		} catch (Exception e) {
@@ -398,38 +539,60 @@ public class GLRenderer implements IRenderer {
 	@Override
 	public void drawImage(int textureId, float x, float y, float width, float height, float texX, float texY, float texWidth, float texHeight) {
 		if (textureId == -1) {
-			System.err.println("无效的纹理ID");
 			return;
 		}
 		
-		// 启用纹理和混合
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-		
-		// 设置颜色为白色，这样纹理的颜色会正常显示
-		GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		
-		// 计算纹理坐标，调整上下颠倒的问题
-		float texYTop = texY + texHeight;
-		float texYBottom = texY;
-		
-		// 绘制四边形
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(texX, texYTop); // 左上角
-		GL11.glVertex2f(x, y);
-		GL11.glTexCoord2f(texX + texWidth, texYTop); // 右上角
-		GL11.glVertex2f(x + width, y);
-		GL11.glTexCoord2f(texX + texWidth, texYBottom); // 右下角
-		GL11.glVertex2f(x + width, y + height);
-		GL11.glTexCoord2f(texX, texYBottom); // 左下角
-		GL11.glVertex2f(x, y + height);
-		GL11.glEnd();
-		
-		// 禁用纹理和混合
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glDisable(GL11.GL_BLEND);
+		try {
+			// 保存当前矩阵模式
+			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+			
+			// 确保在模型视图矩阵模式下
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			checkGLError("设置模型视图矩阵模式");
+			
+			// 启用纹理和混合
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			checkGLError("启用纹理");
+			GL11.glEnable(GL11.GL_BLEND);
+			checkGLError("启用混合");
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			checkGLError("设置混合函数");
+			
+			// 绑定纹理
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+			checkGLError("绑定纹理");
+			
+			// 设置颜色为白色，这样纹理的颜色会正常显示
+			GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			checkGLError("设置颜色");
+			
+			// 计算纹理坐标，调整上下颠倒的问题
+			float texYTop = texY + texHeight;
+			float texYBottom = texY;
+			
+			// 绘制四边形
+			GL11.glBegin(GL11.GL_QUADS);
+			checkGLError("开始绘制四边形");
+			GL11.glTexCoord2f(texX, texYTop); // 左上角
+			GL11.glVertex2f(x, y);
+			GL11.glTexCoord2f(texX + texWidth, texYTop); // 右上角
+			GL11.glVertex2f(x + width, y);
+			GL11.glTexCoord2f(texX + texWidth, texYBottom); // 右下角
+			GL11.glVertex2f(x + width, y + height);
+			GL11.glTexCoord2f(texX, texYBottom); // 左下角
+			GL11.glVertex2f(x, y + height);
+			GL11.glEnd();
+			checkGLError("结束绘制四边形");
+			
+			// 恢复之前的矩阵模式
+			GL11.glMatrixMode(previousMatrixMode);
+			checkGLError("恢复矩阵模式");
+			
+			// 禁用纹理（可选，根据需要）
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			checkGLError("禁用纹理");
+		} catch (Exception e) {
+		}
 	}
 
 	/**
@@ -437,11 +600,17 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void cleanup() {
+		// 释放所有纹理
+		for (Integer textureId : textureIds) {
+			if (textureId > 0) {
+				GL11.glDeleteTextures(textureId);
+			}
+		}
+		textureIds.clear();
+		
 		// 清理STB字体渲染器资源
 		STBFontRenderer.getInstance().cleanup();
-		
 		initialized = false;
-		System.out.println("GLRenderer 资源清理完成");
 	}
 	
 	/**

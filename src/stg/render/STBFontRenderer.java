@@ -80,21 +80,46 @@ public class STBFontRenderer {
 			String[] paths = {
 				fontPath,
 				"fonts/OPPO Sans 4.0.ttf",
-				"resources/fonts/OPPO Sans 4.0.ttf"
+				"resources/fonts/OPPO Sans 4.0.ttf",
+				"OPPO Sans 4.0.ttf",
+				"fonts/sans.ttf",
+				"resources/fonts/sans.ttf"
 			};
 			
 			byte[] fontBytes = null;
+			String loadedPath = null;
+			
 			for (String path : paths) {
 				try {
+	
 					fontBytes = Files.readAllBytes(Paths.get(path));
+					loadedPath = path;
+	
 					break;
 				} catch (IOException e) {
-					System.err.println("字体加载失败: " + path);
+	
 				}
 			}
 			
 			if (fontBytes == null) {
-				throw new RuntimeException("无法加载字体文件");
+	
+				// 尝试从类路径加载
+				try {
+	
+					java.io.InputStream inputStream = getClass().getClassLoader().getResourceAsStream("fonts/OPPO Sans 4.0.ttf");
+					if (inputStream != null) {
+						fontBytes = inputStream.readAllBytes();
+						inputStream.close();
+						loadedPath = "classpath:fonts/OPPO Sans 4.0.ttf";
+	
+					} else {
+	
+						throw new RuntimeException("无法加载字体文件");
+					}
+				} catch (IOException e) {
+	
+					throw new RuntimeException("无法加载字体文件");
+				}
 			}
 			
 			fontBuffer = MemoryUtil.memAlloc(fontBytes.length);
@@ -103,11 +128,12 @@ public class STBFontRenderer {
 			
 			fontInfo = STBTTFontinfo.create();
 			if (!STBTruetype.stbtt_InitFont(fontInfo, fontBuffer)) {
+	
 				throw new RuntimeException("无法初始化字体信息");
 			}
+			
+	
 		} catch (Exception e) {
-			System.err.println("字体初始化失败: " + e.getMessage());
-			e.printStackTrace();
 		}
 	}
 	
@@ -121,67 +147,131 @@ public class STBFontRenderer {
 	 */
 	public void renderText(String text, float x, float y, float fontSize, float[] color) {
 		if (fontInfo == null || fontBuffer == null) {
-			System.err.println("字体未初始化，无法渲染文本");
+			// 降级到简单的文本渲染
+			fallbackRenderText(text, x, y, fontSize, color);
 			return;
 		}
 		
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glColor4f(color[0], color[1], color[2], color[3]);
+		if (text == null || text.isEmpty()) {
+			return;
+		}
 		
-		float scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontSize);
+		if (color == null || color.length < 4) {
+			return;
+		}
 		
-		try (MemoryStack stack = MemoryStack.stackPush()) {
-			IntBuffer pWidth = stack.mallocInt(1);
-			IntBuffer pHeight = stack.mallocInt(1);
-			IntBuffer pXOff = stack.mallocInt(1);
-			IntBuffer pYOff = stack.mallocInt(1);
-			IntBuffer pAdvanceWidth = stack.mallocInt(1);
-			IntBuffer pLeftSideBearing = stack.mallocInt(1);
-			IntBuffer pAscent = stack.mallocInt(1);
-			IntBuffer pDescent = stack.mallocInt(1);
-			IntBuffer pLineGap = stack.mallocInt(1);
+		try {
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			GL11.glColor4f(color[0], color[1], color[2], color[3]);
 			
-			STBTruetype.stbtt_GetFontVMetrics(fontInfo, pAscent, pDescent, pLineGap);
-			int ascent = pAscent.get(0);
+			float scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontSize);
 			
+			try (MemoryStack stack = MemoryStack.stackPush()) {
+				IntBuffer pWidth = stack.mallocInt(1);
+				IntBuffer pHeight = stack.mallocInt(1);
+				IntBuffer pXOff = stack.mallocInt(1);
+				IntBuffer pYOff = stack.mallocInt(1);
+				IntBuffer pAdvanceWidth = stack.mallocInt(1);
+				IntBuffer pLeftSideBearing = stack.mallocInt(1);
+				IntBuffer pAscent = stack.mallocInt(1);
+				IntBuffer pDescent = stack.mallocInt(1);
+				IntBuffer pLineGap = stack.mallocInt(1);
+				
+				STBTruetype.stbtt_GetFontVMetrics(fontInfo, pAscent, pDescent, pLineGap);
+				int ascent = pAscent.get(0);
+				
+				float currentX = x;
+				float baseline = y;
+				
+				for (int i = 0; i < text.length(); i++) {
+					char c = text.charAt(i);
+					
+					int cacheKey = (int)c | ((int)fontSize << 16);
+					GlyphCache cached = glyphCache.get(cacheKey);
+					
+					if (cached == null) {
+						try {
+							cached = createGlyphCache(c, fontSize, scale, stack,
+								pWidth, pHeight, pXOff, pYOff, pAdvanceWidth, pLeftSideBearing);
+							glyphCache.put(cacheKey, cached);
+						} catch (Exception e) {
+					// 使用默认字形
+					cached = new GlyphCache(0, 0, 0, 0, 0, (int)(fontSize * 0.5f / scale));
+				}
+					}
+					
+					if (cached.textureId > 0 && cached.width > 0 && cached.height > 0) {
+						try {
+							GL11.glEnable(GL11.GL_TEXTURE_2D);
+							GL11.glBindTexture(GL11.GL_TEXTURE_2D, cached.textureId);
+							
+							float charX = currentX + cached.xOff;
+							float charY = baseline - cached.yOff;
+							
+							GL11.glBegin(GL11.GL_QUADS);
+							GL11.glTexCoord2f(0, 1); GL11.glVertex2f(charX, charY - cached.height);
+							GL11.glTexCoord2f(1, 1); GL11.glVertex2f(charX + cached.width, charY - cached.height);
+							GL11.glTexCoord2f(1, 0); GL11.glVertex2f(charX + cached.width, charY);
+							GL11.glTexCoord2f(0, 0); GL11.glVertex2f(charX, charY);
+							GL11.glEnd();
+							
+							GL11.glDisable(GL11.GL_TEXTURE_2D);
+						} catch (Exception e) {
+						GL11.glDisable(GL11.GL_TEXTURE_2D);
+					}
+					}
+					
+					currentX += cached.advanceWidth * scale;
+				}
+			}
+		} catch (Exception e) {
+			// 降级到简单的文本渲染
+			fallbackRenderText(text, x, y, fontSize, color);
+		} finally {
+			try {
+				GL11.glDisable(GL11.GL_BLEND);
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+			} catch (Exception e) {
+				// 忽略清理时的错误
+			}
+		}
+	}
+	
+	/**
+	 * 降级文本渲染方法（当字体渲染失败时使用）
+	 * @param text 文本内容
+	 * @param x X坐标
+	 * @param y Y坐标
+	 * @param fontSize 字体大小
+	 * @param color 颜色 [r, g, b, a]
+	 */
+	private void fallbackRenderText(String text, float x, float y, float fontSize, float[] color) {
+		try {
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			GL11.glColor4f(color[0], color[1], color[2], color[3]);
+			
+			// 简单的文本渲染，使用矩形表示每个字符
+			float charWidth = fontSize * 0.6f;
+			float charHeight = fontSize;
 			float currentX = x;
-			float baseline = y;
 			
 			for (int i = 0; i < text.length(); i++) {
 				char c = text.charAt(i);
-				
-				int cacheKey = (int)c | ((int)fontSize << 16);
-				GlyphCache cached = glyphCache.get(cacheKey);
-				
-				if (cached == null) {
-					cached = createGlyphCache(c, fontSize, scale, stack,
-						pWidth, pHeight, pXOff, pYOff, pAdvanceWidth, pLeftSideBearing);
-					glyphCache.put(cacheKey, cached);
-				}
-				
-				if (cached.textureId > 0 && cached.width > 0 && cached.height > 0) {
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
-					GL11.glBindTexture(GL11.GL_TEXTURE_2D, cached.textureId);
-					
-					float charX = currentX + cached.xOff;
-					float charY = baseline - cached.yOff;
-					
-					GL11.glBegin(GL11.GL_QUADS);
-					GL11.glTexCoord2f(0, 1); GL11.glVertex2f(charX, charY - cached.height);
-					GL11.glTexCoord2f(1, 1); GL11.glVertex2f(charX + cached.width, charY - cached.height);
-					GL11.glTexCoord2f(1, 0); GL11.glVertex2f(charX + cached.width, charY);
-					GL11.glTexCoord2f(0, 0); GL11.glVertex2f(charX, charY);
-					GL11.glEnd();
-					
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-				}
-				
-				currentX += cached.advanceWidth * scale;
+				// 绘制矩形表示字符
+				GL11.glBegin(GL11.GL_QUADS);
+				GL11.glVertex2f(currentX, y - charHeight);
+				GL11.glVertex2f(currentX + charWidth, y - charHeight);
+				GL11.glVertex2f(currentX + charWidth, y);
+				GL11.glVertex2f(currentX, y);
+				GL11.glEnd();
+				currentX += charWidth;
 			}
+			
+			GL11.glDisable(GL11.GL_BLEND);
+		} catch (Exception e) {
 		}
-		
-		GL11.glDisable(GL11.GL_BLEND);
 	}
 	
 	/**

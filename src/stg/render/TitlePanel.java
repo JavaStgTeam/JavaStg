@@ -80,26 +80,33 @@ public class TitlePanel extends Panel {
 	 * @param renderer 渲染器实例
 	 */
 	public void loadBackgroundTexture(IRenderer renderer) {
-		// 使用相对路径加载背景图片
-		String backgroundPath = "resources/images/menu_bg.png";
-		// 也可以尝试使用相对路径
-		String relativePath = "resources/images/menu_bg.png";
+		// 尝试使用不同的路径加载背景图片
+		String[] backgroundPaths = {
+			"resources/images/menu_bg.png",
+			"images/menu_bg.png",
+			"menu_bg.png"
+		};
 		
-		// 尝试使用相对路径加载
+		// 尝试使用多个路径加载
 		if (renderer instanceof GLRenderer) {
 			GLRenderer glRenderer = (GLRenderer) renderer;
-			backgroundTextureId = glRenderer.loadTexture(backgroundPath);
+			boolean loaded = false;
 			
-			// 如果相对路径加载失败，尝试使用备用路径
-			if (backgroundTextureId == -1) {
-				System.out.println("使用相对路径加载背景纹理失败，尝试使用备用路径");
-				backgroundTextureId = glRenderer.loadTexture(relativePath);
+			for (String path : backgroundPaths) {
+				backgroundTextureId = glRenderer.loadTexture(path);
+				if (backgroundTextureId != -1) {
+					System.out.println("背景纹理加载成功，纹理ID: " + backgroundTextureId + "，路径: " + path);
+					loaded = true;
+					break;
+				} else {
+					System.out.println("尝试加载背景纹理失败: " + path);
+				}
 			}
 			
-			if (backgroundTextureId != -1) {
-				System.out.println("背景纹理加载成功，纹理ID: " + backgroundTextureId);
-			} else {
-				System.err.println("背景纹理加载失败");
+			if (!loaded) {
+				System.err.println("所有路径都无法加载背景纹理");
+				// 如果所有路径都失败，使用默认颜色作为背景
+				System.out.println("将使用默认颜色作为背景");
 			}
 		} else {
 			System.err.println("无效的渲染器实例");
@@ -338,6 +345,9 @@ public class TitlePanel extends Panel {
 		if (backgroundTextureId != -1) {
 			// 绘制背景图片，覆盖整个面板
 			renderer.drawImage(backgroundTextureId, 0, 0, getWidth(), getHeight());
+		} else {
+			// 如果背景纹理加载失败，使用默认背景颜色
+			renderer.drawRect(0, 0, getWidth(), getHeight(), 0.04f, 0.04f, 0.08f, 1.0f);
 		}
 	}
 

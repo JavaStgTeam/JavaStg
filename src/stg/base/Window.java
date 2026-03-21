@@ -74,7 +74,7 @@ public class Window {
 	/** 是否暂停 */
 	private boolean isPaused = false;
 	/** 按键状态 */
-	private boolean[] keyStates = new boolean[GLFW.GLFW_KEY_LAST];
+	private final boolean[] keyStates = new boolean[GLFW.GLFW_KEY_LAST];
 	/** 按键状态提供者 */
 	private KeyStateProvider keyStateProvider;
 	
@@ -333,6 +333,18 @@ public class Window {
 		// 初始化关卡组列表，传递正确的 gameWorld 实例
 		stageGroupSelectPanel.initStageGroups(gameWorld);
 		
+		// 加载Reimu玩家纹理并保存纹理ID
+		final int[] reimuTextureId = { -1 };
+		if (renderer instanceof GLRenderer glRenderer) {
+			String reimuTexturePath = "resources/images/reimu.png";
+			reimuTextureId[0] = glRenderer.loadTexture(reimuTexturePath);
+			if (reimuTextureId[0] != -1) {
+				System.out.println("Reimu纹理加载成功，纹理ID: " + reimuTextureId[0]);
+			} else {
+				System.err.println("Reimu纹理加载失败");
+			}
+		}
+		
 		// 创建玩家选择面板
 		playerSelectPanel = new PlayerSelectPanel(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new PlayerSelectPanel.PlayerSelectCallback() {
 			@Override
@@ -346,11 +358,10 @@ public class Window {
 					player = selectedPlayer;
 					player.setKeyStateProvider(keyStateProvider);
 					
-					// 为Reimu玩家设置默认纹理ID（在主线程中加载纹理）
-					if (player instanceof user.player.reimu.__ReimuPlayer) {
-						// 暂时设置为-1，在主线程中加载纹理
-						((user.player.reimu.__ReimuPlayer) player).setReimuTextureId(-1);
-						System.out.println("为Reimu玩家设置默认纹理ID: -1");
+					// 为Reimu玩家设置纹理ID
+					if (player instanceof user.player.reimu.__ReimuPlayer reimuPlayer) {
+						reimuPlayer.setReimuTextureId(reimuTextureId[0]);
+						System.out.println("为Reimu玩家设置纹理ID: " + reimuTextureId[0]);
 					}
 					
 					gamePanel.setPlayer(player);
@@ -429,19 +440,7 @@ public class Window {
 		audioManager.playSound("pageSwitch");
 		System.out.println("测试音效播放完成");
 		
-		// 加载Reimu玩家纹理
-		if (renderer instanceof GLRenderer) {
-			GLRenderer glRenderer = (GLRenderer) renderer;
-			String reimuTexturePath = "resources/images/reimu.png";
-			int reimuTextureId = glRenderer.loadTexture(reimuTexturePath);
-			if (reimuTextureId != -1) {
-				System.out.println("Reimu纹理加载成功，纹理ID: " + reimuTextureId);
-				// 为所有Reimu玩家设置纹理ID
-				// 注意：这里需要在玩家选择后设置，暂时先加载纹理
-			} else {
-				System.err.println("Reimu纹理加载失败");
-			}
-		}
+
 		
 		System.out.println("面板布局: 左侧=" + sidePanelWidth + ", 中间=" + gamePanelWidth + ", 右侧=" + sidePanelWidth);
 		
@@ -499,26 +498,23 @@ public class Window {
 		renderer.clear(0.0f, 0.0f, 0.0f, 1.0f);
 		
 		switch (currentPanelState) {
-		case TITLE:
+		case TITLE -> {
 			// 显示标题页面
-			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
 			titlePanel.render(renderer);
-			break;
-		case STAGE_GROUP_SELECT:
+		}
+		case STAGE_GROUP_SELECT -> {
 			// 显示标题背景
 			titlePanel.drawBackgroundImage(renderer);
 			// 显示关卡组选择界面
-			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
 			stageGroupSelectPanel.render(renderer);
-			break;
-		case PLAYER_SELECT:
+		}
+		case PLAYER_SELECT -> {
 			// 显示标题背景
 			titlePanel.drawBackgroundImage(renderer);
 			// 显示玩家选择界面
-			renderer.setViewport(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT);
 			playerSelectPanel.render(renderer);
-			break;
-		case GAME:
+		}
+		case GAME -> {
 			// 显示游戏面板
 			renderer.setViewport(leftPanel.getX(), leftPanel.getY(), leftPanel.getWidth(), leftPanel.getHeight());
 			leftPanel.render(renderer);
@@ -536,7 +532,7 @@ public class Window {
 			if (isPaused) {
 				pauseMenu.render(renderer);
 			}
-			break;
+		}
 		}
 		
 		renderer.endFrame();
