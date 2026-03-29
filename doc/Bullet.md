@@ -3,6 +3,8 @@
 ## 类概述
 `Bullet` 是所有子弹的基类，继承自 `Obj` 类，实现了 `Resettable` 和 `IBullet` 接口。定义了子弹的基本行为和属性，包括伤害管理、生命周期、轨迹效果等功能。
 
+**注解**：`@Pooled(initialCapacity = 100, maxCapacity = 500, name = "BulletPool")` - 支持对象池管理
+
 ## 成员变量
 
 ### 1. damage (int)
@@ -97,34 +99,40 @@
 **用途**：获取子弹的伤害值
 **参数**：无
 **返回值**：int - 子弹的伤害值
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 2. setDamage(int damage)
 **用途**：设置子弹的伤害值
 **参数**：
 - `damage` (int)：子弹的伤害值
 **返回值**：无
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 3. getSpeed()
 **用途**：获取子弹速度
 **参数**：无
 **返回值**：float - 子弹速度
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 4. setSpeed(float speed)
 **用途**：设置子弹速度
 **参数**：
 - `speed` (float)：子弹速度
 **返回值**：无
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 5. getDirection()
 **用途**：获取子弹方向（角度，单位：度）
 **参数**：无
 **返回值**：float - 子弹方向
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 6. setDirection(float direction)
 **用途**：设置子弹方向（角度，单位：度）
 **参数**：
 - `direction` (float)：子弹方向
 **返回值**：无
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 7. getLifeTime()
 **用途**：获取子弹生命周期
@@ -141,6 +149,7 @@
 **用途**：自定义更新逻辑
 **参数**：无
 **返回值**：无
+**重写**：重写了 `Obj` 类的方法
 **说明**：处理生命周期管理
 
 ### 10. updateLifeTime()
@@ -155,12 +164,14 @@
 - `width` (int)：游戏宽度
 - `height` (int)：游戏高度
 **返回值**：boolean - 是否超出边界
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 12. render(Graphics2D g)
 **用途**：渲染子弹（Java2D版本）
 **参数**：
 - `g` (Graphics2D)：图形上下文
 **返回值**：无
+**重写**：重写了 `Obj` 类的方法
 
 ### 13. renderTrail(Graphics2D g, float screenX, float screenY)
 **用途**：渲染子弹轨迹
@@ -174,9 +185,11 @@
 **用途**：重置子弹状态（对象池回收时调用）
 **参数**：无
 **返回值**：无
+**重写**：实现了 `Resettable` 接口的方法
 **说明**：
 - 重置子弹的基本属性
-- 实现了 Resettable 接口
+- 将active设为true，位置、速度归零
+- 重置所有倍率和特殊效果
 
 ### 15. isPlayerBullet()
 **用途**：获取是否为玩家子弹
@@ -314,11 +327,13 @@
 **用途**：获取X坐标
 **参数**：无
 **返回值**：float - X坐标
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 40. getY()
 **用途**：获取Y坐标
 **参数**：无
 **返回值**：float - Y坐标
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 41. getVx()
 **用途**：获取X方向速度
@@ -358,11 +373,13 @@
 **用途**：获取大小
 **参数**：无
 **返回值**：float - 大小
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 48. getHitboxRadius()
 **用途**：获取碰撞检测半径
 **参数**：无
 **返回值**：float - 碰撞检测半径
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 49. setHitboxRadius(float hitboxRadius)
 **用途**：设置碰撞检测半径
@@ -374,24 +391,27 @@
 **用途**：检查是否活跃
 **参数**：无
 **返回值**：boolean - 是否活跃
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 51. setActive(boolean active)
 **用途**：设置是否活跃
 **参数**：
 - `active` (boolean)：是否活跃
 **返回值**：无
+**重写**：实现了 `IBullet` 接口的方法
 
 ### 52. update()
 **用途**：更新对象状态
 **参数**：无
 **返回值**：无
+**重写**：重写了 `Obj` 类的方法
 
 ## 实现的接口
 
-### 从 Resettable 接口继承
+### Resettable 接口
 - `resetState()`：重置对象状态
 
-### 从 IBullet 接口继承
+### IBullet 接口
 - `getDamage()`：获取子弹的伤害值
 - `setDamage(int damage)`：设置子弹的伤害值
 - `isOutOfBounds(int width, int height)`：检查子弹是否超出游戏边界
