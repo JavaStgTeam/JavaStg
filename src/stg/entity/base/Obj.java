@@ -5,7 +5,9 @@ import java.awt.Graphics2D;
 
 import stg.render.IRenderable;
 import stg.render.IRenderer;
+import stg.util.BoundsUtil;
 import stg.util.CoordinateSystem;
+import stg.util.TextureUtil;
 import stg.util.objectpool.ObjectPoolConfig;
 import stg.util.objectpool.ObjectPoolManager;
 
@@ -297,15 +299,9 @@ public abstract class Obj implements IRenderable {
      * @return 是否超出边界
      * @throws IllegalStateException 如果坐标系统未初始化
      */
-    //TODO,整理到新的工具类
     public boolean isOutOfBounds() {
         requireCoordinateSystem();
-        CoordinateSystem cs = sharedCoordinateSystem;
-        float leftBound = cs.getLeftBound() - size;
-        float rightBound = cs.getRightBound() + size;
-        float topBound = cs.getTopBound() - size;
-        float bottomBound = cs.getBottomBound() + size;
-        return x < leftBound || x > rightBound || y < topBound || y > bottomBound;
+        return BoundsUtil.isOutOfBounds(x, y, size, sharedCoordinateSystem);
     }
 
     /**
@@ -537,10 +533,11 @@ public abstract class Obj implements IRenderable {
                 // 尝试从对象池获取
                 T object = ObjectPoolManager.getInstance().acquire(clazz);
                 if (object != null) {
+                    // 重置对象状态，确保不会保留旧状态
+                    object.reset();
                     // 设置对象的属性
                     if (args.length >= 2) {
                         // 处理不同类型的参数
-                        //TODO,存在访问安全问题
                         if (args[0] instanceof Number) {
                             object.setX(((Number) args[0]).floatValue());
                         }
@@ -611,101 +608,7 @@ public abstract class Obj implements IRenderable {
      * @param height 素材高度
      * @return 纹理ID
      */
-    //TODO,整理到新的工具类
     public static int loadTexture(String path, float x, float y, float width, float height) {
-        // 直接使用GL11来加载纹理，不创建新的GLRenderer实例
-        // 这样可以确保在同一个OpenGL上下文中加载纹理
-        int textureId = -1;
-        
-        try (org.lwjgl.system.MemoryStack stack = org.lwjgl.system.MemoryStack.stackPush()) {
-            java.nio.IntBuffer widthBuffer = stack.mallocInt(1);
-            java.nio.IntBuffer heightBuffer = stack.mallocInt(1);
-            java.nio.IntBuffer channelsBuffer = stack.mallocInt(1);
-            
-            // 尝试从文件系统直接读取
-            java.nio.file.Path filePath = java.nio.file.Paths.get(path);
-            if (!java.nio.file.Files.exists(filePath)) {
-                // 如果文件不存在，尝试从类路径读取
-                System.out.println("文件系统中找不到图片文件: " + path + "，尝试从类路径读取");
-                // 从类路径读取图片
-                java.io.InputStream inputStream = Obj.class.getClassLoader().getResourceAsStream(path);
-                if (inputStream == null) {
-                    System.err.println("图片文件不存在: " + path);
-                    return -1;
-                }
-                
-                // 读取输入流到字节数组
-                byte[] bytes = inputStream.readAllBytes();
-                inputStream.close();
-                
-                // 分配内存并填充数据
-                java.nio.ByteBuffer buffer = org.lwjgl.system.MemoryUtil.memAlloc(bytes.length);
-                buffer.put(bytes);
-                buffer.flip();
-                
-                // 加载图片
-                java.nio.ByteBuffer image = org.lwjgl.stb.STBImage.stbi_load_from_memory(buffer, widthBuffer, heightBuffer, channelsBuffer, 4);
-                org.lwjgl.system.MemoryUtil.memFree(buffer);
-                
-                if (image == null) {
-                    System.err.println("加载图片失败: " + org.lwjgl.stb.STBImage.stbi_failure_reason());
-                    return -1;
-                }
-                
-                // 创建纹理
-                textureId = org.lwjgl.opengl.GL11.glGenTextures();
-                org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, textureId);
-                
-                // 设置纹理参数
-                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
-                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
-                
-                // 保存宽度和高度值
-                int imgWidth = widthBuffer.get();
-                int imgHeight = heightBuffer.get();
-                
-                // 上传纹理数据
-                org.lwjgl.opengl.GL11.glTexImage2D(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL11.GL_RGBA, imgWidth, imgHeight, 0, org.lwjgl.opengl.GL11.GL_RGBA, org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE, image);
-                
-                // 释放图片数据
-                org.lwjgl.stb.STBImage.stbi_image_free(image);
-                
-                System.out.println("从类路径加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
-            } else {
-                // 从文件系统直接读取
-                java.nio.ByteBuffer image = org.lwjgl.stb.STBImage.stbi_load(path, widthBuffer, heightBuffer, channelsBuffer, 4);
-                
-                if (image == null) {
-                    System.err.println("加载图片失败: " + org.lwjgl.stb.STBImage.stbi_failure_reason());
-                    return -1;
-                }
-                
-                // 创建纹理
-                textureId = org.lwjgl.opengl.GL11.glGenTextures();
-                org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, textureId);
-                
-                // 设置纹理参数
-                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
-                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
-                
-                // 保存宽度和高度值
-                int imgWidth = widthBuffer.get();
-                int imgHeight = heightBuffer.get();
-                
-                // 上传纹理数据
-                org.lwjgl.opengl.GL11.glTexImage2D(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL11.GL_RGBA, imgWidth, imgHeight, 0, org.lwjgl.opengl.GL11.GL_RGBA, org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE, image);
-                
-                // 释放图片数据
-                org.lwjgl.stb.STBImage.stbi_image_free(image);
-                
-                System.out.println("从文件系统加载纹理成功: " + path + " (" + imgWidth + "x" + imgHeight + ")");
-            }
-            
-        } catch (Exception e) {
-            System.err.println("加载纹理失败: " + e.getMessage());
-            e.printStackTrace();
-        }
-        
-        return textureId;
+        return TextureUtil.loadTexture(path, x, y, width, height);
     }
 }

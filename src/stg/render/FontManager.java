@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import stg.util.ResourceManager;
 
 /**
  * 字体管理器

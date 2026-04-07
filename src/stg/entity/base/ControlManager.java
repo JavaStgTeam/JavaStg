@@ -210,11 +210,7 @@ public class ControlManager {
         float targetVx = unitVx * targetSpeed;
         float targetVy = unitVy * targetSpeed;
         
-        // 计算速度变化率
-        float deltaVx = (targetVx - currentVx) / time;
-        float deltaVy = (targetVy - currentVy) / time;
-        
-        // 设置新的速度（这里直接设置目标速度，实际应用中可能需要在update方法中逐渐调整速度）
+        // 设置新的速度
         entity.setVx(targetVx);
         entity.setVy(targetVy);
     }
