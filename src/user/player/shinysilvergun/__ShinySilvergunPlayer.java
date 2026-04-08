@@ -4,10 +4,6 @@ import stg.entity.player.Player;
 import stg.render.IRenderer;
 import stg.util.SpriteSheetRenderer;
 
-/**
- * 闪亮银枪自机类 - 实现闪亮银枪风格的自机
- * @since 2026-04-08
- */
 public class __ShinySilvergunPlayer extends Player {
     // 动画相关
     private int animationFrame;
@@ -16,6 +12,10 @@ public class __ShinySilvergunPlayer extends Player {
     private int currentAnimation; // 0-站立, 1-左移, 2-右移, 3-射击
     
     // 武器系统
+    public enum WeaponMode {
+        A, B, C, AB, AC, BC, ABC
+    }
+    private WeaponMode currentWeaponMode; // 当前武器模式
     private int weaponLevel; // 武器等级 1-3
     private int specialEnergy; // 特殊武器能量
     private static final int MAX_SPECIAL_ENERGY = 100;
@@ -23,29 +23,24 @@ public class __ShinySilvergunPlayer extends Player {
     // 精灵表
     private int shipTextureId;
     
-    /**
-     * 构造函数
-     */
+    // 构造函数
     public __ShinySilvergunPlayer() {
         super(0, 0, 9.0f, 3.5f, 20);
         this.animationFrame = 0;
         this.animationCounter = 0;
         this.currentAnimation = 0;
+        this.currentWeaponMode = WeaponMode.A; // 默认A火力
         this.weaponLevel = 1;
         this.specialEnergy = 0;
         this.shipTextureId = -1;
     }
     
-    /**
-     * 构造函数
-     * @param x 初始X坐标
-     * @param y 初始Y坐标
-     */
     public __ShinySilvergunPlayer(float x, float y) {
         super(x, y, 9.0f, 3.5f, 20);
         this.animationFrame = 0;
         this.animationCounter = 0;
         this.currentAnimation = 0;
+        this.currentWeaponMode = WeaponMode.A; // 默认A火力
         this.weaponLevel = 1;
         this.specialEnergy = 0;
         this.shipTextureId = -1;
@@ -63,7 +58,7 @@ public class __ShinySilvergunPlayer extends Player {
         animationCounter++;
         if (animationCounter >= ANIMATION_SPEED) {
             animationCounter = 0;
-            animationFrame = (animationFrame + 1) % 8;
+            animationFrame = (animationFrame + 1) % 8; // 8帧循环
         }
         
         // 根据移动状态更新动画
@@ -77,106 +72,106 @@ public class __ShinySilvergunPlayer extends Player {
         // 射击动画由shoot()方法控制
     }
     
-    /**
-     * 设置精灵表纹理ID
-     * @param textureId 纹理ID
-     */
-    public void setShipTextureId(int textureId) {
-        this.shipTextureId = textureId;
-    }
-    
-    /**
-     * 获取精灵表纹理ID
-     * @return 纹理ID
-     */
-    public int getShipTextureId() {
-        return shipTextureId;
-    }
-    
     @Override
     protected void shoot() {
-        // 主武器射击
-        fireMainWeapon();
-        
-        // 副武器射击（根据武器等级）
-        if (weaponLevel > 1) {
-            fireSecondaryWeapon();
+        // 根据当前武器模式射击
+        switch (currentWeaponMode) {
+            case A:
+                fireAWeapon();
+                break;
+            case B:
+                fireBWeapon();
+                break;
+            case C:
+                fireCWeapon();
+                break;
+            case AB:
+                fireABWeapon();
+                break;
+            case AC:
+                fireACWeapon();
+                break;
+            case BC:
+                fireBCWeapon();
+                break;
+            case ABC:
+                fireABCWeapon();
+                break;
         }
         
         // 更新射击动画
         currentAnimation = 3;
     }
     
-    /**
-     * 发射主武器
-     */
-    private void fireMainWeapon() {
-        // 实现主武器射击逻辑
-        // 根据武器等级发射不同数量和模式的子弹
-        System.out.println("Shiny Silvergun: Main weapon fired (Level " + weaponLevel + ")");
+    private void fireAWeapon() {
+        // A火力：前方直线射击
+        System.out.println("Firing A weapon (straight forward)");
     }
     
-    /**
-     * 发射副武器
-     */
-    private void fireSecondaryWeapon() {
-        // 实现副武器射击逻辑
-        // 向左右两侧发射子弹
-        System.out.println("Shiny Silvergun: Secondary weapon fired");
+    private void fireBWeapon() {
+        // B火力：追踪敌人，最小转向半径为5
+        System.out.println("Firing B weapon (homing with minimum turn radius 5)");
     }
     
-    /**
-     * 发射特殊武器
-     */
-    public void fireSpecialWeapon() {
-        if (specialEnergy >= 50) {
-            // 实现特殊武器逻辑
-            // 消耗能量，产生范围攻击
-            specialEnergy -= 50;
-            System.out.println("Shiny Silvergun: Special weapon fired! Energy left: " + specialEnergy);
-        }
+    private void fireCWeapon() {
+        // C火力：斜向射击，15°和165°
+        System.out.println("Firing C weapon (diagonal at 15° and 165°)");
     }
     
-    /**
-     * 升级武器
-     */
+    private void fireABWeapon() {
+        // AB火力：两条线，指向敌人时锁定
+        System.out.println("Firing AB weapon (double lines, lock on when aiming at enemies)");
+    }
+    
+    private void fireACWeapon() {
+        // AC火力：前方低威力，和后方扇形射击
+        System.out.println("Firing AC weapon (low power forward, fan-shaped backward)");
+    }
+    
+    private void fireBCWeapon() {
+        // BC火力：展开圆形立场，锁定攻击立场内敌人
+        System.out.println("Firing BC weapon (circular field, lock on enemies within field)");
+    }
+    
+    private void fireABCWeapon() {
+        // ABC火力：展开一个光剑
+        System.out.println("Firing ABC weapon (lightsaber)");
+    }
+    
+    public void switchWeaponMode(WeaponMode mode) {
+        this.currentWeaponMode = mode;
+        System.out.println("Switched to weapon mode: " + mode);
+    }
+    
+    public WeaponMode getCurrentWeaponMode() {
+        return currentWeaponMode;
+    }
+    
     public void upgradeWeapon() {
         if (weaponLevel < 3) {
             weaponLevel++;
-            System.out.println("Shiny Silvergun: Weapon upgraded to Level " + weaponLevel);
+            System.out.println("Weapon upgraded to level: " + weaponLevel);
         }
     }
     
-    /**
-     * 添加特殊武器能量
-     * @param amount 能量值
-     */
     public void addSpecialEnergy(int amount) {
         specialEnergy = Math.min(specialEnergy + amount, MAX_SPECIAL_ENERGY);
     }
     
-    /**
-     * 获取当前武器等级
-     * @return 武器等级
-     */
     public int getWeaponLevel() {
         return weaponLevel;
     }
     
-    /**
-     * 获取当前特殊武器能量
-     * @return 能量值
-     */
     public int getSpecialEnergy() {
         return specialEnergy;
     }
     
-    /**
-     * 获取最大特殊武器能量
-     * @return 最大能量值
-     */
-    public int getMaxSpecialEnergy() {
-        return MAX_SPECIAL_ENERGY;
+    public void setShipTextureId(int textureId) {
+        this.shipTextureId = textureId;
+    }
+    
+    public int getShipTextureId() {
+        return shipTextureId;
     }
     
     @Override
@@ -195,4 +190,41 @@ public class __ShinySilvergunPlayer extends Player {
         // 转换为屏幕坐标
         requireCoordinateSystem();
         float[] screenCoords = toScreenCoords(getX(), getY());
-        float screen
+        float screenX = screenCoords[0];
+        float screenY = screenCoords[1];
+        
+        // 绘制精灵
+        if (shipTextureId != -1) {
+            final int SPRITE_WIDTH = 48;
+            final int SPRITE_HEIGHT = 48;
+            final int SPRITES_PER_ROW = 8;
+            final int SPRITE_SHEET_WIDTH = 384;
+            final int SPRITE_SHEET_HEIGHT = 272;
+            final float SCALE = 1.5f;
+            
+            SpriteSheetRenderer.drawSpriteFrame(
+                renderer,
+                shipTextureId,
+                screenX,
+                screenY,
+                SPRITE_WIDTH,
+                SPRITE_HEIGHT,
+                SPRITE_SHEET_WIDTH,
+                SPRITE_SHEET_HEIGHT,
+                currentAnimation,
+                animationFrame,
+                SPRITES_PER_ROW,
+                SCALE
+            );
+        } else {
+            //  fallback: 绘制默认形状
+            renderer.drawCircle(screenX, screenY, getSize()/2, 0.8f, 0.8f, 0.9f, 1.0f);
+        }
+        
+        // 低速模式时显示受击判定点
+        if (isSlowMode()) {
+            float hitboxRadius = getHitboxRadius() * 2.0f;
+            renderer.drawCircle(screenX, screenY, hitboxRadius, 1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
+}

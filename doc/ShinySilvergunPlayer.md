@@ -52,10 +52,13 @@
 
 ### 4.2 阶段二：武器系统实现
 
-1. **主武器实现**：直线射击逻辑
-2. **副武器实现**：侧向射击逻辑
-3. **特殊武器实现**：范围攻击逻辑
-4. **武器升级系统**：实现升级机制
+1. **A火力实现**：前方直线射击逻辑
+2. **B火力实现**：追踪敌人逻辑（最小转向半径5）
+3. **C火力实现**：斜向射击逻辑（15°和165°）
+4. **AB火力实现**：双线射击并锁定敌人
+5. **AC火力实现**：前方低威力射击和后方扇形射击
+6. **BC火力实现**：圆形立场锁定攻击
+7. **ABC火力实现**：光剑效果
 
 ### 4.3 阶段三：视觉效果
 
@@ -88,6 +91,10 @@ public class __ShinySilvergunPlayer extends Player {
     private int currentAnimation; // 0-站立, 1-左移, 2-右移, 3-射击
     
     // 武器系统
+    public enum WeaponMode {
+        A, B, C, AB, AC, BC, ABC
+    }
+    private WeaponMode currentWeaponMode; // 当前武器模式
     private int weaponLevel; // 武器等级 1-3
     private int specialEnergy; // 特殊武器能量
     private static final int MAX_SPECIAL_ENERGY = 100;
@@ -101,6 +108,7 @@ public class __ShinySilvergunPlayer extends Player {
         this.animationFrame = 0;
         this.animationCounter = 0;
         this.currentAnimation = 0;
+        this.currentWeaponMode = WeaponMode.A; // 默认A火力
         this.weaponLevel = 1;
         this.specialEnergy = 0;
         this.shipTextureId = -1;
@@ -115,31 +123,69 @@ public class __ShinySilvergunPlayer extends Player {
 ```java
 @Override
 protected void shoot() {
-    // 主武器射击
-    fireMainWeapon();
-    
-    // 副武器射击（根据武器等级）
-    if (weaponLevel > 1) {
-        fireSecondaryWeapon();
+    // 根据当前武器模式射击
+    switch (currentWeaponMode) {
+        case A:
+            fireAWeapon();
+            break;
+        case B:
+            fireBWeapon();
+            break;
+        case C:
+            fireCWeapon();
+            break;
+        case AB:
+            fireABWeapon();
+            break;
+        case AC:
+            fireACWeapon();
+            break;
+        case BC:
+            fireBCWeapon();
+            break;
+        case ABC:
+            fireABCWeapon();
+            break;
     }
     
     // 更新射击动画
     currentAnimation = 3;
 }
 
-private void fireMainWeapon() {
-    // 实现主武器射击逻辑
-    // 根据武器等级发射不同数量和模式的子弹
+private void fireAWeapon() {
+    // A火力：前方直线射击
 }
 
-private void fireSecondaryWeapon() {
-    // 实现副武器射击逻辑
-    // 向左右两侧发射子弹
+private void fireBWeapon() {
+    // B火力：追踪敌人，最小转向半径为5
 }
 
-public void fireSpecialWeapon() {
-    // 实现特殊武器逻辑
-    // 消耗能量，产生范围攻击
+private void fireCWeapon() {
+    // C火力：斜向射击，15°和165°
+}
+
+private void fireABWeapon() {
+    // AB火力：两条线，指向敌人时锁定
+}
+
+private void fireACWeapon() {
+    // AC火力：前方低威力，和后方扇形射击
+}
+
+private void fireBCWeapon() {
+    // BC火力：展开圆形立场，锁定攻击立场内敌人
+}
+
+private void fireABCWeapon() {
+    // ABC火力：展开一个光剑
+}
+
+public void switchWeaponMode(WeaponMode mode) {
+    this.currentWeaponMode = mode;
+}
+
+public WeaponMode getCurrentWeaponMode() {
+    return currentWeaponMode;
 }
 ```
 
@@ -149,12 +195,20 @@ public void fireSpecialWeapon() {
 public void upgradeWeapon() {
     if (weaponLevel < 3) {
         weaponLevel++;
-        // 升级武器效果
+        // 升级武器效果，增强所有武器模式的威力
     }
 }
 
 public void addSpecialEnergy(int amount) {
     specialEnergy = Math.min(specialEnergy + amount, MAX_SPECIAL_ENERGY);
+}
+
+public int getWeaponLevel() {
+    return weaponLevel;
+}
+
+public int getSpecialEnergy() {
+    return specialEnergy;
 }
 ```
 
@@ -277,10 +331,10 @@ public void render(IRenderer renderer) {
 | 阶段 | 时间估计 |
 |------|----------|
 | 基础架构搭建 | 1天 |
-| 武器系统实现 | 2天 |
+| 武器系统实现 | 3天 |
 | 视觉效果 | 1天 |
 | 测试与优化 | 1天 |
-| **总计** | **5天** |
+| **总计** | **6天** |
 
 ## 10. 结论
 
