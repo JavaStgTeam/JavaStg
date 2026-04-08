@@ -199,6 +199,11 @@ public class Window {
 			}
 			
 			@Override
+			public boolean isCPressed() {
+				return keyStates[GLFW.GLFW_KEY_C];
+			}
+			
+			@Override
 			public boolean isEscPressed() {
 				return keyStates[GLFW.GLFW_KEY_ESCAPE];
 			}

@@ -8,5 +8,6 @@ public interface KeyStateProvider {
 	boolean isZPressed();
 	boolean isShiftPressed();
 	boolean isXPressed();
+	boolean isCPressed();
 	boolean isEscPressed();
 }
