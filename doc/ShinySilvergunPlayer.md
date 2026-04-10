@@ -28,19 +28,33 @@
 
 闪亮银枪自机将实现以下武器系统：
 
-1. **A火力**：前方直线射击
-2. **B火力**：追踪敌人,最小转向半径为5
-3. **C火力**：斜向射击,15,165,x轴正方向为0,逆时针为正
-4. **AB火力**：两条线,指向敌人时锁定
-5. **AC火力**：前方低威力,和后方扇形射击
-6. **BC火力**：展开圆形立场,锁定攻击立场内敌人
-7. **ABC火力**：展开一个光剑
+1. **火神炮（A）**：向前方直线连续发射密集小型光束，弹道集中
+2. **跟踪弹（B）**：发射可自动追踪锁定敌机的能量弹，追踪性强
+3. **扩散弹（C）**：向斜上方大范围扇形扩散射击，覆盖左右广阔区域
+4. **后射扩散（A+C）**：前方直线射击，同时向斜后方发射扩散弹幕，前后兼顾
+5. **跟踪等离子（A+B）**：自动锁定目标，持续输出高伤害等离子激光
+6. **锁定扩散（B+C）**：对范围内多个敌人同时锁定，发射多束跟踪弹进行集火
+7. **光辉剑（A+B+C）**：展开巨大近战光剑，近身斩击敌人，可格挡并吸收敌方弹幕
 
 ### 3.3 移动特性
 
 - **高机动性**：比普通自机更快的移动速度
 - **精准控制**：低速模式下的精细操作
 - **平滑移动**：实现惯性移动效果
+
+### 3.4 操作方式
+
+- **移动**：方向键控制
+- **低速模式**：Shift键
+- **射击**：Z键
+- **武器切换**：
+  - **A模式**：Z键
+  - **B模式**：X键
+  - **C模式**：C键
+  - **AB模式**：Z+X键
+  - **AC模式**：Z+C键
+  - **BC模式**：X+C键
+  - **ABC模式**：Z+X+C键
 
 ## 4. 开发计划
 
@@ -153,39 +167,80 @@ protected void shoot() {
 }
 
 private void fireAWeapon() {
-    // A火力：前方直线射击
+    // 火神炮（A）：向前方直线连续发射密集小型光束，弹道集中
 }
 
 private void fireBWeapon() {
-    // B火力：追踪敌人，最小转向半径为5
+    // 跟踪弹（B）：发射可自动追踪锁定敌机的能量弹，追踪性强
 }
 
 private void fireCWeapon() {
-    // C火力：斜向射击，15°和165°
+    // 扩散弹（C）：向斜上方大范围扇形扩散射击，覆盖左右广阔区域
 }
 
 private void fireABWeapon() {
-    // AB火力：两条线，指向敌人时锁定
+    // 跟踪等离子（A+B）：自动锁定目标，持续输出高伤害等离子激光
 }
 
 private void fireACWeapon() {
-    // AC火力：前方低威力，和后方扇形射击
+    // 后射扩散（A+C）：前方直线射击，同时向斜后方发射扩散弹幕，前后兼顾
 }
 
 private void fireBCWeapon() {
-    // BC火力：展开圆形立场，锁定攻击立场内敌人
+    // 锁定扩散（B+C）：对范围内多个敌人同时锁定，发射多束跟踪弹进行集火
 }
 
 private void fireABCWeapon() {
-    // ABC火力：展开一个光剑
+    // 光辉剑（A+B+C）：展开巨大近战光剑，近身斩击敌人，可格挡并吸收敌方弹幕
 }
 
 public void switchWeaponMode(WeaponMode mode) {
-    this.currentWeaponMode = mode;
+    if (this.currentWeaponMode != mode) {
+        this.currentWeaponMode = mode;
+        System.out.println("Switched to weapon mode: " + mode);
+    }
 }
 
 public WeaponMode getCurrentWeaponMode() {
     return currentWeaponMode;
+}
+
+/**
+ * 处理武器切换逻辑
+ */
+private void handleWeaponSwitching() {
+    if (keyStateProvider == null || respawning) {
+        return;
+    }
+    
+    boolean zPressed = keyStateProvider.isZPressed();
+    boolean xPressed = keyStateProvider.isXPressed();
+    boolean cPressed = keyStateProvider.isCPressed();
+    
+    // 根据ZXC按键组合切换武器模式
+    if (zPressed && xPressed && cPressed) {
+        // Z+X+C = ABC模式
+        switchWeaponMode(WeaponMode.ABC);
+    } else if (zPressed && xPressed) {
+        // Z+X = AB模式
+        switchWeaponMode(WeaponMode.AB);
+    } else if (zPressed && cPressed) {
+        // Z+C = AC模式
+        switchWeaponMode(WeaponMode.AC);
+    } else if (xPressed && cPressed) {
+        // X+C = BC模式
+        switchWeaponMode(WeaponMode.BC);
+    } else if (zPressed) {
+        // Z = A模式
+        switchWeaponMode(WeaponMode.A);
+    } else if (xPressed) {
+        // X = B模式
+        switchWeaponMode(WeaponMode.B);
+    } else if (cPressed) {
+        // C = C模式
+        switchWeaponMode(WeaponMode.C);
+    }
+    // 没有按键按下时保持当前模式
 }
 ```
 

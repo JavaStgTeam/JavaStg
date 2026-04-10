@@ -23,6 +23,9 @@ public class __ShinySilvergunPlayer extends Player {
     // 精灵表
     private int shipTextureId;
     
+    // 按键状态提供者
+    private stg.base.KeyStateProvider weaponKeyStateProvider;
+    
     // 构造函数
     public __ShinySilvergunPlayer() {
         super(0, 0, 9.0f, 3.5f, 20);
@@ -33,6 +36,7 @@ public class __ShinySilvergunPlayer extends Player {
         this.weaponLevel = 1;
         this.specialEnergy = 0;
         this.shipTextureId = -1;
+        this.weaponKeyStateProvider = null;
     }
     
     public __ShinySilvergunPlayer(float x, float y) {
@@ -44,11 +48,64 @@ public class __ShinySilvergunPlayer extends Player {
         this.weaponLevel = 1;
         this.specialEnergy = 0;
         this.shipTextureId = -1;
+        this.weaponKeyStateProvider = null;
+    }
+    
+    @Override
+    public void setKeyStateProvider(stg.base.KeyStateProvider provider) {
+        super.setKeyStateProvider(provider);
+        this.weaponKeyStateProvider = provider;
     }
     
     @Override
     protected void onUpdate() {
         updateAnimation();
+        handleWeaponSwitching();
+    }
+    
+    /**
+     * 处理武器切换逻辑
+     */
+    private void handleWeaponSwitching() {
+        if (weaponKeyStateProvider == null) {
+            return;
+        }
+        
+        boolean zPressed = weaponKeyStateProvider.isZPressed();
+        boolean xPressed = weaponKeyStateProvider.isXPressed();
+        boolean cPressed = weaponKeyStateProvider.isCPressed();
+        
+        // 根据ZXC按键组合切换武器模式
+        if (zPressed && xPressed && cPressed) {
+            // Z+X+C = ABC模式
+            switchWeaponMode(WeaponMode.ABC);
+        } else if (zPressed && xPressed) {
+            // Z+X = AB模式
+            switchWeaponMode(WeaponMode.AB);
+        } else if (zPressed && cPressed) {
+            // Z+C = AC模式
+            switchWeaponMode(WeaponMode.AC);
+        } else if (xPressed && cPressed) {
+            // X+C = BC模式
+            switchWeaponMode(WeaponMode.BC);
+        } else if (zPressed) {
+            // Z = A模式
+            switchWeaponMode(WeaponMode.A);
+        } else if (xPressed) {
+            // X = B模式
+            switchWeaponMode(WeaponMode.B);
+        } else if (cPressed) {
+            // C = C模式
+            switchWeaponMode(WeaponMode.C);
+        }
+        // 没有按键按下时保持当前模式
+    }
+    
+    /**
+     * 检查是否正在射击
+     */
+    private boolean isShooting() {
+        return weaponKeyStateProvider != null && weaponKeyStateProvider.isZPressed();
     }
     
     /**
@@ -104,43 +161,45 @@ public class __ShinySilvergunPlayer extends Player {
     }
     
     private void fireAWeapon() {
-        // A火力：前方直线射击
-        System.out.println("Firing A weapon (straight forward)");
+        // 火神炮（A）：向前方直线连续发射密集小型光束，弹道集中
+        System.out.println("Firing Vulcan Cannon (A): Dense small beams forward, concentrated弹道");
     }
     
     private void fireBWeapon() {
-        // B火力：追踪敌人，最小转向半径为5
-        System.out.println("Firing B weapon (homing with minimum turn radius 5)");
+        // 跟踪弹（B）：发射可自动追踪锁定敌机的能量弹，追踪性强
+        System.out.println("Firing Homing Missiles (B): Auto-tracking energy projectiles with strong homing capability");
     }
     
     private void fireCWeapon() {
-        // C火力：斜向射击，15°和165°
-        System.out.println("Firing C weapon (diagonal at 15° and 165°)");
+        // 扩散弹（C）：向斜上方大范围扇形扩散射击，覆盖左右广阔区域
+        System.out.println("Firing Spread Shot (C): Wide fan-shaped spread shooting to cover large area");
     }
     
     private void fireABWeapon() {
-        // AB火力：两条线，指向敌人时锁定
-        System.out.println("Firing AB weapon (double lines, lock on when aiming at enemies)");
+        // 跟踪等离子（A+B）：自动锁定目标，持续输出高伤害等离子激光
+        System.out.println("Firing Homing Plasma (A+B): Auto-lock target, continuous high-damage plasma laser");
     }
     
     private void fireACWeapon() {
-        // AC火力：前方低威力，和后方扇形射击
-        System.out.println("Firing AC weapon (low power forward, fan-shaped backward)");
+        // 后射扩散（A+C）：前方直线射击，同时向斜后方发射扩散弹幕，前后兼顾
+        System.out.println("Firing Rear Spread (A+C): Forward straight shot with backward spread弹幕");
     }
     
     private void fireBCWeapon() {
-        // BC火力：展开圆形立场，锁定攻击立场内敌人
-        System.out.println("Firing BC weapon (circular field, lock on enemies within field)");
+        // 锁定扩散（B+C）：对范围内多个敌人同时锁定，发射多束跟踪弹进行集火
+        System.out.println("Firing Lock-on Spread (B+C): Multi-target lock-on with multiple homing projectiles");
     }
     
     private void fireABCWeapon() {
-        // ABC火力：展开一个光剑
-        System.out.println("Firing ABC weapon (lightsaber)");
+        // 光辉剑（A+B+C）：展开巨大近战光剑，近身斩击敌人，可格挡并吸收敌方弹幕
+        System.out.println("Firing Radiant Sword (A+B+C): Giant melee lightsaber, can block and absorb enemy弹幕");
     }
     
     public void switchWeaponMode(WeaponMode mode) {
-        this.currentWeaponMode = mode;
-        System.out.println("Switched to weapon mode: " + mode);
+        if (this.currentWeaponMode != mode) {
+            this.currentWeaponMode = mode;
+            System.out.println("Switched to weapon mode: " + mode);
+        }
     }
     
     public WeaponMode getCurrentWeaponMode() {
