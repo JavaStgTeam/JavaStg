@@ -80,7 +80,7 @@ public class GameWorld {
                 try {
                     Obj.release(enemy);
                 } catch (Exception e) {
-                    // 如果没有注册对象池，忽略异常
+                    System.err.println("[GameWorld] 释放敌人对象失败: " + e.getMessage());
                 }
             }
         }
@@ -99,7 +99,7 @@ public class GameWorld {
                 try {
                     Obj.release(bullet);
                 } catch (Exception e) {
-                    // 如果没有注册对象池，忽略异常
+                    System.err.println("[GameWorld] 释放玩家子弹对象失败: " + e.getMessage());
                 }
             }
         }
@@ -113,7 +113,7 @@ public class GameWorld {
                 try {
                     Obj.release(bullet);
                 } catch (Exception e) {
-                    // 如果没有注册对象池，忽略异常
+                    System.err.println("[GameWorld] 释放敌人子弹对象失败: " + e.getMessage());
                 }
             }
         }
@@ -131,7 +131,7 @@ public class GameWorld {
                 try {
                     Obj.release(item);
                 } catch (Exception e) {
-                    // 如果没有注册对象池，忽略异常
+                    System.err.println("[GameWorld] 释放物品对象失败: " + e.getMessage());
                 }
             }
         }

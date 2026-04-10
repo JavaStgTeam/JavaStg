@@ -19,6 +19,7 @@ import stg.render.TitlePanel;
 import stg.stage.StageGroup;
 import stg.util.ALAudioManager;
 import stg.util.CoordinateSystem;
+import stg.util.GameConstants;
 import user.player.DefaultPlayer;
 
 /**
@@ -751,5 +752,74 @@ public class Window {
 			selectedStageGroup.start();
 		}
 		System.out.println("重新开始游戏");
+	}
+	
+	/**
+	 * 更新当前面板 - 由 GameLoop 调用
+	 * 根据当前面板状态执行相应的更新逻辑
+	 */
+	public void updateCurrentPanel() {
+		switch (currentPanelState) {
+		case TITLE -> {
+			if (titlePanel != null) {
+				titlePanel.update();
+			}
+		}
+		case STAGE_GROUP_SELECT -> {
+			if (stageGroupSelectPanel != null) {
+				stageGroupSelectPanel.update();
+			}
+		}
+		case PLAYER_SELECT -> {
+			if (playerSelectPanel != null) {
+				playerSelectPanel.update();
+			}
+		}
+		case GAME -> {
+			if (isPaused) {
+				if (pauseMenu != null) {
+					pauseMenu.update();
+				}
+			} else {
+				updateGameLogic();
+			}
+		}
+		}
+	}
+	
+	/**
+	 * 更新游戏逻辑 - 在 GAME 状态下且未暂停时调用
+	 */
+	private void updateGameLogic() {
+		// 更新玩家
+		if (player != null && player.isActive()) {
+			player.update();
+		}
+		
+		// 更新关卡组
+		if (selectedStageGroup != null) {
+			selectedStageGroup.update();
+		}
+		
+		// 更新游戏世界
+		if (gameWorld != null) {
+			gameWorld.update(gamePanel.getWidth(), gamePanel.getHeight());
+		}
+	}
+	
+	/**
+	 * 获取游戏面板宽度
+	 * @return 游戏面板宽度
+	 */
+	public int getGamePanelWidth() {
+		return gamePanel != null ? gamePanel.getWidth() : GameConstants.GAME_WIDTH;
+	}
+	
+	/**
+	 * 获取游戏面板高度
+	 * @return 游戏面板高度
+	 */
+	public int getGamePanelHeight() {
+		return gamePanel != null ? gamePanel.getHeight() : GameConstants.GAME_HEIGHT;
 	}
 }

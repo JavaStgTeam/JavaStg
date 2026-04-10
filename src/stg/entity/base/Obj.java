@@ -525,59 +525,75 @@ public abstract class Obj implements IRenderable {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Obj> T create(Class<T> clazz, Object... args) {
+        // 首先尝试从对象池获取现有对象
+        T pooledObject = acquireFromPool(clazz);
+        if (pooledObject != null) {
+            // 重置对象状态，确保不会保留旧状态
+            pooledObject.reset();
+            // 使用反射设置对象的构造参数
+            initObjectWithArgs(pooledObject, args);
+            return pooledObject;
+        }
+        
+        // 对象池为空，直接创建新对象
+        return createNewInstance(clazz, args);
+    }
+    
+    /**
+     * 从对象池获取对象
+     * @param <T> 对象类型
+     * @param clazz 对象类型的 Class
+     * @return 池中的对象，如果池为空则返回 null
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Obj> T acquireFromPool(Class<T> clazz) {
         try {
-            // 尝试从对象池获取或创建对象
-            try {
-                // 获取或创建对象池
-                ObjectPoolManager.getInstance().getOrCreatePool(clazz);
-                
-                // 尝试从对象池获取
-                T object = ObjectPoolManager.getInstance().acquire(clazz);
-                if (object != null) {
-                    // 重置对象状态，确保不会保留旧状态
-                    object.reset();
-                    // 设置对象的属性
-                    if (args.length >= 2) {
-                        // 处理不同类型的参数
-                        if (args[0] instanceof Number) {
-                            object.setX(((Number) args[0]).floatValue());
-                        }
-                        if (args[1] instanceof Number) {
-                            object.setY(((Number) args[1]).floatValue());
-                        }
-                    }
+            ObjectPoolManager poolManager = ObjectPoolManager.getInstance();
+            poolManager.getOrCreatePool(clazz);
+            return (T) poolManager.acquire(clazz);
+        } catch (Exception e) {
+            // 对象池获取失败，返回 null 让调用方创建新对象
+            return null;
+        }
+    }
+    
+    /**
+     * 使用反射初始化对象的属性
+     * @param object 要初始化的对象
+     * @param args 构造函数参数
+     */
+    private static void initObjectWithArgs(Obj object, Object... args) {
+        if (args.length >= 2) {
+            if (args[0] instanceof Number) {
+                object.setX(((Number) args[0]).floatValue());
+            }
+            if (args[1] instanceof Number) {
+                object.setY(((Number) args[1]).floatValue());
+            }
+        }
+    }
+    
+    /**
+     * 创建新对象实例
+     * @param <T> 对象类型
+     * @param clazz 对象类型的 Class
+     * @param args 构造函数参数
+     * @return 新创建的对象实例
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Obj> T createNewInstance(Class<T> clazz, Object... args) {
+        try {
+            for (java.lang.reflect.Constructor<?> constructor : clazz.getConstructors()) {
+                if (constructor.getParameterCount() == args.length) {
+                    T object = (T) constructor.newInstance(args);
+                    // 新创建的对象直接返回，不立即放入对象池
+                    // 对象会在 release() 时被回收
                     return object;
                 }
-            } catch (Exception poolEx) {
-                // 对象池获取失败，记录异常
-                System.err.println("Object pool acquire failed: " + poolEx.getMessage());
             }
-            
-            // 直接创建对象
-            try {
-                // 查找匹配的构造函数
-                for (java.lang.reflect.Constructor<?> constructor : clazz.getConstructors()) {
-                    if (constructor.getParameterCount() == args.length) {
-                        T object = (T) constructor.newInstance(args);
-                        
-                        // 将新创建的对象添加到对象池中（如果对象池存在）
-                        try {
-                            ObjectPoolManager.getInstance().release(object);
-                            // 重新从对象池获取，这样可以确保对象被正确跟踪
-                            return ObjectPoolManager.getInstance().acquire(clazz);
-                        } catch (Exception e) {
-                            // 忽略异常，直接返回创建的对象
-                        }
-                        
-                        return object;
-                    }
-                }
-                throw new IllegalArgumentException("No suitable constructor found for " + clazz.getName());
-            } catch (Exception ex) {
-                throw new RuntimeException("Failed to create object: " + ex.getMessage(), ex);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create object: " + e.getMessage(), e);
+            throw new IllegalArgumentException("No suitable constructor found for " + clazz.getName());
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to create object: " + ex.getMessage(), ex);
         }
     }
     
@@ -594,8 +610,9 @@ public abstract class Obj implements IRenderable {
         try {
             ObjectPoolManager.getInstance().release(object);
         } catch (Exception e) {
-            // 如果对象池未初始化或失败，忽略异常
+            // 如果对象池未初始化或失败，记录日志后忽略
             // 对象会被 GC 回收
+            System.err.println("[Obj] 对象回收失败，将由GC回收: " + e.getMessage());
         }
     }
     
