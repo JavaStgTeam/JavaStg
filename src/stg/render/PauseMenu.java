@@ -116,27 +116,23 @@ public class PauseMenu extends Panel {
 
 		for (int i = 0; i < MENU_ITEMS.length; i++) {
 			String item = MENU_ITEMS[i];
-			float x = getWidth() / 2 - 120;
-			float y = getHeight() / 2 + 60 - i * 60;
+			float menuX = getWidth() / 2 - 120;
+			float menuY = getHeight() / 2 + 60 - i * 60;
 
 			if (i == selectedIndex) {
-				renderer.drawText(">", x - 50 - 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 50 + 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 50 - 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 50 + 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(">", x - 50, y, menuFont, SELECTED_COLOR);
+				renderer.drawText(">", menuX - 50 - 1, menuY - 1, menuFont, Color.BLACK);
+				renderer.drawText(">", menuX - 50 + 1, menuY - 1, menuFont, Color.BLACK);
+				renderer.drawText(">", menuX - 50 - 1, menuY + 1, menuFont, Color.BLACK);
+				renderer.drawText(">", menuX - 50 + 1, menuY + 1, menuFont, Color.BLACK);
+				renderer.drawText(">", menuX - 50, menuY, menuFont, SELECTED_COLOR);
 
-				renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x + 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x - 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x + 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x, y, menuFont, SELECTED_COLOR);
+				renderer.drawText(item, menuX - 1, menuY - 1, menuFont, Color.BLACK);
+				renderer.drawText(item, menuX + 1, menuY - 1, menuFont, Color.BLACK);
+				renderer.drawText(item, menuX - 1, menuY + 1, menuFont, Color.BLACK);
+				renderer.drawText(item, menuX + 1, menuY + 1, menuFont, Color.BLACK);
+				renderer.drawText(item, menuX, menuY, menuFont, SELECTED_COLOR);
 			} else {
-				renderer.drawText(item, x - 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x + 1, y - 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x - 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x + 1, y + 1, menuFont, Color.BLACK);
-				renderer.drawText(item, x, y, menuFont, UNSELECTED_COLOR);
+				renderer.drawText(item, menuX, menuY, menuFont, UNSELECTED_COLOR);
 			}
 		}
 	}

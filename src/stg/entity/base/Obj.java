@@ -318,6 +318,7 @@ public abstract class Obj implements IRenderable {
      * 检查物体是否激活
      * @return 是否激活
      */
+    @Override
     public boolean isActive() {
         return active;
     }
