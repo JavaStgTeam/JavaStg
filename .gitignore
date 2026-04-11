@@ -13,8 +13,6 @@ ai_debug/
 # 无效的配置文件
 *.invalid
 
-
-
 # 测试相关
 **/test/**
 **/*Test*.java

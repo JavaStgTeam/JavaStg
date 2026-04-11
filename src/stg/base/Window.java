@@ -78,6 +78,8 @@ public class Window {
 	private final boolean[] keyStates = new boolean[GLFW.GLFW_KEY_LAST];
 	/** 按键状态提供者 */
 	private KeyStateProvider keyStateProvider;
+	/** 激光贴图纹理ID */
+	private int laserTextureId = -1;
 	
 	/** 面板状态枚举 */
 	private enum PanelState {
@@ -348,6 +350,15 @@ public class Window {
 				System.out.println("Reimu纹理加载成功，纹理ID: " + reimuTextureId[0]);
 			} else {
 				System.err.println("Reimu纹理加载失败");
+			}
+			
+			// 加载激光贴图
+			String laserTexturePath = "resources/images/laser1.png";
+			laserTextureId = glRenderer.loadTexture(laserTexturePath);
+			if (laserTextureId != -1) {
+				System.out.println("激光纹理加载成功，纹理ID: " + laserTextureId);
+			} else {
+				System.err.println("激光纹理加载失败");
 			}
 		}
 		
@@ -821,5 +832,13 @@ public class Window {
 	 */
 	public int getGamePanelHeight() {
 		return gamePanel != null ? gamePanel.getHeight() : GameConstants.GAME_HEIGHT;
+	}
+	
+	/**
+	 * 获取激光贴图纹理ID
+	 * @return 激光贴图纹理ID
+	 */
+	public int getLaserTextureId() {
+		return laserTextureId;
 	}
 }

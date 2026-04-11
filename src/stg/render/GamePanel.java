@@ -5,6 +5,7 @@ import stg.entity.player.Player;
 import stg.entity.enemy.Enemy;
 import stg.entity.bullet.Bullet;
 import stg.entity.item.Item;
+import stg.entity.laser.Laser;
 
 /**
  * 主游戏面板
@@ -96,6 +97,13 @@ public class GamePanel extends Panel {
 			for (Item item : gameWorld.getItems()) {
 				if (item != null && item.isActive()) {
 					item.renderOnScreen(renderer);
+				}
+			}
+			
+			// 渲染激光
+			for (Laser laser : gameWorld.getLasers()) {
+				if (laser != null && laser.isVisible()) {
+					laser.render(renderer);
 				}
 			}
 		}

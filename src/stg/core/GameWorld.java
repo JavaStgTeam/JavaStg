@@ -2,10 +2,12 @@ package stg.core;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import stg.entity.base.Obj;
 import stg.entity.bullet.Bullet;
 import stg.entity.enemy.Enemy;
 import stg.entity.item.Item;
-import stg.entity.base.Obj;
+import stg.entity.laser.Laser;
 
 
 /**
@@ -19,6 +21,7 @@ public class GameWorld {
     private final List<Bullet> playerBullets = new CopyOnWriteArrayList<>();
     private final List<Bullet> enemyBullets = new CopyOnWriteArrayList<>();
     private final List<Item> items = new CopyOnWriteArrayList<>();
+    private final List<Laser> lasers = new CopyOnWriteArrayList<>();
     
     /**
      * 添加敌人
@@ -57,12 +60,22 @@ public class GameWorld {
     }
     
     /**
+     * 添加激光
+     */
+    public void addObject(Laser laser) {
+        if (laser != null) {
+            lasers.add(laser);
+        }
+    }
+    
+    /**
      * 更新所有实体
      */
     public void update(int canvasWidth, int canvasHeight) {
         updateEnemies(canvasWidth, canvasHeight);
         updateBullets();
         updateItems();
+        updateLasers(canvasWidth, canvasHeight);
     }
     
 
@@ -138,6 +151,19 @@ public class GameWorld {
     }
     
     /**
+     * 更新激光
+     */
+    private void updateLasers(int canvasWidth, int canvasHeight) {
+        for (int i = lasers.size() - 1; i >= 0; i--) {
+            Laser laser = lasers.get(i);
+            laser.update();
+            if (!laser.isVisible() || laser.isOutOfBounds(canvasWidth, canvasHeight)) {
+                lasers.remove(i);
+            }
+        }
+    }
+    
+    /**
      * 获取敌人列表
      */
     public List<Enemy> getEnemies() {
@@ -166,6 +192,13 @@ public class GameWorld {
     }
     
     /**
+     * 获取激光列表
+     */
+    public List<Laser> getLasers() {
+        return lasers;
+    }
+    
+    /**
      * 清除所有实体
      */
     public void clear() {
@@ -173,6 +206,7 @@ public class GameWorld {
         playerBullets.clear();
         enemyBullets.clear();
         items.clear();
+        lasers.clear();
     }
     
     /**

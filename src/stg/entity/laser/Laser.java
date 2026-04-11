@@ -18,6 +18,8 @@ public abstract class Laser {
 	protected float length; // 激光长度
 	protected float width; // 激光宽度
 	protected Color color; // 激光颜色
+	protected LaserColor laserColor; // 激光贴图颜色
+	protected int textureId; // 激光贴图纹理ID
 	
 	protected boolean warningOnly; // 是否仅显示预警线
 	protected int warningTime; // 预警持续时间(帧)
@@ -35,7 +37,7 @@ public abstract class Laser {
 	 * @param color 颜色
 	 */
 	public Laser(float x, float y, float angle, float length, float width, Color color) {
-		this(x, y, angle, length, width, color, 60, 10);
+		this(x, y, angle, length, width, color, LaserColor.RED, 0, 60, 10);
 	}
 
 	/**
@@ -50,12 +52,31 @@ public abstract class Laser {
 	 * @param damage 伤害值
 	 */
 	public Laser(float x, float y, float angle, float length, float width, Color color, int warningTime, int damage) {
+		this(x, y, angle, length, width, color, LaserColor.RED, 0, warningTime, damage);
+	}
+
+	/**
+	 * 带贴图支持的构造函数
+	 * @param x 起点X坐标
+	 * @param y 起点Y坐标
+	 * @param angle 角度(弧度)
+	 * @param length 长度
+	 * @param width 宽度
+	 * @param color 颜色
+	 * @param laserColor 激光贴图颜色
+	 * @param textureId 激光贴图纹理ID
+	 * @param warningTime 预警时间(帧)
+	 * @param damage 伤害值
+	 */
+	public Laser(float x, float y, float angle, float length, float width, Color color, LaserColor laserColor, int textureId, int warningTime, int damage) {
 		this.x = x;
 		this.y = y;
 		this.angle = angle;
 		this.length = length;
 		this.width = width;
 		this.color = color;
+		this.laserColor = laserColor;
+		this.textureId = textureId;
 		this.warningTime = warningTime;
 		this.warningTimer = warningTime;
 		this.damage = damage;
@@ -199,15 +220,30 @@ public abstract class Laser {
 	 * @param renderer 渲染器
 	 */
 	protected void renderLaserGL(IRenderer renderer) {
-		float endX = x + (float)(Math.cos(angle) * length);
-		float endY = y + (float)(Math.sin(angle) * length);
+		if (textureId > 0) {
+			// 使用贴图渲染
+			float endX = x + (float)(Math.cos(angle) * length);
+			float endY = y + (float)(Math.sin(angle) * length);
 
-		// 绘制激光核心
-		renderer.drawLine(x, y, endX, endY, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() / 255f);
+			// 计算激光的宽度和长度
+			float laserWidth = width;
+			float laserLength = length;
 
-		// 绘制高光
-		java.awt.Color highlightColor = new java.awt.Color(255, 255, 255, 150);
-		renderer.drawLine(x, y, endX, endY, highlightColor.getRed() / 255f, highlightColor.getGreen() / 255f, highlightColor.getBlue() / 255f, highlightColor.getAlpha() / 255f);
+			// 绘制激光贴图
+			renderer.drawImage(textureId, x, y - laserWidth / 2, laserLength, laserWidth, 
+					0, laserColor.getTextureYStart(), 1, laserColor.getTextureYEnd());
+		} else {
+			// 回退到线条绘制
+			float endX = x + (float)(Math.cos(angle) * length);
+			float endY = y + (float)(Math.sin(angle) * length);
+
+			// 绘制激光核心
+			renderer.drawLine(x, y, endX, endY, color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() / 255f);
+
+			// 绘制高光
+			java.awt.Color highlightColor = new java.awt.Color(255, 255, 255, 150);
+			renderer.drawLine(x, y, endX, endY, highlightColor.getRed() / 255f, highlightColor.getGreen() / 255f, highlightColor.getBlue() / 255f, highlightColor.getAlpha() / 255f);
+		}
 	}
 
 	/**
@@ -287,6 +323,10 @@ public abstract class Laser {
 	public void setLength(float length) { this.length = length; }
 	public void setWidth(float width) { this.width = width; }
 	public void setColor(Color color) { this.color = color; }
+	public LaserColor getLaserColor() { return laserColor; }
+	public void setLaserColor(LaserColor laserColor) { this.laserColor = laserColor; }
+	public int getTextureId() { return textureId; }
+	public void setTextureId(int textureId) { this.textureId = textureId; }
 	public void setWarningOnly(boolean warningOnly) { this.warningOnly = warningOnly; }
 	public void setWarningTime(int warningTime) { this.warningTime = warningTime; }
 	public void setVisible(boolean visible) { this.visible = visible; }
