@@ -1,6 +1,6 @@
 package stg.stage;
 
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +68,7 @@ public class StageGroupManager {
             stageGroups.addAll(instances);
             
             System.out.println("关卡组初始化完成，共管理 " + stageGroups.size() + " 个关卡组");
-        } catch (IOException e) {
+        } catch (Exception e) {
             LogUtil.error("StageGroupManager", "关卡组初始化失败", e);
         }
     }

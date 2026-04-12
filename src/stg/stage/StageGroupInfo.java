@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface StageGroupInfo {
     /**
-     * 关卡组名称
+     * 关卡组显示名称
      * @return 关卡组名称
      */
     String name();
@@ -36,4 +36,11 @@ public @interface StageGroupInfo {
      * @return 图标路径
      */
     String iconPath() default "";
+    
+    /**
+     * 关卡组排序顺序，数值越小越靠前
+     * 默认 0，未设置注解时按类名字母序排列
+     * @return 排序顺序
+     */
+    int order() default 0;
 }

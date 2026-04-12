@@ -11,7 +11,8 @@ import user.stage.TestStage;
 @StageGroupInfo(
     name = "自定义关卡组",
     description = "玩家自定义的关卡组",
-    difficulty = StageGroup.Difficulty.NORMAL
+    difficulty = StageGroup.Difficulty.NORMAL,
+    order = 1
 )
 public class CustomStageGroup extends StageGroup {
     public CustomStageGroup(GameWorld gameWorld) {

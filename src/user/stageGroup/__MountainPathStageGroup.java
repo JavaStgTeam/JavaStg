@@ -8,7 +8,8 @@ import user.stage.__MountainPathStage;
 @StageGroupInfo(
     name = "测试关卡",
     description = "秋静叶的山道",
-    difficulty = StageGroup.Difficulty.NORMAL
+    difficulty = StageGroup.Difficulty.NORMAL,
+    order = 0
 )
 public class __MountainPathStageGroup extends StageGroup {
     public __MountainPathStageGroup(GameWorld gameWorld) {
