@@ -1,8 +1,6 @@
 package stg.core;
 
 import stg.base.Window;
-import stg.entity.player.Player;
-import stg.util.GameConstants;
 
 /**
  * 游戏循环 - 控制游戏主循环

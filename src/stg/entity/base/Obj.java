@@ -125,8 +125,8 @@ public abstract class Obj implements IRenderable {
         this.angle = 0;
         this.angularVelocity = 0;
         this.lifecycleState = LifecycleState.CREATED;
-        initBehavior();
-        init();
+        this.initBehavior();
+        this.init();
     }
 
     /**
@@ -164,7 +164,7 @@ public abstract class Obj implements IRenderable {
      * 注意：此方法仅在物体处于激活状态时被调用
      */
     protected void onUpdate() {
-        // 子类可以重写此方法实现每帧的自定义更新逻辑
+        // TODO:子类可以重写此方法实现每帧的自定义更新逻辑
     }
 
     /**
@@ -175,7 +175,7 @@ public abstract class Obj implements IRenderable {
      * 子类可以在此方法中修改vx和vy的值，以实现复杂的移动效果
      */
     protected void onMove() {
-        // 子类可以重写此方法实现自定义移动逻辑
+        // TODO:子类可以重写此方法实现自定义移动逻辑
     }
 
     /**

@@ -43,7 +43,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
     public Bullet(float x, float y, float vx, float vy, float size, Color color) {
         super(x, y, vx, vy, size, color);
         // 设置碰撞判定半径为size的5倍，确保高速子弹不会穿透敌人
-        setHitboxRadius(size * 5.0f);
+        this.hitboxRadius = size * 5.0f;
     }
     
     /**
@@ -61,7 +61,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
                  BulletSpriteSheet.BulletElement spriteElement, BulletSpriteSheet.BulletType bulletType) {
         super(x, y, vx, vy, size, color);
         // 设置碰撞判定半径为size的5倍，确保高速子弹不会穿透敌人
-        setHitboxRadius(size * 5.0f);
+        this.hitboxRadius = size * 5.0f;
         this.spriteElement = spriteElement;
         this.bulletType = bulletType;
     }
@@ -200,10 +200,10 @@ public class Bullet extends Obj implements Resettable, IBullet {
     public void render(Graphics2D g) {
         if (!isActive()) return;
         
-        // 优化：避免重复的坐标系统检查
+        //避免重复的坐标系统检查
         if (!isCoordinateSystemInitialized()) return;
         
-        // 优化：使用缓存的坐标转换
+        //使用缓存的坐标转换
         float[] screenCoords = toScreenCoords(getX(), getY());
         float screenX = screenCoords[0];
         float screenY = screenCoords[1];
@@ -519,7 +519,8 @@ public class Bullet extends Obj implements Resettable, IBullet {
     /**
      * 获取X方向速度
      * @return X方向速度
-     */
+     */ 
+    @Override
     public float getVx() {
         return vx;
     }
@@ -528,6 +529,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
      * 获取Y方向速度
      * @return Y方向速度
      */
+    @Override
     public float getVy() {
         return vy;
     }
@@ -536,6 +538,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
      * 设置X方向速度
      * @param vx X方向速度
      */
+    @Override
     public void setVx(float vx) {
         this.vx = vx;
     }
@@ -544,6 +547,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
      * 设置Y方向速度
      * @param vy Y方向速度
      */
+    @Override
     public void setVy(float vy) {
         this.vy = vy;
     }
@@ -552,6 +556,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
      * 设置X坐标
      * @param x X坐标
      */
+    @Override
     public void setX(float x) {
         this.x = x;
     }
@@ -560,6 +565,7 @@ public class Bullet extends Obj implements Resettable, IBullet {
      * 设置Y坐标
      * @param y Y坐标
      */
+    @Override
     public void setY(float y) {
         this.y = y;
     }
@@ -586,6 +592,8 @@ public class Bullet extends Obj implements Resettable, IBullet {
      * 设置碰撞检测半径
      * @param hitboxRadius 碰撞检测半径
      */
+    //TODO: 添加特殊形状碰撞检测
+    @Override
     public void setHitboxRadius(float hitboxRadius) {
         this.hitboxRadius = hitboxRadius;
     }
