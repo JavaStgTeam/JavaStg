@@ -134,7 +134,7 @@ public abstract class Obj implements IRenderable {
      * 在构造函数中调用，用于初始化行为参数
      */
     protected void initBehavior() {
-        // 子类可以重写此方法初始化行为参数
+        // TODO:子类可以重写此方法初始化行为参数
     }
     
     /**
@@ -154,7 +154,7 @@ public abstract class Obj implements IRenderable {
      * 子类可以重写此方法实现特定的初始化行为
      */
     protected void onInit() {
-        // 子类可以重写此方法实现特定的初始化行为
+        // TODO:子类可以重写此方法实现特定的初始化行为
     }
 
     /**
