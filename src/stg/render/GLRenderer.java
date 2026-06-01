@@ -154,6 +154,29 @@ public class GLRenderer implements IRenderer {
 		checkGLError("清除屏幕");
 	}
 	
+	@FunctionalInterface
+	private interface Drawable {
+		void draw();
+	}
+
+	private void setupColorDrawingState(float r, float g, float b, float a, Drawable drawable) {
+		int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+		try {
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			GL11.glColor4f(r, g, b, a);
+
+			drawable.draw();
+		} catch (Exception e) {
+			System.err.println("绘制错误: " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			GL11.glMatrixMode(previousMatrixMode);
+		}
+	}
+
 	/**
 	 * 绘制矩形
 	 * @param x 矩形左下角X坐标
@@ -167,35 +190,14 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void drawRect(float x, float y, float width, float height, float r, float g, float b, float a) {
-		try {
-			// 保存当前矩阵模式
-			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-			
-			// 确保在模型视图矩阵模式下
-			GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			
-			// 禁用纹理，确保使用颜色绘制
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			
-			// 启用混合
-			GL11.glEnable(GL11.GL_BLEND);
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			
-			// 设置颜色
-			GL11.glColor4f(r, g, b, a);
-			
-			// 绘制矩形
+		setupColorDrawingState(r, g, b, a, () -> {
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glVertex2f(x, y);
 			GL11.glVertex2f(x + width, y);
 			GL11.glVertex2f(x + width, y + height);
 			GL11.glVertex2f(x, y + height);
 			GL11.glEnd();
-			
-			// 恢复之前的矩阵模式
-			GL11.glMatrixMode(previousMatrixMode);
-		} catch (Exception e) {
-		}
+		});
 	}
 	
 	/**
@@ -211,33 +213,12 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void drawLine(float x1, float y1, float x2, float y2, float r, float g, float b, float a) {
-		try {
-			// 保存当前矩阵模式
-			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-			
-			// 确保在模型视图矩阵模式下
-			GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			
-			// 禁用纹理，确保使用颜色绘制
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			
-			// 启用混合
-			GL11.glEnable(GL11.GL_BLEND);
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			
-			// 设置颜色
-			GL11.glColor4f(r, g, b, a);
-			
-			// 绘制线条
+		setupColorDrawingState(r, g, b, a, () -> {
 			GL11.glBegin(GL11.GL_LINES);
 			GL11.glVertex2f(x1, y1);
 			GL11.glVertex2f(x2, y2);
 			GL11.glEnd();
-			
-			// 恢复之前的矩阵模式
-			GL11.glMatrixMode(previousMatrixMode);
-		} catch (Exception e) {
-		}
+		});
 	}
 	
 	/**
@@ -252,24 +233,7 @@ public class GLRenderer implements IRenderer {
 	 */
 	@Override
 	public void drawCircle(float x, float y, float radius, float r, float g, float b, float a) {
-		try {
-			// 保存当前矩阵模式
-			int previousMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-			
-			// 确保在模型视图矩阵模式下
-			GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			
-			// 禁用纹理，确保使用颜色绘制
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			
-			// 启用混合
-			GL11.glEnable(GL11.GL_BLEND);
-			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-			
-			// 设置颜色
-			GL11.glColor4f(r, g, b, a);
-			
-			// 绘制圆形
+		setupColorDrawingState(r, g, b, a, () -> {
 			GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 			int segments = 32;
 			GL11.glVertex2f(x, y);
@@ -280,11 +244,7 @@ public class GLRenderer implements IRenderer {
 				GL11.glVertex2f(vx, vy);
 			}
 			GL11.glEnd();
-			
-			// 恢复之前的矩阵模式
-			GL11.glMatrixMode(previousMatrixMode);
-		} catch (Exception e) {
-		}
+		});
 	}
 	
 	/**
