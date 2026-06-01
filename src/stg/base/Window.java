@@ -6,6 +6,7 @@ import org.lwjgl.opengl.GL;
 
 import stg.core.GameLoop;
 import stg.core.GameWorld;
+import stg.core.ScoreManager;
 import stg.entity.player.Player;
 import stg.render.GLRenderer;
 import stg.render.GamePanel;
@@ -66,6 +67,8 @@ public class Window {
 	private CoordinateSystem coordinateSystem;
 	/** 游戏世界 */
 	private GameWorld gameWorld;
+	/** 分数管理器 */
+	private ScoreManager scoreManager;
 	/** 当前选择的关卡组 */
 	private StageGroup selectedStageGroup;
 	/** 是否已初始化 */
@@ -259,7 +262,9 @@ public class Window {
 		leftPanel = new LeftPanel(0, 0, sidePanelWidth, TOTAL_HEIGHT);
 		gamePanel = new GamePanel(sidePanelWidth, 0, gamePanelWidth, TOTAL_HEIGHT);
 		rightPanel = new RightPanel(sidePanelWidth + gamePanelWidth, 0, sidePanelWidth, TOTAL_HEIGHT);
-		
+		scoreManager = new ScoreManager();
+		rightPanel.setScoreManager(scoreManager);
+
 		// 创建标题面板
 		titlePanel = new TitlePanel(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new TitlePanel.TitleCallback() {
 			@Override
@@ -293,6 +298,7 @@ public class Window {
 		
 		// 初始化游戏世界
 		gameWorld = new GameWorld();
+		gameWorld.setScoreManager(scoreManager);
 		
 		// 创建关卡组选择面板
 		stageGroupSelectPanel = new StageGroupSelectPanel(0, 0, TOTAL_WIDTH, TOTAL_HEIGHT, new StageGroupSelectPanel.StageGroupSelectCallback() {
@@ -731,7 +737,8 @@ public class Window {
 		}
 		pauseMenu.resetKeyStates();
 		titlePanel.resetKeyStates();
-		
+		scoreManager.reset();
+
 		if (selectedStageGroup != null) {
 			selectedStageGroup.cleanup();
 		}
@@ -755,7 +762,8 @@ public class Window {
 			keyStates[i] = false;
 		}
 		pauseMenu.resetKeyStates();
-		
+		scoreManager.reset();
+
 		if (selectedStageGroup != null) {
 			selectedStageGroup.cleanup();
 			gameWorld.cleanup();

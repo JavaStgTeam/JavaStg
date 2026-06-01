@@ -5,6 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import stg.entity.base.Obj;
 import stg.entity.bullet.Bullet;
+import stg.entity.enemy.Boss;
 import stg.entity.enemy.Enemy;
 import stg.entity.item.Item;
 import stg.entity.laser.Laser;
@@ -22,6 +23,7 @@ public class GameWorld {
     private final List<Bullet> enemyBullets = new CopyOnWriteArrayList<>();
     private final List<Item> items = new CopyOnWriteArrayList<>();
     private final List<Laser> lasers = new CopyOnWriteArrayList<>();
+    private ScoreManager scoreManager;
     
     /**
      * 添加敌人
@@ -89,6 +91,13 @@ public class GameWorld {
             enemy.update(canvasWidth, canvasHeight);
             
             if (!enemy.isAlive() || enemy.isOutOfBounds(canvasWidth, canvasHeight)) {
+                if (!enemy.isAlive() && scoreManager != null) {
+                    if (enemy instanceof Boss) {
+                        scoreManager.addScore(10000);
+                    } else {
+                        scoreManager.addScore(100);
+                    }
+                }
                 enemies.remove(i);
                 try {
                     Obj.release(enemy);
@@ -228,5 +237,21 @@ public class GameWorld {
      */
     public void cleanup() {
         clear();
+    }
+
+    /**
+     * 设置分数管理器
+     * @param scoreManager 分数管理器实例
+     */
+    public void setScoreManager(ScoreManager scoreManager) {
+        this.scoreManager = scoreManager;
+    }
+
+    /**
+     * 获取分数管理器
+     * @return 分数管理器实例
+     */
+    public ScoreManager getScoreManager() {
+        return scoreManager;
     }
 }

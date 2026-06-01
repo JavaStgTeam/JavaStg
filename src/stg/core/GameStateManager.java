@@ -17,10 +17,8 @@ public class GameStateManager {
     }
     
     private State currentState = State.PLAYING;
-    private int score = 0;
     private int lives = 3;
     private int spellCards = 2;
-    private int maxScore = 10000;
     
     /**
      * 设置游戏状态
@@ -70,16 +68,6 @@ public class GameStateManager {
     }
     
     /**
-     * 添加分数
-     */
-    public void addScore(int points) {
-        score += points;
-        if (score > maxScore) {
-            maxScore = score;
-        }
-    }
-    
-    /**
      * 失去生命
      */
     public void loseLife() {
@@ -117,16 +105,10 @@ public class GameStateManager {
      * 重置游戏状态
      */
     public void reset() {
-        score = 0;
         lives = 3;
         spellCards = 2;
         setState(State.PLAYING);
     }
-    
-    /**
-     * 获取分数
-     */
-    public int getScore() { return score; }
     
     /**
      * 获取生命值
@@ -139,16 +121,6 @@ public class GameStateManager {
     public int getSpellCards() { return spellCards; }
     
     /**
-     * 获取最高分数
-     */
-    public int getMaxScore() { return maxScore; }
-    
-    /**
-     * 设置分数
-     */
-    public void setScore(int score) { this.score = score; }
-    
-    /**
      * 设置生命值
      */
     public void setLives(int lives) { this.lives = lives; }
@@ -157,9 +129,4 @@ public class GameStateManager {
      * 设置符卡数
      */
     public void setSpellCards(int spellCards) { this.spellCards = spellCards; }
-    
-    /**
-     * 设置最高分数
-     */
-    public void setMaxScore(int maxScore) { this.maxScore = maxScore; }
 }
