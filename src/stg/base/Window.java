@@ -498,6 +498,31 @@ public class Window {
 	}
 	
 	/**
+	 * 直接启动游戏（跳过菜单流程，用于测试）
+	 * @param stageGroup 关卡组
+	 * @param directPlayer 玩家实例
+	 */
+	public void startDirectGame(StageGroup stageGroup, Player directPlayer) {
+		this.player = directPlayer;
+		this.selectedStageGroup = stageGroup;
+		this.player.setKeyStateProvider(keyStateProvider);
+		
+		gamePanel.setPlayer(player);
+		gamePanel.setGameWorld(gameWorld);
+		
+		currentPanelState = PanelState.GAME;
+		
+		if (selectedStageGroup != null) {
+			selectedStageGroup.start();
+			System.out.println("Direct game started: " + selectedStageGroup.getDisplayName());
+		}
+		
+		ALAudioManager.getInstance().stopMusic("title");
+		
+		startGameLoop();
+	}
+	
+	/**
 	 * 获取按键状态提供者
 	 * @return 按键状态提供者
 	 */
@@ -677,11 +702,19 @@ public class Window {
 	}
 	
 	/**
-	 * 获取主游戏面板
+	 * 获取游戏面板
 	 * @return 主游戏面板
 	 */
 	public GamePanel getGamePanel() {
 		return gamePanel;
+	}
+	
+	/**
+	 * 获取游戏世界
+	 * @return 游戏世界实例
+	 */
+	public GameWorld getGameWorld() {
+		return gameWorld;
 	}
 	
 	/**
