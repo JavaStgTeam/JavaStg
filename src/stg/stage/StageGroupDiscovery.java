@@ -130,7 +130,7 @@ public class StageGroupDiscovery {
                 scanDirectoryForPackage(root, f, packageName, packagePathLower, out, seen);
             } else if (f.getName().endsWith(".class")) {
                 String simpleName = f.getName().substring(0, f.getName().length() - 6);
-                String fullClassName = (relPath.isEmpty() ? packageName : relPath.replace('/', '.') + "." + simpleName);
+                String fullClassName = (relPath.isEmpty() ? packageName + "." + simpleName : relPath.replace('/', '.') + "." + simpleName);
                 fullClassName = normalizeClassName(fullClassName);
                 
                 tryLoadAndAdd(fullClassName, out, seen);

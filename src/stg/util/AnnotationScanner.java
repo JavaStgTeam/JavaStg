@@ -143,7 +143,7 @@ public class AnnotationScanner {
             } else if (f.getName().endsWith(".class")) {
                 // 提取类名（大小写不敏感比较）
                 String classFileName = f.getName().substring(0, f.getName().length() - 6);
-                String fullClassName = (relPath.isEmpty() ? packageName : relPath.replace('/', '.') + "." + classFileName);
+                String fullClassName = (relPath.isEmpty() ? packageName + "." + classFileName : relPath.replace('/', '.') + "." + classFileName);
                 
                 // 大小写标准化：首字母大写，其余小写（Java 规范）
                 fullClassName = normalizeClassName(fullClassName);
