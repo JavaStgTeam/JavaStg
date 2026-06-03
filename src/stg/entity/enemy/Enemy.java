@@ -7,6 +7,7 @@ import stg.core.GameWorld;
 import stg.entity.base.Obj;
 import stg.render.IRenderable;
 import stg.render.IRenderer;
+import stg.util.CoordinateSystem;
 import stg.util.objectpool.Resettable;
 
 /**
@@ -191,26 +192,25 @@ public abstract class Enemy extends Obj implements Resettable, IRenderable {
 	 */
 	@Override
 	public boolean isOutOfBounds() {
-		return isOutOfBounds(0, 0); // 调用兼容版本
+		Obj.requireCoordinateSystem();
+		CoordinateSystem cs = Obj.getSharedCoordinateSystem();
+		float leftBound = cs.getLeftBound() - getSize() * 2;
+		float rightBound = cs.getRightBound() + getSize() * 2;
+		float bottomBound = cs.getBottomBound() - getSize() * 2;
+		float topBound = cs.getTopBound() + getSize() * 2;
+
+		return getX() < leftBound || getX() > rightBound ||
+		       getY() < bottomBound || getY() > topBound;
 	}
 
 	/**
-	 * 检查是否越界 - @since 2026-01-19 使用游戏逻辑坐标系
+	 * 检查是否越界（带参数兼容版本）
 	 * @param canvasWidth 画布宽度（兼容参数，不使用）
 	 * @param canvasHeight 画布高度（兼容参数，不使用）
 	 * @return 是否越界
 	 */
 	public boolean isOutOfBounds(int canvasWidth, int canvasHeight) {
-		// 使用游戏逻辑坐标系的固定边界
-		stg.entity.base.Obj.requireCoordinateSystem();
-		stg.util.CoordinateSystem cs = stg.entity.base.Obj.getSharedCoordinateSystem();
-		float leftBound = cs.getLeftBound() - getSize() * 2;
-		float rightBound = cs.getRightBound() + getSize() * 2;
-		float topBound = cs.getBottomBound() - getSize() * 2;
-		float bottomBound = cs.getTopBound() + getSize() * 2;
-
-		return getX() < leftBound || getX() > rightBound ||
-		       getY() < topBound || getY() > bottomBound;
+		return isOutOfBounds();
 	}
 
 	/**

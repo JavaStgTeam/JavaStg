@@ -27,6 +27,6 @@ public class BoundsUtil {
         float rightBound = coordinateSystem.getRightBound() + size;
         float topBound = coordinateSystem.getTopBound() - size;
         float bottomBound = coordinateSystem.getBottomBound() + size;
-        return x < leftBound || x > rightBound || y < topBound || y > bottomBound;
+        return x < leftBound || x > rightBound || y > topBound || y < bottomBound;
     }
 }

@@ -855,7 +855,7 @@ public class Window {
 		
 		// 更新游戏世界
 		if (gameWorld != null) {
-			gameWorld.update(gamePanel.getWidth(), gamePanel.getHeight());
+			gameWorld.update(GameConstants.GAME_WIDTH, GameConstants.GAME_HEIGHT);
 		}
 	}
 	

@@ -266,9 +266,9 @@ public abstract class Laser {
 	public boolean isOutOfBounds(int width, int height) {
 		float leftBound = -width / 2.0f - length;
 		float rightBound = width / 2.0f + length;
-		float topBound = -height / 2.0f - length;
-		float bottomBound = height / 2.0f + length;
-		return x < leftBound || x > rightBound || y < topBound || y > bottomBound;
+		float bottomBound = -height / 2.0f - length;
+		float topBound = height / 2.0f + length;
+		return x < leftBound || x > rightBound || y < bottomBound || y > topBound;
 	}
 
 	/**

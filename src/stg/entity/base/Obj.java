@@ -226,7 +226,6 @@ public abstract class Obj implements IRenderable {
     public void render(Graphics2D g) {
         if (!active) return;
 
-        requireCoordinateSystem();
         float[] screenCoords = toScreenCoords(x, y);
         float screenX = screenCoords[0];
         float screenY = screenCoords[1];
@@ -244,7 +243,6 @@ public abstract class Obj implements IRenderable {
     public void render(IRenderer renderer) {
         if (!active) return;
 
-        requireCoordinateSystem();
         float[] screenCoords = toScreenCoords(x, y);
         float screenX = screenCoords[0];
         float screenY = screenCoords[1];
@@ -270,7 +268,6 @@ public abstract class Obj implements IRenderable {
     public void render(IRenderer renderer, int textureId, float texX, float texY, float texWidth, float texHeight, float imgWidth, float imgHeight) {
         if (!active) return;
 
-        requireCoordinateSystem();
         float[] screenCoords = toScreenCoords(x, y);
         float screenX = screenCoords[0];
         float screenY = screenCoords[1];
@@ -300,7 +297,6 @@ public abstract class Obj implements IRenderable {
      * @throws IllegalStateException 如果坐标系统未初始化
      */
     public boolean isOutOfBounds() {
-        requireCoordinateSystem();
         return BoundsUtil.isOutOfBounds(x, y, size, sharedCoordinateSystem);
     }
 

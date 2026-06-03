@@ -99,7 +99,6 @@ public class GameLoop implements Runnable {
 			
 			long targetFrameTime = NANO_PER_SECOND / targetFPS;
 			long sleepTime = targetFrameTime - elapsedTime;
-			//TODO: 应避免重复的坐标系统检查
 			if (sleepTime > 0) {
 				try {
 					if (sleepTime > NANO_PER_MILLI) {
