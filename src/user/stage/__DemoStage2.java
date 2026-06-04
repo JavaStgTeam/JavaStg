@@ -8,16 +8,17 @@ import stg.stage.StageCompletionCondition;
 import stg.entity.base.Obj;
 import stg.entity.laser.LaserColor;
 import user.boss.__StandbyBoss;
+import user.enemy.__FairyEnemy;
 import user.laser.TestLaser;
 
 /**
  * 演示关卡2 - 激光与Boss展示
- * 展示激光渲染功能和 __StandbyBoss
+ * 前半段展示9色放射激光，后半段展示 __StandbyBoss（3符卡）
  * @since 2026-06-03
  */
 public class __DemoStage2 extends Stage {
 
-    private static final int MAX_FRAME = 2400;
+    private static final int MAX_FRAME = 3000;
     private boolean laserSpawned = false;
     private boolean bossSpawned = false;
 
@@ -42,30 +43,25 @@ public class __DemoStage2 extends Stage {
     }
 
     @Override
-    protected void initStage() {
-        laserSpawned = false;
-        bossSpawned = false;
-    }
-
-    @Override
-    protected void onStageStart() {
-        laserSpawned = false;
-        bossSpawned = false;
-    }
-
-    @Override
     protected void updateWaveLogic() {
         int frame = getCurrentFrame();
 
         if (frame == 60 && !laserSpawned && getGameWorld() != null) {
-            System.out.println("[DemoStage2] Phase 1: Laser showcase");
+            System.out.println("[DemoStage2] Phase 1: Laser showcase (9 colors, radial)");
             spawnTestLasers();
             laserSpawned = true;
         }
 
-        if (frame == 600 && !bossSpawned) {
-            System.out.println("[DemoStage2] Phase 2: __StandbyBoss");
-            __StandbyBoss boss = Obj.create(__StandbyBoss.class, 0, -200);
+        if (frame >= 180 && frame < 600 && frame % 90 == 0) {
+            float x = (float) (Math.random() * 200 - 100);
+            __FairyEnemy fairy = Obj.create(__FairyEnemy.class, x, 260);
+            fairy.setVy(-3.0f);
+            addEnemy(fairy);
+        }
+
+        if (frame == 900 && !bossSpawned) {
+            System.out.println("[DemoStage2] Phase 2: __StandbyBoss (3 spellcards)");
+            __StandbyBoss boss = Obj.create(__StandbyBoss.class, 0, -120);
             addEnemy(boss);
             bossSpawned = true;
         }
@@ -77,7 +73,7 @@ public class __DemoStage2 extends Stage {
 
         float startX = 0;
         float startY = 0;
-        float length = 350;
+        float length = 250;
         float width = 28;
 
         LaserColor[] laserColors = LaserColor.values();
@@ -98,6 +94,5 @@ public class __DemoStage2 extends Stage {
             TestLaser laser = new TestLaser(startX, startY, angle, length, width, colors[i], laserColors[i]);
             world.addObject(laser);
         }
-        System.out.println("[DemoStage2] Spawned " + laserColors.length + " lasers");
     }
 }

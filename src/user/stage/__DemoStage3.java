@@ -5,10 +5,11 @@ import stg.stage.Stage;
 import stg.stage.StageCompletionCondition;
 import stg.entity.base.Obj;
 import user.boss.__MinorikoBoss;
+import user.enemy.__MidFairyEnemy;
 
 /**
  * 演示关卡3 - Boss符卡展示
- * 展示 __MinorikoBoss 及其完整的符卡攻击模式
+ * 展示 __MinorikoBoss 完整的符卡攻击模式（非符×2 + 符卡×2）
  * @since 2026-06-03
  */
 public class __DemoStage3 extends Stage {
@@ -50,10 +51,17 @@ public class __DemoStage3 extends Stage {
     protected void updateWaveLogic() {
         int frame = getCurrentFrame();
 
-        if (frame == 60 && !bossSpawned) {
-            System.out.println("[DemoStage3] __MinorikoBoss with spellcards: "
-                + "NonSpellcard1 -> Spellcard1 -> NonSpellcard2 -> Spellcard2");
-            __MinorikoBoss boss = Obj.create(__MinorikoBoss.class, 0, -250);
+        if (frame >= 60 && frame < 420 && frame % 120 == 0) {
+            float x = (float) (Math.random() * 200 - 100);
+            __MidFairyEnemy midFairy = Obj.create(__MidFairyEnemy.class, x, 260);
+            midFairy.setVy(-2.0f);
+            addEnemy(midFairy);
+        }
+
+        if (frame == 480 && !bossSpawned) {
+            System.out.println("[DemoStage3] __MinorikoBoss: "
+                + "NonSpellcard1 -> Spellcard1(秋之符) -> NonSpellcard2 -> Spellcard2");
+            __MinorikoBoss boss = Obj.create(__MinorikoBoss.class, 0, -100);
             addEnemy(boss);
             bossSpawned = true;
         }

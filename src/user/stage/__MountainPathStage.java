@@ -58,10 +58,9 @@ public class __MountainPathStage extends Stage {
             midFairyCount++;
         }*/
         
-        // 每隔1秒（60帧）在屏幕正中心生成一个Elf敌人
+        // 每隔1秒（60帧）在屏幕下方生成一个Elf敌人向上飞行
         if (frame >= 60 && frame % 60 == 0) {
-            Elf elf = Obj.create(Elf.class, 0, 0);
-            // 设置Elf敌人向上移动
+            Elf elf = Obj.create(Elf.class, 0, -300);
             elf.setVy(3.0f);
             addEnemy(elf);
             elfCount++;
