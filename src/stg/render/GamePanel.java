@@ -25,7 +25,9 @@ public class GamePanel extends Panel {
 	private GameWorld gameWorld;
 	/** 坐标系转换工具 */
 	private PanelCoordinateSystem coordinateSystem;
-	
+	/** 默认寺庙背景 */
+	private TempleBackground templeBackground;
+
 	/**
 	 * 构造函数
 	 * @param x 面板X坐标
@@ -37,6 +39,15 @@ public class GamePanel extends Panel {
 		super(x, y, width, height);
 		setBackgroundColor(0.05f, 0.05f, 0.1f, 1.0f);
 		coordinateSystem = new PanelCoordinateSystem(width, height, GAME_LOGICAL_WIDTH, GAME_LOGICAL_HEIGHT);
+		templeBackground = new TempleBackground();
+	}
+
+	/**
+	 * 初始化默认寺庙背景纹理
+	 * @param glRenderer GLRenderer实例
+	 */
+	public void initTempleBackground(GLRenderer glRenderer) {
+		templeBackground.loadTextures(glRenderer);
 	}
 	
 	/**
@@ -69,7 +80,7 @@ public class GamePanel extends Panel {
 	 */
 	@Override
 	public void render(IRenderer renderer) {
-		renderBackground(renderer);
+		templeBackground.render(renderer, width, height);
 		
 		// 渲染敌人
 		if (gameWorld != null) {

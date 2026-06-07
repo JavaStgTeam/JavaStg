@@ -295,6 +295,8 @@ public class Window {
 		titlePanel.setKeyStateProvider(keyStateProvider);
 		// 加载标题面板背景纹理
 		titlePanel.loadBackgroundTexture(renderer);
+		// 加载游戏面板默认寺庙背景纹理
+		gamePanel.initTempleBackground((GLRenderer) renderer);
 		
 		// 初始化游戏世界
 		gameWorld = new GameWorld();
